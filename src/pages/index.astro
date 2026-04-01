@@ -1,0 +1,30 @@
+---
+import Base from '../layouts/Base.astro';
+import SummaryTable from '../components/SummaryTable.tsx';
+import { db } from '../lib/db';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../lib/schema';
+import { loadCatalog } from '../lib/data';
+
+const raw = {
+  hubTypes: db.select().from(hubTypes).all(),
+  hubTiers: db.select().from(hubTiers).all(),
+  sensorTiers: db.select().from(sensorTiers).all(),
+  hubParts: db.select().from(hubTierParts).all(),
+  sensorParts: db.select().from(sensorTierParts).all(),
+};
+const catalog = loadCatalog(raw);
+const configs = db.select().from(savedConfigs).all();
+---
+<Base title="Pool Security — Summary">
+  <main class="max-w-[1120px] mx-auto px-8">
+    <section class="py-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+        All <span class="text-accent">build options</span> at a glance
+      </h1>
+      <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
+        Compare every valid hub + sensor combination. Sort by price, filter by architecture, and jump straight to the configurator.
+      </p>
+    </section>
+    <SummaryTable client:load catalog={catalog} savedConfigs={configs} />
+  </main>
+</Base>

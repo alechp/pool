@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import Configurator from '../components/Configurator.tsx';
+import { db } from '../lib/db';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../lib/schema';
+import { loadCatalog } from '../lib/data';
+
+const raw = {
+  hubTypes: db.select().from(hubTypes).all(),
+  hubTiers: db.select().from(hubTiers).all(),
+  sensorTiers: db.select().from(sensorTiers).all(),
+  hubParts: db.select().from(hubTierParts).all(),
+  sensorParts: db.select().from(sensorTierParts).all(),
+};
+const catalog = loadCatalog(raw);
+
+const hubTypeParam = Astro.url.searchParams.get('hub_type');
+const hubTierParam = Astro.url.searchParams.get('hub_tier');
+const sensorTierParam = Astro.url.searchParams.get('sensor_tier');
+---
+<Base title="Pool Security — Build">
+  <main class="max-w-[1120px] mx-auto px-8">
+    <section class="py-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+        Build your <span class="text-accent">pool security</span> system
+      </h1>
+      <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
+        Configure sensors and hubs for full backyard coverage. Real-time pricing from Amazon and direct suppliers.
+      </p>
+    </section>
+    <Configurator
+      client:load
+      catalog={catalog}
+      initialHubType={hubTypeParam}
+      initialHubTier={hubTierParam}
+      initialSensorTier={sensorTierParam}
+    />
+  </main>
+</Base>

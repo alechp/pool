@@ -1,0 +1,33 @@
+{
+  "name": "pool-security-configurator",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed"
+  },
+  "dependencies": {
+    "@astrojs/node": "10.0.4",
+    "@astrojs/solid-js": "6.0.1",
+    "@tailwindcss/vite": "4.2.2",
+    "@tanstack/solid-table": "8.21.3",
+    "astro": "6.1.2",
+    "better-sqlite3": "12.8.0",
+    "drizzle-orm": "0.45.2",
+    "solid-js": "1.9.12",
+    "tailwindcss": "4.2.2",
+    "three": "0.183.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.13",
+    "@types/three": "0.183.1",
+    "drizzle-kit": "0.31.10",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}

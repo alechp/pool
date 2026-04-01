@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pool Security — Hardware Configurator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root {
+  --bg-deep: #0a0b0f;
+  --bg-surface: #12131a;
+  --bg-card: #181922;
+  --bg-card-hover: #1e1f2a;
+  --bg-elevated: #22232e;
+  --accent: #00e5a0;
+  --accent-dim: #00c98b;
+  --accent-glow: rgba(0,229,160,0.12);
+  --accent-glow-strong: rgba(0,229,160,0.25);
+  --accent-blue: #3b82f6;
+  --accent-amber: #f59e0b;
+  --accent-coral: #f97066;
+  --accent-purple: #a78bfa;
+  --text-primary: #e8e9ed;
+  --text-secondary: #8b8d98;
+  --text-tertiary: #565868;
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --border-active: rgba(0,229,160,0.4);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --font-display: 'Outfit', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection { background: var(--accent-glow-strong); color: var(--accent); }
+
+.container { max-width: 1120px; margin: 0 auto; padding: 0 2rem; }
+
+/* HEADER */
+header {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,11,15,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-mark svg { width: 18px; height: 18px; }
+.logo-text {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.logo-text span { color: var(--text-tertiary); font-weight: 400; }
+.header-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.header-meta .live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: pulse-dot 2s ease infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* HERO */
+.hero {
+  padding: 4rem 0 3rem;
+  text-align: center;
+}
+.hero h1 {
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+.hero h1 .accent { color: var(--accent); }
+.hero p {
+  font-size: 16px;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* STEP INDICATOR */
+.steps-nav {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 3rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+.step-tab {
+  flex: 1;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.step-tab:hover { color: var(--text-secondary); }
+.step-tab.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.step-tab .step-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: block;
+  margin-bottom: 2px;
+}
+.step-tab.active .step-num { color: var(--accent); }
+.step-tab.completed .step-num { color: var(--accent); }
+.step-tab.completed::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+/* SECTION */
+.config-section {
+  margin-bottom: 3rem;
+  animation: fadeUp 0.4s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section-header {
+  margin-bottom: 1.5rem;
+}
+.section-header .overline {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.section-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.section-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* OPTION CARDS */
+.options-grid {
+  display: grid;
+  gap: 12px;
+}
+.options-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.options-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 768px) {
+  .options-grid.cols-3, .options-grid.cols-2 { grid-template-columns: 1fr; }
+}
+
+.option-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.option-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.2s;
+}
+.option-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+.option-card.selected {
+  border-color: var(--border-active);
+  background: var(--bg-card-hover);
+}
+.option-card.selected::before {
+  background: var(--accent);
+}
+.option-card .card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.option-card .card-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+.badge-budget { background: rgba(0,229,160,0.12); color: var(--accent); }
+.badge-premium { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
+.badge-none { background: rgba(255,255,255,0.06); color: var(--text-secondary); }
+.badge-zigbee { background: rgba(167,139,250,0.12); color: var(--accent-purple); }
+.badge-lora { background: rgba(245,158,11,0.12); color: var(--accent-amber); }
+
+.option-card .card-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--text-tertiary);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.option-card.selected .card-radio {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--bg-card-hover);
+}
+
+.option-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.option-card .card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.option-card .card-price {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.option-card .card-price-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-left: 4px;
+}
+.option-card .card-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.spec-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.04);
+  padding: 3px 8px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+}
+
+/* DISABLED STATE */
+.option-card.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(0.5);
+}
+
+/* 3D VIEWER */
+.viewer-section {
+  margin: 3rem 0;
+}
+.viewer-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  position: relative;
+}
+#viewer3d {
+  display: block;
+  width: 100%;
+  height: 380px;
+  cursor: grab;
+}
+#viewer3d:active { cursor: grabbing; }
+.viewer-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(transparent, rgba(18,19,26,0.95));
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.viewer-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+.viewer-title span { color: var(--accent); }
+.viewer-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* BOM TABLE */
+.bom-section {
+  margin: 3rem 0;
+}
+.bom-group {
+  margin-bottom: 2rem;
+}
+.bom-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.bom-group-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.bom-group-header .group-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.04);
+  padding: 2px 8px;
+  border-radius: 100px;
+}
+.bom-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  align-items: center;
+}
+.bom-row:last-child { border-bottom: none; }
+.bom-part-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.bom-part-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.bom-part-price {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* FLEET SECTION */
+.fleet-section {
+  margin: 3rem 0;
+  padding: 2rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+.fleet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.fleet-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.qty-control label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.qty-control input[type=range] {
+  width: 140px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 2px;
+  outline: none;
+}
+.qty-control input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid var(--bg-surface);
+}
+.qty-val {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  min-width: 24px;
+  text-align: center;
+}
+
+.fleet-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 768px) {
+  .fleet-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+.fleet-metric {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+.fleet-metric .fm-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+}
+.fleet-metric .fm-value {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.fleet-metric .fm-note {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+.fleet-metric.highlight { border-color: var(--border-active); }
+.fleet-metric.highlight .fm-value { color: var(--accent); }
+
+/* TOTAL BAR */
+.total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-active);
+  border-radius: var(--radius-lg);
+  margin-top: 1.5rem;
+}
+.total-bar .total-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.total-bar .total-breakdown {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.total-bar .total-amount {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* FOOTER */
+footer {
+  padding: 3rem 0;
+  border-top: 1px solid var(--border);
+  margin-top: 4rem;
+}
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-inner p {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.footer-inner a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* TRANSITION */
+.config-section { transition: opacity 0.3s ease; }
+.config-section.hidden { display: none; }
+
+/* SCROLL ANIMATIONS */
+.reveal { opacity: 0; transform: translateY(20px); transition: all 0.5s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0a0b0f" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+      </div>
+      <div class="logo-text">PoolGuard <span>/ configurator</span></div>
+    </div>
+    <div class="header-meta"><span class="live-dot"></span>Prices live — Apr 2026</div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>Build your <span class="accent">pool security</span> system</h1>
+    <p>Configure sensors and hubs for full backyard coverage. Real-time pricing from Amazon and direct suppliers. 3D preview of every unit you build.</p>
+  </div>
+</section>
+
+<main class="container">
+
+  <div class="steps-nav" id="steps-nav">
+    <div class="step-tab active" data-step="1"><span class="step-num">01</span>Hub type</div>
+    <div class="step-tab" data-step="2"><span class="step-num">02</span>Hub tier</div>
+    <div class="step-tab" data-step="3"><span class="step-num">03</span>Sensor tier</div>
+    <div class="step-tab" data-step="4"><span class="step-num">04</span>Review</div>
+  </div>
+
+  <!-- STEP 1: Hub Type -->
+  <div class="config-section" id="step-1">
+    <div class="section-header">
+      <div class="overline">Step 01</div>
+      <h2>Choose your architecture</h2>
+      <p>Decide how sensors communicate with your AI stack. This determines available sensor and hub options.</p>
+    </div>
+    <div class="options-grid cols-3" id="hub-type-grid"></div>
+  </div>
+
+  <!-- STEP 2: Hub Tier -->
+  <div class="config-section hidden" id="step-2">
+    <div class="section-header">
+      <div class="overline">Step 02</div>
+      <h2 id="step2-title">Choose your hub tier</h2>
+      <p id="step2-desc">Select the build quality for your central hub.</p>
+    </div>
+    <div class="options-grid cols-2" id="hub-tier-grid"></div>
+  </div>
+
+  <!-- STEP 3: Sensor Tier -->
+  <div class="config-section hidden" id="step-3">
+    <div class="section-header">
+      <div class="overline">Step 03</div>
+      <h2>Choose your sensor tier</h2>
+      <p id="step3-desc">Each sensor includes camera, mmWave radar, battery, and IP67 enclosure.</p>
+    </div>
+    <div class="options-grid cols-2" id="sensor-tier-grid"></div>
+  </div>
+
+  <!-- STEP 4: Review -->
+  <div class="config-section hidden" id="step-4">
+    <div class="section-header">
+      <div class="overline">Step 04</div>
+      <h2>Your build</h2>
+      <p>Complete bill of materials with 3D preview. Adjust fleet size below.</p>
+    </div>
+
+    <div class="viewer-section">
+      <div class="viewer-container">
+        <canvas id="viewer3d"></canvas>
+        <div class="viewer-overlay">
+          <div class="viewer-title" id="viewer-title">—</div>
+          <div class="viewer-hint">Drag to rotate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bom-section" id="bom-section"></div>
+
+    <div class="fleet-section">
+      <div class="fleet-header">
+        <h2>Fleet sizing</h2>
+        <div class="qty-control">
+          <label>Sensors</label>
+          <input type="range" min="1" max="8" value="4" step="1" id="qty-slider" />
+          <span class="qty-val" id="qty-val">4</span>
+        </div>
+      </div>
+      <div class="fleet-metrics">
+        <div class="fleet-metric highlight">
+          <div class="fm-label">Total cost</div>
+          <div class="fm-value" id="fm-total">—</div>
+          <div class="fm-note" id="fm-total-note">—</div>
+        </div>
+        <div class="fleet-metric">
+          <div class="fm-label">Coverage</div>
+          <div class="fm-value" id="fm-coverage">—</div>
+          <div class="fm-note">with 25% overlap</div>
+        </div>
+        <div class="fleet-metric">
+          <div class="fm-label">Battery life</div>
+          <div class="fm-value" id="fm-battery">—</div>
+          <div class="fm-note">per sensor, deep sleep</div>
+        </div>
+        <div class="fleet-metric">
+          <div class="fm-label">Comm range</div>
+          <div class="fm-value" id="fm-range">—</div>
+          <div class="fm-note">sensor to hub/server</div>
+        </div>
+      </div>
+      <div class="total-bar">
+        <div>
+          <div class="total-label">Grand total — all hardware</div>
+          <div class="total-breakdown" id="total-breakdown">—</div>
+        </div>
+        <div class="total-amount" id="grand-total">—</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <p>Prices sourced from Amazon, Seeed Studio, SMLIGHT, Waveshare — April 2026</p>
+    <p><a href="#" onclick="resetConfig();return false;">Reset configurator</a></p>
+  </div>
+</footer>
+
+<script>
+// ======== DATA ========
+
+const HUB_TYPES = [
+  { id: 'none', name: 'No hub', badge: 'Standalone', badgeClass: 'badge-none',
+    desc: 'Each sensor streams directly over WiFi to your AI server. Simplest setup — no hub hardware needed.',
+    specs: ['WiFi direct','No hub cost','Higher sensor power'] },
+  { id: 'zigbee', name: 'Zigbee hub', badge: 'Zigbee 3.0', badgeClass: 'badge-zigbee',
+    desc: 'Low-power mesh network. Sensors sync to a central coordinator which forwards to your AI stack via MQTT.',
+    specs: ['50–100m mesh','250 kbps','Ultra-low power'] },
+  { id: 'lorawan', name: 'LoRaWAN gateway', badge: 'LoRa 915MHz', badgeClass: 'badge-lora',
+    desc: 'Maximum range for large properties. Sub-GHz radio reaches 500m–5km. Gateway runs ChirpStack.',
+    specs: ['500m–5km','0.3–50 kbps','Best battery life'] }
+];
+
+const HUB_TIERS = {
+  zigbee: [
+    { id: 'zigbee-cheap', name: 'Zigbee hub — budget', badge: 'Budget', badgeClass: 'badge-budget',
+      desc: 'ESP32-C6 as a lightweight Zigbee coordinator with basic MQTT bridge. Minimal cost.',
+      price: 28, specs: ['ESP32-C6','10–40m range','Basic'],
+      parts: [
+        { name: 'ESP32-C6 dev board', desc: 'Zigbee/Thread coordinator firmware, external antenna', price: 15 },
+        { name: '5V USB-C wall adapter', desc: 'Always-on power supply', price: 8 },
+        { name: 'Small ABS enclosure', desc: 'Basic indoor protection', price: 5 },
+      ]
+    },
+    { id: 'zigbee-premium', name: 'Zigbee hub — premium', badge: 'Premium', badgeClass: 'badge-premium',
+      desc: 'Raspberry Pi 5 + SMLIGHT SLZB-06. Full Home Assistant OS, web dashboard, OTA updates, 200+ device support.',
+      price: 225, specs: ['Pi 5 + SLZB-06','50–100m mesh','Full HA dashboard'],
+      parts: [
+        { name: 'Raspberry Pi 5 8GB', desc: 'Quad-core A76, runs Home Assistant + Zigbee2MQTT', price: 132 },
+        { name: 'SMLIGHT SLZB-06', desc: 'Zigbee 3.0 coordinator, +20dB amp, PoE/USB/WiFi', price: 45 },
+        { name: 'Samsung EVO 64GB A2 microSD', desc: 'For Home Assistant OS image', price: 10 },
+        { name: 'Official Pi 5 27W USB-C PSU', desc: 'Stable 24/7 power delivery', price: 15 },
+        { name: 'Argon ONE V5 case + fan', desc: 'Aluminum cooling case with GPIO access', price: 23 },
+      ]
+    }
+  ],
+  lorawan: [
+    { id: 'lora-cheap', name: 'LoRaWAN gateway — budget', badge: 'Budget', badgeClass: 'badge-budget',
+      desc: 'Raspberry Pi Zero 2W + SX1302 HAT. Runs lightweight ChirpStack. Compact and affordable.',
+      price: 115, specs: ['Pi Zero 2W + SX1302','500m–2km','Compact'],
+      parts: [
+        { name: 'Raspberry Pi Zero 2W', desc: 'Quad-core, WiFi, compact gateway host', price: 20 },
+        { name: 'Waveshare SX1302 915M HAT', desc: '8-ch LoRaWAN concentrator, +26dBm, GNSS', price: 65 },
+        { name: 'Samsung EVO 32GB A2 microSD', desc: 'For ChirpStack OS', price: 8 },
+        { name: '5V 2.5A USB micro PSU', desc: 'Stable power for Pi Zero', price: 10 },
+        { name: 'Pi Zero case', desc: 'Basic enclosure with HAT clearance', price: 12 },
+      ]
+    },
+    { id: 'lora-premium', name: 'LoRaWAN gateway — premium', badge: 'Premium', badgeClass: 'badge-premium',
+      desc: 'Raspberry Pi 5 + SX1302 HAT. Full ChirpStack + Node-RED, maximum range and processing headroom.',
+      price: 265, specs: ['Pi 5 + SX1302','500m–5km','Full ChirpStack'],
+      parts: [
+        { name: 'Raspberry Pi 5 8GB', desc: 'Quad-core A76, runs ChirpStack + MQTT bridge', price: 132 },
+        { name: 'Waveshare SX1302 915M HAT', desc: '8-ch LoRaWAN gateway, +26dBm, -141dBm rx', price: 75 },
+        { name: 'Samsung EVO 64GB A2 microSD', desc: 'For ChirpStack OS image', price: 10 },
+        { name: 'Official Pi 5 27W USB-C PSU', desc: 'Stable 24/7 power delivery', price: 15 },
+        { name: 'Argon ONE V5 case + fan', desc: 'Aluminum cooling with HAT clearance', price: 23 },
+        { name: '5dBi 915MHz antenna + GPS antenna', desc: 'Included with HAT', price: 10 },
+      ]
+    }
+  ]
+};
+
+const SENSOR_TIERS = {
+  none: [
+    { id: 'sa-cheap', name: 'Standalone sensor — budget', badge: 'Budget', badgeClass: 'badge-budget',
+      desc: 'Freenove ESP32-S3 CAM with OV2640. Direct WiFi MJPEG streaming to your AI endpoint.',
+      price: 64, battery: '2–6 mo', commRange: 'WiFi ~30m', color: 0x00e5a0,
+      specs: ['ESP32-S3 + OV2640','WiFi streaming','LD2410C mmWave'],
+      parts: [
+        { name: 'Freenove ESP32-S3 CAM', desc: 'OV2640 2MP, 8MB PSRAM, WiFi/BLE, MJPEG stream', price: 20 },
+        { name: 'HLK-LD2410C mmWave radar', desc: '24GHz FMCW, 5m range, static+motion, UART/GPIO', price: 8 },
+        { name: '3.7V 350mAh LiPo battery', desc: 'JST PH2.0, with protection board', price: 7 },
+        { name: 'GITRUAX IP67 clear-lid box', desc: '5.9"x5.9"x3.5", stainless latches', price: 18 },
+        { name: 'Wiring + desiccant + sealant kit', desc: 'Dupont wires, silica gel, silicone, glands', price: 6 },
+        { name: 'USB-C programming cable', desc: 'One-time initial flash', price: 5 },
+      ]
+    },
+    { id: 'sa-premium', name: 'Standalone sensor — premium', badge: 'Premium', badgeClass: 'badge-premium',
+      desc: 'ESP32-S3 with OV5640 5MP. Higher-res streaming for better AI accuracy. Premium enclosure.',
+      price: 82, battery: '1–4 mo', commRange: 'WiFi ~30m', color: 0x3b82f6,
+      specs: ['ESP32-S3 + OV5640 5MP','HD WiFi stream','LD2410C mmWave'],
+      parts: [
+        { name: 'Freenove ESP32-S3 CAM (OV5640)', desc: '5MP sensor, 16MB flash, RTSP capable', price: 28 },
+        { name: 'HLK-LD2410C mmWave radar', desc: '24GHz FMCW, 5m range, static+motion, UART/GPIO', price: 8 },
+        { name: 'INMP441 I2S digital microphone', desc: 'High-sensitivity splash/voice detection', price: 4 },
+        { name: '3.7V 500mAh LiPo battery', desc: 'Higher capacity for HD streaming', price: 9 },
+        { name: 'TICONN large IP67 clear-lid box', desc: '8.7"x6.7"x4.3", stainless hardware', price: 22 },
+        { name: 'Wiring + desiccant + standoffs kit', desc: 'Premium assembly consumables', price: 6 },
+        { name: 'USB-C programming cable', desc: 'One-time initial flash', price: 5 },
+      ]
+    }
+  ],
+  zigbee: [
+    { id: 'zb-cheap', name: 'Zigbee sensor — budget', badge: 'Budget', badgeClass: 'badge-budget',
+      desc: 'ESP32-C6 with Zigbee radio + OV2640 triggered snapshots. Ultra-low power, months of battery.',
+      price: 54, battery: '3–12 mo', commRange: '50–100m mesh', color: 0xa78bfa,
+      specs: ['ESP32-C6 Zigbee','OV2640 snapshots','LD2410C mmWave'],
+      parts: [
+        { name: 'ESP32-C6 dev board', desc: 'Zigbee/Thread/ESP-NOW, ultra-low-power', price: 11 },
+        { name: 'OV2640 camera module', desc: '2MP triggered snapshots, DVP interface', price: 6 },
+        { name: 'HLK-LD2410C mmWave radar', desc: '24GHz, 5m range, static+motion, UART', price: 8 },
+        { name: '3.7V 350mAh LiPo battery', desc: 'Months of deep-sleep operation', price: 7 },
+        { name: 'GITRUAX IP67 clear-lid box', desc: '5.9"x5.9"x3.5", pool splash proof', price: 18 },
+        { name: 'Wiring + desiccant + sealant', desc: 'Assembly consumables', price: 4 },
+      ]
+    },
+    { id: 'zb-premium', name: 'Zigbee sensor — premium', badge: 'Premium', badgeClass: 'badge-premium',
+      desc: 'ESP32-C6 premium + OV5640 5MP snapshots. External antenna for extended mesh range.',
+      price: 82, battery: '3–12 mo', commRange: '50–100m mesh', color: 0x3b82f6,
+      specs: ['ESP32-C6 ext. antenna','OV5640 5MP','LD2410C mmWave'],
+      parts: [
+        { name: 'ESP32-C6 board (premium, ext ant)', desc: 'Extra memory, U.FL external antenna port', price: 16 },
+        { name: 'OV5640 camera module', desc: '5MP high-res triggered snapshots', price: 22 },
+        { name: 'HLK-LD2410C mmWave radar', desc: '24GHz FMCW, 5m presence detection', price: 8 },
+        { name: '3.7V 350mAh LiPo battery', desc: 'Dedicated rechargeable per-sensor', price: 7 },
+        { name: 'TICONN large IP67 clear-lid box', desc: '8.7"x6.7"x4.3", stainless hardware', price: 22 },
+        { name: 'Wiring + desiccant + standoffs', desc: 'Premium assembly consumables', price: 7 },
+      ]
+    }
+  ],
+  lorawan: [
+    { id: 'lr-cheap', name: 'LoRa sensor — budget', badge: 'Budget', badgeClass: 'badge-budget',
+      desc: 'ESP32 + SX1262 LoRa radio. Ultra-long range with compressed snapshot payloads.',
+      price: 68, battery: '6–24 mo', commRange: '500m–5km', color: 0xf59e0b,
+      specs: ['ESP32 + SX1262','LoRa 915MHz','LD2410C mmWave'],
+      parts: [
+        { name: 'Heltec ESP32 LoRa V3 (SX1262)', desc: 'Integrated LoRa radio, 915MHz, OLED', price: 23 },
+        { name: 'OV2640 camera module', desc: '2MP compressed snapshots over LoRa', price: 6 },
+        { name: 'HLK-LD2410C mmWave radar', desc: '24GHz, 5m range, human presence', price: 8 },
+        { name: '3.7V 350mAh LiPo battery', desc: 'Excellent life with LoRa deep sleep', price: 7 },
+        { name: 'GITRUAX IP67 clear-lid box', desc: '5.9"x5.9"x3.5", pool splash proof', price: 18 },
+        { name: 'Wiring + desiccant + sealant', desc: 'Assembly consumables', price: 6 },
+      ]
+    },
+    { id: 'lr-premium', name: 'LoRa sensor — premium', badge: 'Premium', badgeClass: 'badge-premium',
+      desc: 'ESP32 LoRa + OV5640 5MP + external antenna. Maximum range and image fidelity.',
+      price: 95, battery: '6–18 mo', commRange: '1–5km+', color: 0x3b82f6,
+      specs: ['ESP32 + SX1262 ext ant','OV5640 5MP','LD2410C mmWave'],
+      parts: [
+        { name: 'Heltec ESP32 LoRa V3 (SX1262)', desc: 'Integrated LoRa, 915MHz, deep sleep', price: 23 },
+        { name: 'OV5640 camera module', desc: '5MP high-res compressed snapshots', price: 22 },
+        { name: 'HLK-LD2410C mmWave radar', desc: '24GHz FMCW, 5m presence detection', price: 8 },
+        { name: 'INMP441 I2S digital microphone', desc: 'Splash/voice detection trigger', price: 4 },
+        { name: '3.7V 500mAh LiPo battery', desc: 'Higher capacity for premium sensor load', price: 9 },
+        { name: 'TICONN large IP67 clear-lid box', desc: 'Premium stainless hardware', price: 22 },
+        { name: 'Wiring + desiccant + standoffs', desc: 'Premium assembly consumables', price: 7 },
+      ]
+    }
+  ]
+};
+
+// ======== STATE ========
+let state = {
+  step: 1,
+  hubType: null,       // 'none' | 'zigbee' | 'lorawan'
+  hubTier: null,       // object from HUB_TIERS
+  sensorTier: null,    // object from SENSOR_TIERS
+  qty: 4
+};
+
+// ======== THREE.JS ========
+let scene, camera, renderer, meshGroup, animId;
+
+function init3D() {
+  const canvas = document.getElementById('viewer3d');
+  const w = canvas.parentElement.clientWidth;
+  const h = 380;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
+  camera.position.set(4, 3, 5);
+  camera.lookAt(0, 0.2, 0);
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const d1 = new THREE.DirectionalLight(0xffffff, 0.7);
+  d1.position.set(4, 6, 4);
+  scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0x88aaff, 0.3);
+  d2.position.set(-3, 4, -3);
+  scene.add(d2);
+  meshGroup = new THREE.Group();
+  scene.add(meshGroup);
+  let isDrag = false, pX = 0;
+  canvas.addEventListener('pointerdown', e => { isDrag = true; pX = e.clientX; canvas.style.cursor='grabbing'; });
+  window.addEventListener('pointermove', e => { if (isDrag) { meshGroup.rotation.y += (e.clientX - pX) * 0.008; pX = e.clientX; }});
+  window.addEventListener('pointerup', () => { isDrag = false; document.getElementById('viewer3d').style.cursor='grab'; });
+  function animate() { requestAnimationFrame(animate); if(!isDrag) meshGroup.rotation.y += 0.002; renderer.render(scene, camera); }
+  animate();
+  window.addEventListener('resize', () => {
+    const nw = canvas.parentElement.clientWidth;
+    camera.aspect = nw / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(nw, h);
+  });
+}
+
+function build3DModel(accentColor) {
+  while(meshGroup.children.length) meshGroup.remove(meshGroup.children[0]);
+  const c = accentColor || 0x00e5a0;
+  // Enclosure - translucent
+  const encMat = new THREE.MeshStandardMaterial({ color: 0x8899aa, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+  const enc = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 1.8), encMat);
+  enc.position.y = 0.55;
+  meshGroup.add(enc);
+  // Lid - glass
+  const lidMat = new THREE.MeshStandardMaterial({ color: 0xaaddff, transparent: true, opacity: 0.15 });
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(2.58, 0.06, 1.78), lidMat);
+  lid.position.y = 1.13;
+  meshGroup.add(lid);
+  // Edges
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0x556677, linewidth: 1 });
+  meshGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(enc.geometry), edgeMat)).position.y = 0.55;
+  // PCB
+  const pcbMat = new THREE.MeshStandardMaterial({ color: 0x0d6e38 });
+  const pcb = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 1.0), pcbMat);
+  pcb.position.set(-0.25, 0.15, 0);
+  meshGroup.add(pcb);
+  // MCU chip
+  const chipMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e });
+  const chip = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 0.4), chipMat);
+  chip.position.set(-0.25, 0.22, 0);
+  meshGroup.add(chip);
+  // Accent LED on chip
+  const ledMat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.5 });
+  const led = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.03, 0.06), ledMat);
+  led.position.set(-0.05, 0.26, 0.1);
+  meshGroup.add(led);
+  // Camera module
+  const camMat = new THREE.MeshStandardMaterial({ color: 0x222233 });
+  const cam = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.22, 0.35), camMat);
+  cam.position.set(0.6, 0.22, 0);
+  meshGroup.add(cam);
+  // Camera lens
+  const lensMat = new THREE.MeshStandardMaterial({ color: 0x0a0a12, metalness: 0.9, roughness: 0.1 });
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 20), lensMat);
+  lens.rotation.x = Math.PI / 2;
+  lens.position.set(0.6, 0.36, 0);
+  meshGroup.add(lens);
+  // Lens iris accent
+  const irisMat = new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.3 });
+  const iris = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.02, 16), irisMat);
+  iris.rotation.x = Math.PI / 2;
+  iris.position.set(0.6, 0.365, 0);
+  meshGroup.add(iris);
+  // mmWave radar board
+  const rdrMat = new THREE.MeshStandardMaterial({ color: 0xb8860b });
+  const rdr = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.04, 0.32), rdrMat);
+  rdr.position.set(-0.7, 0.15, 0.5);
+  meshGroup.add(rdr);
+  // Radar chip
+  const rChip = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.03, 0.15), chipMat);
+  rChip.position.set(-0.7, 0.19, 0.5);
+  meshGroup.add(rChip);
+  // Battery
+  const battMat = new THREE.MeshStandardMaterial({ color: 0x2244aa });
+  const batt = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.38), battMat);
+  batt.position.set(0.6, 0.15, -0.55);
+  meshGroup.add(batt);
+  // Battery label
+  const lblMat = new THREE.MeshStandardMaterial({ color: 0x4466cc });
+  const lbl = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.01, 0.25), lblMat);
+  lbl.position.set(0.6, 0.26, -0.55);
+  meshGroup.add(lbl);
+  // Latches
+  const latchMat = new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.9, roughness: 0.2 });
+  [-0.75, 0.75].forEach(z => {
+    const l = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.07), latchMat);
+    l.position.set(1.26, 0.55, z);
+    meshGroup.add(l);
+    const l2 = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.07), latchMat);
+    l2.position.set(-1.26, 0.55, z);
+    meshGroup.add(l2);
+  });
+  // Cable gland
+  const glMat = new THREE.MeshStandardMaterial({ color: 0x444444 });
+  const gl = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.2, 12), glMat);
+  gl.rotation.z = Math.PI / 2;
+  gl.position.set(-1.38, 0.35, 0);
+  meshGroup.add(gl);
+  // Antenna
+  const antMat = new THREE.MeshStandardMaterial({ color: 0x333340 });
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), antMat);
+  ant.position.set(-0.9, 1.0, -0.6);
+  meshGroup.add(ant);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), antMat);
+  tip.position.set(-0.9, 1.35, -0.6);
+  meshGroup.add(tip);
+  // Desiccant packet
+  const desMat = new THREE.MeshStandardMaterial({ color: 0xeeddcc });
+  const des = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.08, 0.18), desMat);
+  des.position.set(-0.6, 0.08, -0.5);
+  meshGroup.add(des);
+  // Mounting standoffs
+  const stMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 });
+  [[-0.8,0,-0.3],[-0.8,0,0.3],[0.3,0,-0.3],[0.3,0,0.3]].forEach(p => {
+    const st = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.1, 8), stMat);
+    st.position.set(p[0], 0.05, p[2]);
+    meshGroup.add(st);
+  });
+  // Ground plane
+  const gpMat = new THREE.MeshStandardMaterial({ color: 0x1a1b24, transparent: true, opacity: 0.5 });
+  const gp = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), gpMat);
+  gp.rotation.x = -Math.PI / 2;
+  gp.position.y = -0.01;
+  meshGroup.add(gp);
+}
+
+// ======== RENDERING ========
+
+function renderStep1() {
+  const grid = document.getElementById('hub-type-grid');
+  grid.innerHTML = '';
+  HUB_TYPES.forEach(ht => {
+    const card = document.createElement('div');
+    card.className = 'option-card' + (state.hubType === ht.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="card-top"><span class="card-badge ${ht.badgeClass}">${ht.badge}</span><div class="card-radio"></div></div>
+      <h3>${ht.name}</h3>
+      <p class="card-desc">${ht.desc}</p>
+      <div class="card-specs">${ht.specs.map(s=>'<span class="spec-pill">'+s+'</span>').join('')}</div>
+    `;
+    card.onclick = () => {
+      state.hubType = ht.id;
+      state.hubTier = null;
+      state.sensorTier = null;
+      if (ht.id === 'none') {
+        state.step = 3;
+        showStep(3);
+      } else {
+        state.step = 2;
+        showStep(2);
+      }
+      renderStep1();
+      updateStepNav();
+    };
+    grid.appendChild(card);
+  });
+}
+
+function renderStep2() {
+  if (state.hubType === 'none') return;
+  const tiers = HUB_TIERS[state.hubType];
+  const grid = document.getElementById('hub-tier-grid');
+  grid.innerHTML = '';
+  const titles = { zigbee: 'Choose your Zigbee hub tier', lorawan: 'Choose your LoRaWAN gateway tier' };
+  const descs = { zigbee: 'Budget runs a minimal ESP32-C6 coordinator. Premium runs full Home Assistant on a Raspberry Pi 5.', lorawan: 'Budget uses a Pi Zero 2W. Premium uses a full Raspberry Pi 5 with maximum processing headroom.' };
+  document.getElementById('step2-title').textContent = titles[state.hubType];
+  document.getElementById('step2-desc').textContent = descs[state.hubType];
+  tiers.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'option-card' + (state.hubTier && state.hubTier.id === t.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="card-top"><span class="card-badge ${t.badgeClass}">${t.badge}</span><div class="card-radio"></div></div>
+      <h3>${t.name}</h3>
+      <p class="card-desc">${t.desc}</p>
+      <div style="margin-top:12px"><span class="card-price">$${t.price}</span><span class="card-price-note">one-time</span></div>
+      <div class="card-specs">${t.specs.map(s=>'<span class="spec-pill">'+s+'</span>').join('')}</div>
+    `;
+    card.onclick = () => {
+      state.hubTier = t;
+      state.sensorTier = null;
+      state.step = 3;
+      showStep(3);
+      renderStep2();
+      updateStepNav();
+    };
+    grid.appendChild(card);
+  });
+}
+
+function renderStep3() {
+  const tiers = SENSOR_TIERS[state.hubType];
+  const grid = document.getElementById('sensor-tier-grid');
+  grid.innerHTML = '';
+  const typeNames = { none: 'standalone WiFi', zigbee: 'Zigbee', lorawan: 'LoRaWAN' };
+  document.getElementById('step3-desc').textContent = 'Sensors compatible with your ' + typeNames[state.hubType] + ' architecture. Includes camera, mmWave radar, battery, and IP67 enclosure.';
+  tiers.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'option-card' + (state.sensorTier && state.sensorTier.id === t.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="card-top"><span class="card-badge ${t.badgeClass}">${t.badge}</span><div class="card-radio"></div></div>
+      <h3>${t.name}</h3>
+      <p class="card-desc">${t.desc}</p>
+      <div style="margin-top:12px"><span class="card-price">$${t.price}</span><span class="card-price-note">per unit</span></div>
+      <div class="card-specs">${t.specs.map(s=>'<span class="spec-pill">'+s+'</span>').join('')}</div>
+    `;
+    card.onclick = () => {
+      state.sensorTier = t;
+      state.step = 4;
+      showStep(4);
+      renderStep3();
+      renderReview();
+      updateStepNav();
+    };
+    grid.appendChild(card);
+  });
+}
+
+function renderReview() {
+  if (!state.sensorTier) return;
+  // 3D
+  build3DModel(state.sensorTier.color);
+  // Viewer title
+  const parts = [];
+  if (state.hubTier) parts.push(state.hubTier.name);
+  parts.push(state.sensorTier.name);
+  document.getElementById('viewer-title').innerHTML = parts.map(p => '<span>' + p + '</span>').join(' <span style="color:var(--text-tertiary)">+</span> ');
+  // BOM
+  const bomEl = document.getElementById('bom-section');
+  let html = '';
+  if (state.hubTier) {
+    html += '<div class="bom-group"><div class="bom-group-header"><h3>Hub — ' + state.hubTier.name + '</h3><span class="group-count">' + state.hubTier.parts.length + ' parts</span></div>';
+    state.hubTier.parts.forEach(p => {
+      html += '<div class="bom-row"><div><div class="bom-part-name">' + p.name + '</div><div class="bom-part-desc">' + p.desc + '</div></div><div class="bom-part-price">' + (p.price > 0 ? '$' + p.price : 'Included') + '</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '<div class="bom-group"><div class="bom-group-header"><h3>Sensor — ' + state.sensorTier.name + '</h3><span class="group-count">' + state.sensorTier.parts.length + ' parts</span></div>';
+  state.sensorTier.parts.forEach(p => {
+    html += '<div class="bom-row"><div><div class="bom-part-name">' + p.name + '</div><div class="bom-part-desc">' + p.desc + '</div></div><div class="bom-part-price">' + (p.price > 0 ? '$' + p.price : 'Included') + '</div></div>';
+  });
+  html += '</div>';
+  bomEl.innerHTML = html;
+  renderFleet();
+}
+
+function renderFleet() {
+  if (!state.sensorTier) return;
+  const q = state.qty;
+  const hubCost = state.hubTier ? state.hubTier.price : 0;
+  const sensorTotal = state.sensorTier.price * q;
+  const grand = hubCost + sensorTotal;
+  document.getElementById('fm-total').textContent = '$' + grand;
+  document.getElementById('fm-total-note').textContent = (hubCost > 0 ? '$' + hubCost + ' hub + $' + sensorTotal + ' sensors' : q + ' sensors, no hub');
+  const coverPerUnit = state.hubType === 'lorawan' ? 15 : 6;
+  const area = Math.round(coverPerUnit * q * coverPerUnit * 0.6);
+  document.getElementById('fm-coverage').textContent = '~' + area + ' m\u00B2';
+  document.getElementById('fm-battery').textContent = state.sensorTier.battery;
+  document.getElementById('fm-range').textContent = state.sensorTier.commRange;
+  document.getElementById('grand-total').textContent = '$' + grand;
+  const bdParts = [];
+  if (hubCost > 0) bdParts.push('Hub: $' + hubCost);
+  bdParts.push(q + '\u00D7 sensor @ $' + state.sensorTier.price + ' = $' + sensorTotal);
+  document.getElementById('total-breakdown').textContent = bdParts.join(' + ');
+}
+
+// ======== STEP NAVIGATION ========
+
+function showStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step-' + i);
+    if (i === n) { el.classList.remove('hidden'); el.style.animation = 'none'; el.offsetHeight; el.style.animation = 'fadeUp 0.4s ease'; }
+    else el.classList.add('hidden');
+  }
+  if (n === 1) renderStep1();
+  if (n === 2) renderStep2();
+  if (n === 3) renderStep3();
+  if (n === 4 && state.sensorTier) { renderReview(); if (!renderer) init3D(); build3DModel(state.sensorTier.color); }
+  state.step = n;
+  updateStepNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateStepNav() {
+  document.querySelectorAll('.step-tab').forEach(tab => {
+    const s = parseInt(tab.dataset.step);
+    tab.classList.remove('active', 'completed');
+    if (s === state.step) tab.classList.add('active');
+    if (s < state.step) tab.classList.add('completed');
+    // Hide step 2 tab if no hub
+    if (s === 2 && state.hubType === 'none') { tab.style.opacity = '0.3'; tab.style.pointerEvents = 'none'; }
+    else { tab.style.opacity = '1'; tab.style.pointerEvents = 'auto'; }
+  });
+}
+
+// Tab clicks for going back
+document.querySelectorAll('.step-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const s = parseInt(tab.dataset.step);
+    if (s < state.step) {
+      showStep(s);
+    }
+  });
+});
+
+// Qty slider
+document.getElementById('qty-slider').addEventListener('input', e => {
+  state.qty = parseInt(e.target.value);
+  document.getElementById('qty-val').textContent = state.qty;
+  renderFleet();
+});
+
+function resetConfig() {
+  state = { step: 1, hubType: null, hubTier: null, sensorTier: null, qty: 4 };
+  document.getElementById('qty-slider').value = 4;
+  document.getElementById('qty-val').textContent = '4';
+  showStep(1);
+}
+
+// Init
+renderStep1();
+updateStepNav();
+</script>
+</body>
+</html>

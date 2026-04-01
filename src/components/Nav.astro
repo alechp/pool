@@ -1,0 +1,25 @@
+---
+const pathname = Astro.url.pathname;
+---
+<nav class="max-w-[1120px] mx-auto px-8 pt-6 pb-2">
+  <div class="flex gap-0.5 bg-bg-surface rounded-lg p-1 border border-border inline-flex">
+    <a
+      href="/"
+      class:list={[
+        "px-5 py-2.5 rounded-md text-sm font-medium transition-all",
+        pathname === "/" ? "bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]" : "text-text-tertiary hover:text-text-secondary"
+      ]}
+    >
+      Summary
+    </a>
+    <a
+      href="/build"
+      class:list={[
+        "px-5 py-2.5 rounded-md text-sm font-medium transition-all",
+        pathname === "/build" ? "bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]" : "text-text-tertiary hover:text-text-secondary"
+      ]}
+    >
+      Build
+    </a>
+  </div>
+</nav>
