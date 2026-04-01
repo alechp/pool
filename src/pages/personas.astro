@@ -1,0 +1,45 @@
+---
+import Base from '../layouts/Base.astro';
+import PersonaGrid from '../components/PersonaGrid.tsx';
+import { db } from '../lib/db';
+import { personas, personaFactors, personaBundles, hubTypes, hubTiers, sensorTiers, hubTierParts, sensorTierParts } from '../lib/schema';
+import { loadCatalog } from '../lib/data';
+import type { Persona } from '../lib/data';
+
+const raw = {
+  hubTypes: db.select().from(hubTypes).all(),
+  hubTiers: db.select().from(hubTiers).all(),
+  sensorTiers: db.select().from(sensorTiers).all(),
+  hubParts: db.select().from(hubTierParts).all(),
+  sensorParts: db.select().from(sensorTierParts).all(),
+};
+const catalog = loadCatalog(raw);
+
+const personaRows = db.select().from(personas).all();
+const factorRows = db.select().from(personaFactors).all();
+const bundleRows = db.select().from(personaBundles).all();
+
+const personaData: Persona[] = personaRows.map(p => ({
+  ...p,
+  factors: factorRows
+    .filter(f => f.personaId === p.id)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map(f => ({ ...f, importance: f.importance as any })),
+  bundles: bundleRows
+    .filter(b => b.personaId === p.id)
+    .sort((a, b) => a.sortOrder - b.sortOrder),
+}));
+---
+<Base title="Pool Security — Personas">
+  <main class="max-w-[1120px] mx-auto px-8">
+    <section class="py-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+        Find your <span class="text-accent">fit</span>
+      </h1>
+      <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
+        Select a persona that matches your situation. We'll recommend the best hardware bundle for your needs.
+      </p>
+    </section>
+    <PersonaGrid client:load personas={personaData} catalog={catalog} />
+  </main>
+</Base>

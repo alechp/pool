@@ -12,6 +12,7 @@
     "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.39.0",
     "@astrojs/node": "10.0.4",
     "@astrojs/solid-js": "6.0.1",
     "@tailwindcss/vite": "4.2.2",
@@ -19,6 +20,7 @@
     "astro": "6.1.2",
     "better-sqlite3": "12.8.0",
     "drizzle-orm": "0.45.2",
+    "lucide-solid": "0.469.0",
     "solid-js": "1.9.12",
     "tailwindcss": "4.2.2",
     "three": "0.183.2"

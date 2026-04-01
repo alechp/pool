@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import CustomBuilder from '../../components/CustomBuilder.tsx';
+import { db } from '../../lib/db';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../../lib/schema';
+import { loadCatalog } from '../../lib/data';
+
+const raw = {
+  hubTypes: db.select().from(hubTypes).all(),
+  hubTiers: db.select().from(hubTiers).all(),
+  sensorTiers: db.select().from(sensorTiers).all(),
+  hubParts: db.select().from(hubTierParts).all(),
+  sensorParts: db.select().from(sensorTierParts).all(),
+};
+const catalog = loadCatalog(raw);
+---
+<Base title="Pool Security — Custom Build">
+  <main class="max-w-[1120px] mx-auto px-8">
+    <section class="py-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+        Custom <span class="text-accent">build</span>
+      </h1>
+      <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
+        Pick individual components for a bespoke setup. Mix and match parts across tiers.
+      </p>
+    </section>
+    <CustomBuilder client:load catalog={catalog} />
+  </main>
+</Base>

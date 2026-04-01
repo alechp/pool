@@ -1,6 +1,7 @@
-import { createSignal, createMemo, Show, For } from 'solid-js';
+import { createSignal, createMemo, createEffect, Show, For } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { Catalog, HubType, HubTier, SensorTier, Part } from '../lib/data';
+import { Check } from 'lucide-solid';
 import OptionCard from './OptionCard';
 import Viewer3D from './Viewer3D';
 import FleetSizer from './FleetSizer';
@@ -37,6 +38,37 @@ const Configurator: Component<Props> = (props) => {
   const [saveError, setSaveError] = createSignal<string | null>(null);
   const [configName, setConfigName] = createSignal('');
   const [showSave, setShowSave] = createSignal(false);
+  const [sessionId, setSessionId] = createSignal<number | null>(null);
+
+  // On mount, create session
+  createEffect(() => {
+    if (!sessionId()) {
+      fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'started', source: 'wizard' }),
+      }).then(r => r.json()).then(data => setSessionId(data.id)).catch(() => {});
+    }
+  });
+
+  // Track step progress
+  createEffect(() => {
+    const sid = sessionId();
+    const s = step();
+    if (!sid || s === 1) return;
+    const statusMap: Record<number, string> = { 2: 'step2', 3: 'step3', 4: 'completed' };
+    fetch(`/api/sessions/${sid}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: statusMap[s] || 'started',
+        hubTypeId: hubType(),
+        hubTierId: hubTier()?.id || null,
+        sensorTierId: sensorTier()?.id || null,
+        qty: qty(),
+      }),
+    }).catch(() => {});
+  });
 
   const filteredHubTiers = createMemo(() =>
     props.catalog.hubTiers.filter(t => t.hubTypeId === hubType())
@@ -134,6 +166,16 @@ const Configurator: Component<Props> = (props) => {
 
       setSaved(true);
       setShowSave(false);
+
+      // Track saved status (fire-and-forget)
+      const sid = sessionId();
+      if (sid) {
+        fetch(`/api/sessions/${sid}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'saved' }),
+        }).catch(() => {});
+      }
     } catch (e: any) {
       setSaveError(e.message);
     } finally {
@@ -164,15 +206,17 @@ const Configurator: Component<Props> = (props) => {
               } ${tab.num === 2 && hubType() === 'none' ? 'opacity-30 pointer-events-none' : ''}`}
               onClick={() => goToStep(tab.num)}
             >
-              <span class={`font-mono text-[11px] block mb-0.5 ${
-                step() === tab.num || tab.num < step() ? 'text-accent' : 'text-text-tertiary'
-              }`}>
-                {String(tab.num).padStart(2, '0')}
-              </span>
+              <div class="flex items-center justify-center gap-1.5">
+                <Show when={tab.num < step()}>
+                  <Check size={14} class="text-accent" />
+                </Show>
+                <span class={`font-mono text-[11px] block mb-0.5 ${
+                  step() === tab.num || tab.num < step() ? 'text-accent' : 'text-text-tertiary'
+                }`}>
+                  {String(tab.num).padStart(2, '0')}
+                </span>
+              </div>
               {tab.label}
-              {tab.num < step() && (
-                <span class="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full" />
-              )}
             </div>
           )}
         </For>

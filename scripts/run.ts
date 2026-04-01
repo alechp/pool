@@ -18,6 +18,16 @@ const YELLOW = "\x1b[33m";
 const MAGENTA = "\x1b[35m";
 const RED = "\x1b[31m";
 
+const PORT = 5187;
+
+const ROUTES = [
+  { label: 'Pricing', path: '/' },
+  { label: 'Quick Build', path: '/build' },
+  { label: 'Custom Build', path: '/build/custom' },
+  { label: 'Personas', path: '/personas' },
+  { label: 'API: Configs', path: '/api/configs' },
+];
+
 const options = [
   { key: "1", label: "Run everything",       desc: "DB setup + dev server",       color: GREEN },
   { key: "2", label: "Dev server",           desc: "astro dev",                   color: CYAN },
@@ -30,7 +40,7 @@ const options = [
 
 function banner() {
   console.log(`
-${GREEN}${BOLD}  PoolGuard${RESET} ${DIM}/ configurator${RESET}
+${GREEN}${BOLD}  PoolGuard v2${RESET} ${DIM}/ configurator${RESET}
 ${DIM}  ─────────────────────────${RESET}
 `);
 }
@@ -43,26 +53,56 @@ function menu() {
   console.log();
 }
 
+function printRouteTable() {
+  const base = `http://localhost:${PORT}`;
+  const labelW = 17;  // width for label column
+  const urlW = 37;    // width for URL column
+  const totalW = labelW + urlW + 3; // +3 for separators
+
+  const pad = (s: string, w: number) => s + ' '.repeat(Math.max(0, w - s.length));
+
+  console.log();
+  // Top border
+  console.log(`${DIM}\u250c${'\u2500'.repeat(totalW)}\u2510${RESET}`);
+  // Title row
+  console.log(`${DIM}\u2502${RESET}  ${GREEN}${BOLD}PoolGuard v2${RESET}${' '.repeat(totalW - 14 - base.length)}${CYAN}${base}${RESET}  ${DIM}\u2502${RESET}`);
+  // Separator
+  console.log(`${DIM}\u251c${'\u2500'.repeat(labelW + 2)}\u252c${'\u2500'.repeat(urlW + 2)}\u2524${RESET}`);
+  // Route rows
+  for (const route of ROUTES) {
+    const url = `${base}${route.path}`;
+    console.log(
+      `${DIM}\u2502${RESET}  ${CYAN}${pad(route.label, labelW)}${RESET}${DIM}\u2502${RESET}  ${GREEN}${pad(url, urlW)}${RESET}${DIM}\u2502${RESET}`
+    );
+  }
+  // Bottom separator
+  console.log(`${DIM}\u251c${'\u2500'.repeat(labelW + 2)}\u2534${'\u2500'.repeat(urlW + 2)}\u2524${RESET}`);
+  // Footer
+  console.log(`${DIM}\u2502${RESET}  Press ${BOLD}Ctrl+C${RESET} to stop${' '.repeat(totalW - 24)}${DIM}\u2502${RESET}`);
+  console.log(`${DIM}\u2514${'\u2500'.repeat(totalW)}\u2518${RESET}`);
+  console.log();
+}
+
 async function dbSetup() {
-  console.log(`\n${YELLOW}${BOLD}▸ Generating migrations...${RESET}`);
+  console.log(`\n${YELLOW}${BOLD}\u25b8 Generating migrations...${RESET}`);
   await $`npx drizzle-kit generate`.quiet();
 
-  console.log(`${YELLOW}${BOLD}▸ Running migrations...${RESET}`);
+  console.log(`${YELLOW}${BOLD}\u25b8 Running migrations...${RESET}`);
   await $`npx drizzle-kit migrate`.quiet();
 
-  console.log(`${YELLOW}${BOLD}▸ Seeding database...${RESET}`);
+  console.log(`${YELLOW}${BOLD}\u25b8 Seeding database...${RESET}`);
   await $`npx tsx scripts/seed.ts`.quiet();
 
-  console.log(`${GREEN}${BOLD}✓ Database ready${RESET}\n`);
+  console.log(`${GREEN}${BOLD}\u2713 Database ready${RESET}\n`);
 }
 
 async function ensureDeps() {
   if (!existsSync(resolve(projectRoot, "node_modules"))) {
-    console.log(`${CYAN}${BOLD}▸ Installing dependencies...${RESET}`);
+    console.log(`${CYAN}${BOLD}\u25b8 Installing dependencies...${RESET}`);
     await $`sfw npm ci`.quiet();
     // Rebuild native modules (better-sqlite3)
     await $`cd node_modules/better-sqlite3 && npx --yes prebuild-install`.quiet();
-    console.log(`${GREEN}${BOLD}✓ Dependencies installed${RESET}\n`);
+    console.log(`${GREEN}${BOLD}\u2713 Dependencies installed${RESET}\n`);
   }
 }
 
@@ -75,36 +115,39 @@ async function ensureDb() {
 async function runAll() {
   await ensureDeps();
   await dbSetup();
-  console.log(`${CYAN}${BOLD}▸ Starting dev server...${RESET}\n`);
+  printRouteTable();
+  console.log(`${CYAN}${BOLD}\u25b8 Starting dev server...${RESET}\n`);
   await $`npx astro dev`;
 }
 
 async function devServer() {
   await ensureDeps();
   await ensureDb();
-  console.log(`${CYAN}${BOLD}▸ Starting dev server...${RESET}\n`);
+  printRouteTable();
+  console.log(`${CYAN}${BOLD}\u25b8 Starting dev server...${RESET}\n`);
   await $`npx astro dev`;
 }
 
 async function buildProd() {
   await ensureDeps();
   await ensureDb();
-  console.log(`${MAGENTA}${BOLD}▸ Building for production...${RESET}\n`);
+  console.log(`${MAGENTA}${BOLD}\u25b8 Building for production...${RESET}\n`);
   await $`npx astro build`;
-  console.log(`\n${GREEN}${BOLD}✓ Build complete${RESET}`);
+  console.log(`\n${GREEN}${BOLD}\u2713 Build complete${RESET}`);
 }
 
 async function previewProd() {
   await ensureDeps();
-  console.log(`${MAGENTA}${BOLD}▸ Starting preview server...${RESET}\n`);
+  printRouteTable();
+  console.log(`${MAGENTA}${BOLD}\u25b8 Starting preview server...${RESET}\n`);
   await $`npx astro preview`;
 }
 
 async function seedOnly() {
   await ensureDeps();
-  console.log(`${YELLOW}${BOLD}▸ Seeding database...${RESET}`);
+  console.log(`${YELLOW}${BOLD}\u25b8 Seeding database...${RESET}`);
   await $`npx tsx scripts/seed.ts`.quiet();
-  console.log(`${GREEN}${BOLD}✓ Seed complete${RESET}`);
+  console.log(`${GREEN}${BOLD}\u2713 Seed complete${RESET}`);
 }
 
 // Non-interactive mode: accept choice as CLI arg
@@ -132,7 +175,7 @@ if (arg) {
 banner();
 menu();
 
-process.stdout.write(`  ${BOLD}Choose [1-6, q]${RESET} ${DIM}(default: 1)${RESET} → `);
+process.stdout.write(`  ${BOLD}Choose [1-6, q]${RESET} ${DIM}(default: 1)${RESET} \u2192 `);
 
 for await (const line of console) {
   const choice = line.trim() || "1";
