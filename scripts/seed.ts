@@ -7,7 +7,16 @@ const sqlite = new Database('sqlite.db');
 sqlite.pragma('foreign_keys = ON');
 const db = drizzle(sqlite);
 
-// Clear existing data
+// Clear existing data (order respects foreign key constraints)
+db.run(sql`DELETE FROM persona_bundles`);
+db.run(sql`DELETE FROM persona_factors`);
+db.run(sql`DELETE FROM personas`);
+db.run(sql`DELETE FROM custom_build_parts`);
+db.run(sql`DELETE FROM custom_builds`);
+db.run(sql`DELETE FROM preselections`);
+db.run(sql`DELETE FROM build_sessions`);
+db.run(sql`DELETE FROM chat_sessions`);
+db.run(sql`DELETE FROM bom_links`);
 db.run(sql`DELETE FROM sensor_tier_parts`);
 db.run(sql`DELETE FROM hub_tier_parts`);
 db.run(sql`DELETE FROM saved_configs`);
@@ -218,10 +227,6 @@ db.insert(sensorTierParts).values([
 ]).run();
 
 // Personas
-db.run(sql`DELETE FROM persona_bundles`);
-db.run(sql`DELETE FROM persona_factors`);
-db.run(sql`DELETE FROM personas`);
-
 db.insert(personas).values([
   { id: 'family-suburban', name: 'Family Home', tagline: 'Kids, pets, peace of mind', description: 'Typical suburban home with a backyard pool. Primary concern is child safety with fast alert times.', icon: 'Home', sortOrder: 1 },
   { id: 'airbnb-host', name: 'Vacation Rental', tagline: 'Protect guests, protect liability', description: 'Short-term rental property where the owner may not be on-site. Liability protection and guest safety are key.', icon: 'Palmtree', sortOrder: 2 },
