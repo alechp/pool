@@ -3,10 +3,11 @@ import Base from '../layouts/Base.astro';
 import BuildReview from '../components/BuildReview.tsx';
 import SelectableCard from '../components/SelectableCard.astro';
 import HardwareThumbnail from '../components/HardwareThumbnail.tsx';
+import PartDetailRow from '../components/PartDetailRow.tsx';
 import { db } from '../lib/db';
 import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
-import { getHubVisualVariant, getPartVisualVariant, getSensorVisualVariant } from '../lib/hardwareVisuals';
+import { getHubVisualVariant, getSensorVisualVariant } from '../lib/hardwareVisuals';
 
 const raw = {
   hubTypes: db.select().from(hubTypes).all(),
@@ -280,20 +281,7 @@ const stepTabs = [
                 </span>
               </div>
               {hubParts.map((part) => (
-                <div class="grid grid-cols-[88px_1fr_auto] gap-4 py-3 border-b border-white/3 last:border-b-0 items-center">
-                  <HardwareThumbnail
-                    variant={getPartVisualVariant(part.name)}
-                    title={part.name}
-                    class="aspect-[4/3]"
-                  />
-                  <div class="min-w-0">
-                    <div class="text-sm font-medium">{part.name}</div>
-                    <div class="text-xs text-text-tertiary mt-0.5">{part.description}</div>
-                  </div>
-                  <div class="font-mono text-sm font-medium text-right whitespace-nowrap">
-                    ${part.price}
-                  </div>
-                </div>
+                <PartDetailRow client:load part={part} sectionLabel={`Hub component for ${selectedHubTier.name}`} />
               ))}
             </div>
           )}
@@ -306,20 +294,7 @@ const stepTabs = [
               </span>
               </div>
               {sensorParts.map((part) => (
-              <div class="grid grid-cols-[88px_1fr_auto] gap-4 py-3 border-b border-white/3 last:border-b-0 items-center">
-                <HardwareThumbnail
-                  variant={getPartVisualVariant(part.name)}
-                  title={part.name}
-                  class="aspect-[4/3]"
-                />
-                <div class="min-w-0">
-                  <div class="text-sm font-medium">{part.name}</div>
-                  <div class="text-xs text-text-tertiary mt-0.5">{part.description}</div>
-                </div>
-                <div class="font-mono text-sm font-medium text-right whitespace-nowrap">
-                  ${part.price}
-                </div>
-              </div>
+              <PartDetailRow client:load part={part} sectionLabel={`Sensor component for ${selectedSensorTier.name}`} />
             ))}
           </div>
         </div>
