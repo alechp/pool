@@ -5,14 +5,139 @@ import MarkdownMessage from './MarkdownMessage';
 import HardwareThumbnail from './HardwareThumbnail';
 import { getHubVisualVariant, getSensorVisualVariant } from '../lib/hardwareVisuals';
 
+const ADVISOR_STORAGE_KEY = 'poolguard-ai-advisor';
+const MIN_WIDTH = 380;
+const MAX_WIDTH = 760;
+
+type AdvisorConversation = {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  sessionId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  paths: string[];
+  recommendationCount: number;
+};
+
+type AdvisorState = {
+  open: boolean;
+  highContrast: boolean;
+  width: number;
+  activeConversationId: string | null;
+  conversations: AdvisorConversation[];
+};
+
+function clampWidth(value: number) {
+  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, value));
+}
+
+function createConversation(seed?: string): AdvisorConversation {
+  const now = new Date().toISOString();
+  const title = seed?.trim() ? seed.trim().slice(0, 56) : 'New advisor thread';
+  return {
+    id: crypto.randomUUID(),
+    title,
+    messages: [],
+    sessionId: null,
+    createdAt: now,
+    updatedAt: now,
+    paths: [],
+    recommendationCount: 0,
+  };
+}
+
+function loadAdvisorState(): AdvisorState {
+  if (typeof localStorage === 'undefined') {
+    return { open: false, highContrast: false, width: MIN_WIDTH, activeConversationId: null, conversations: [] };
+  }
+
+  try {
+    const raw = localStorage.getItem(ADVISOR_STORAGE_KEY);
+    if (!raw) {
+      return { open: false, highContrast: false, width: MIN_WIDTH, activeConversationId: null, conversations: [] };
+    }
+    const parsed = JSON.parse(raw) as Partial<AdvisorState>;
+    return {
+      open: Boolean(parsed.open),
+      highContrast: Boolean(parsed.highContrast),
+      width: clampWidth(typeof parsed.width === 'number' ? parsed.width : MIN_WIDTH),
+      activeConversationId: parsed.activeConversationId ?? null,
+      conversations: Array.isArray(parsed.conversations) ? parsed.conversations : [],
+    };
+  } catch {
+    return { open: false, highContrast: false, width: MIN_WIDTH, activeConversationId: null, conversations: [] };
+  }
+}
+
+function saveAdvisorState(state: AdvisorState) {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(ADVISOR_STORAGE_KEY, JSON.stringify(state));
+}
+
 const ChatSidebar: Component = () => {
   const [open, setOpen] = createSignal(false);
-  const [messages, setMessages] = createSignal<ChatMessage[]>([]);
+  const [highContrast, setHighContrast] = createSignal(false);
+  const [sidebarWidth, setSidebarWidth] = createSignal(MIN_WIDTH);
+  const [conversations, setConversations] = createSignal<AdvisorConversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = createSignal<string | null>(null);
   const [input, setInput] = createSignal('');
   const [loading, setLoading] = createSignal(false);
-  const [sessionId, setSessionId] = createSignal<number | null>(null);
+  const [historyOpen, setHistoryOpen] = createSignal(true);
 
   let messagesEndRef: HTMLDivElement | undefined;
+  let isResizing = false;
+
+  const activeConversation = () =>
+    conversations().find((conversation) => conversation.id === activeConversationId()) ?? null;
+
+  const messages = () => activeConversation()?.messages ?? [];
+  const sessionId = () => activeConversation()?.sessionId ?? null;
+
+  function updateActiveConversation(updater: (conversation: AdvisorConversation) => AdvisorConversation) {
+    const id = activeConversationId();
+    if (!id) return;
+    setConversations((current) =>
+      current.map((conversation) => (conversation.id === id ? updater(conversation) : conversation))
+    );
+  }
+
+  function persistState() {
+    saveAdvisorState({
+      open: open(),
+      highContrast: highContrast(),
+      width: sidebarWidth(),
+      activeConversationId: activeConversationId(),
+      conversations: conversations(),
+    });
+  }
+
+  function ensureActiveConversation(seed?: string) {
+    const existing = activeConversation();
+    if (existing) return existing;
+    const conversation = createConversation(seed);
+    setConversations([conversation, ...conversations()]);
+    setActiveConversationId(conversation.id);
+    return conversation;
+  }
+
+  function touchRouteContext(pathname: string) {
+    const conversation = ensureActiveConversation();
+    if (conversation.paths[conversation.paths.length - 1] === pathname) return;
+    updateActiveConversation((current) => ({
+      ...current,
+      paths: [...current.paths, pathname],
+      updatedAt: new Date().toISOString(),
+    }));
+  }
+
+  function createNewConversation(seed?: string) {
+    const conversation = createConversation(seed);
+    setConversations((current) => [conversation, ...current].slice(0, 12));
+    setActiveConversationId(conversation.id);
+    setInput('');
+    setLoading(false);
+  }
 
   // Auto-scroll to bottom when messages change
   createEffect(() => {
@@ -27,29 +152,77 @@ const ChatSidebar: Component = () => {
   // Close sidebar on Escape key
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Escape' && open()) {
+      if (isResizing) {
+        isResizing = false;
+        return;
+      }
       setOpen(false);
     }
   }
 
+  function handleResizeMove(e: PointerEvent) {
+    if (!isResizing) return;
+    setSidebarWidth(clampWidth(window.innerWidth - e.clientX));
+  }
+
+  function stopResizing() {
+    isResizing = false;
+    document.body.style.userSelect = '';
+  }
+
+  function startResizing(e: PointerEvent) {
+    isResizing = true;
+    document.body.style.userSelect = 'none';
+    handleResizeMove(e);
+  }
+
   onMount(() => {
+    const stored = loadAdvisorState();
+    setOpen(stored.open);
+    setHighContrast(stored.highContrast);
+    setSidebarWidth(stored.width);
+    setConversations(stored.conversations);
+    setActiveConversationId(stored.activeConversationId);
+
+    if (!stored.conversations.length) {
+      const conversation = createConversation();
+      setConversations([conversation]);
+      setActiveConversationId(conversation.id);
+    }
+
+    touchRouteContext(window.location.pathname);
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('pointermove', handleResizeMove);
+    window.addEventListener('pointerup', stopResizing);
     onCleanup(() => {
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('pointermove', handleResizeMove);
+      window.removeEventListener('pointerup', stopResizing);
     });
+  });
+
+  createEffect(() => {
+    persistState();
   });
 
   async function sendMessage() {
     const text = input().trim();
     if (!text || loading()) return;
 
+    const conversation = ensureActiveConversation(text);
     const userMessage: ChatMessage = { role: 'user', content: text };
-    setMessages((prev) => [...prev, userMessage]);
+    updateActiveConversation((current) => ({
+      ...current,
+      title: current.messages.length === 0 ? text.slice(0, 56) : current.title,
+      messages: [...current.messages, userMessage],
+      updatedAt: new Date().toISOString(),
+    }));
     setInput('');
     setLoading(true);
 
     try {
       // Build message history for the API (without recommendation metadata)
-      const apiMessages = messages().map((m) => ({
+      const apiMessages = [...conversation.messages, userMessage].map((m) => ({
         role: m.role,
         content: m.content,
       }));
@@ -59,7 +232,7 @@ const ChatSidebar: Component = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: apiMessages,
-          sessionId: sessionId(),
+          sessionId: conversation.sessionId,
         }),
       });
 
@@ -71,17 +244,23 @@ const ChatSidebar: Component = () => {
         recommendation: data.recommendation || undefined,
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
-
-      if (data.sessionId && !sessionId()) {
-        setSessionId(data.sessionId);
-      }
+      updateActiveConversation((current) => ({
+        ...current,
+        messages: [...current.messages, assistantMessage],
+        sessionId: data.sessionId ?? current.sessionId,
+        recommendationCount: current.recommendationCount + (assistantMessage.recommendation ? 1 : 0),
+        updatedAt: new Date().toISOString(),
+      }));
     } catch {
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: 'Sorry, something went wrong. Please try again.',
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      updateActiveConversation((current) => ({
+        ...current,
+        messages: [...current.messages, errorMessage],
+        updatedAt: new Date().toISOString(),
+      }));
     } finally {
       setLoading(false);
     }
@@ -119,28 +298,103 @@ const ChatSidebar: Component = () => {
 
       {/* Sidebar panel */}
       <Show when={open()}>
-        <div class="fixed right-0 top-0 h-full w-[380px] max-w-[90vw] z-50 bg-bg-surface border-l border-border flex flex-col animate-[slide-in-right_0.2s_ease]">
+        <div
+          class={`fixed right-0 top-0 h-full max-w-[92vw] z-50 border-l flex flex-col animate-[slide-in-right_0.2s_ease] ${
+            highContrast()
+              ? 'bg-[#0f1117] border-white/12 shadow-[-18px_0_50px_rgba(0,0,0,0.4)]'
+              : 'bg-bg-surface border-border'
+          }`}
+          style={{ width: `${sidebarWidth()}px` }}
+        >
+          <button
+            type="button"
+            aria-label="Resize AI Advisor"
+            class="absolute left-0 top-0 h-full w-3 -translate-x-1/2 cursor-col-resize bg-transparent"
+            onPointerDown={startResizing}
+          >
+            <span class="absolute left-1/2 top-1/2 h-14 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10" />
+          </button>
           {/* Header */}
-          <div class="flex items-center justify-between p-4 border-b border-border">
-            <h3 class="font-semibold text-sm text-text-primary">AI Advisor</h3>
-            <button
-              onClick={() => setOpen(false)}
-              class="text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer p-1"
-            >
-              {/* X close icon */}
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+          <div class={`p-4 border-b ${highContrast() ? 'border-white/10' : 'border-border'}`}>
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <h3 class="font-semibold text-sm text-text-primary">AI Advisor</h3>
+                <div class="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+                  Persistent workspace
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <button
+                  onClick={() => setHighContrast(!highContrast())}
+                  class={`rounded-lg px-2 py-1 text-[11px] font-medium transition-colors ${
+                    highContrast()
+                      ? 'bg-accent/18 text-accent'
+                      : 'bg-white/6 text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  Contrast
+                </button>
+                <button
+                  onClick={() => createNewConversation()}
+                  class="rounded-lg bg-white/6 px-2 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary"
+                >
+                  New
+                </button>
+                <button
+                  onClick={() => setOpen(false)}
+                  class="text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer p-1"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M4 4l8 8M12 4l-8 8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mt-3 rounded-xl border border-white/6 bg-black/12">
+              <button
+                onClick={() => setHistoryOpen(!historyOpen())}
+                class="flex w-full items-center justify-between px-3 py-2 text-left"
               >
-                <path d="M4 4l8 8M12 4l-8 8" />
-              </svg>
-            </button>
+                <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+                  History
+                </div>
+                <div class="text-[11px] text-text-tertiary">{conversations().length} threads</div>
+              </button>
+              <Show when={historyOpen()}>
+                <div class="max-h-44 overflow-y-auto border-t border-white/6 px-2 py-2 space-y-1">
+                  <For each={conversations()}>
+                    {(conversation) => (
+                      <button
+                        onClick={() => setActiveConversationId(conversation.id)}
+                        class={`block w-full rounded-lg px-3 py-2 text-left transition-colors ${
+                          activeConversationId() === conversation.id
+                            ? 'bg-accent/10 text-text-primary'
+                            : 'hover:bg-white/5 text-text-secondary'
+                        }`}
+                      >
+                        <div class="truncate text-[13px] font-medium">
+                          {conversation.title}
+                        </div>
+                        <div class="mt-1 flex items-center justify-between gap-2 text-[11px] text-text-tertiary">
+                          <span>{conversation.messages.length} msgs</span>
+                          <span>{conversation.recommendationCount} builds</span>
+                          <span class="truncate">{conversation.paths[conversation.paths.length - 1] || '/'}</span>
+                        </div>
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </div>
           </div>
 
           {/* Messages area */}
@@ -153,7 +407,7 @@ const ChatSidebar: Component = () => {
                 </div>
                 <div class="text-text-tertiary text-xs leading-relaxed">
                   I can help you choose the right hub, sensors, and configuration
-                  based on your pool size, budget, and safety needs.
+                  based on your pool size, budget, and safety needs. This thread and its build suggestions persist across page changes.
                 </div>
               </div>
             </Show>
@@ -236,7 +490,7 @@ const ChatSidebar: Component = () => {
           </div>
 
           {/* Input area */}
-          <div class="p-4 border-t border-border">
+          <div class={`p-4 border-t ${highContrast() ? 'border-white/10' : 'border-border'}`}>
             <div class="flex gap-2">
               <input
                 type="text"
