@@ -1,6 +1,9 @@
 import { createSignal, Show, For, createEffect, onCleanup, onMount } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { ChatMessage } from '../lib/data';
+import MarkdownMessage from './MarkdownMessage';
+import HardwareThumbnail from './HardwareThumbnail';
+import { getHubVisualVariant, getSensorVisualVariant } from '../lib/hardwareVisuals';
 
 const ChatSidebar: Component = () => {
   const [open, setOpen] = createSignal(false);
@@ -162,27 +165,59 @@ const ChatSidebar: Component = () => {
                     class={`rounded-lg p-3 text-sm leading-relaxed ${
                       msg.role === 'user'
                         ? 'bg-bg-elevated text-text-primary'
-                        : 'text-text-secondary'
+                        : 'border border-white/6 bg-bg-card/85 text-text-secondary shadow-[0_12px_30px_rgba(0,0,0,0.2)]'
                     }`}
                   >
-                    {msg.content}
+                    <Show
+                      when={msg.role === 'assistant'}
+                      fallback={<div class="whitespace-pre-wrap">{msg.content}</div>}
+                    >
+                      <MarkdownMessage content={msg.content} />
+                    </Show>
                   </div>
 
                   {/* Recommendation card */}
                   <Show when={msg.recommendation}>
-                    <div class="mt-2 p-4 bg-bg-card border border-accent/30 rounded-xl">
-                      <div class="font-mono text-[11px] text-accent uppercase tracking-wider mb-2">
-                        Recommended Build
+                    <div class="mt-3 overflow-hidden rounded-2xl border border-accent/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))]">
+                      <div class="grid grid-cols-2 gap-0 border-b border-white/8 bg-bg-card/65 p-3">
+                        <HardwareThumbnail
+                          variant={getHubVisualVariant(msg.recommendation!.hubTierId ?? null)}
+                          title={msg.recommendation!.hubTierName || msg.recommendation!.hubTypeName || 'Gateway'}
+                          class="aspect-[4/3]"
+                        />
+                        <HardwareThumbnail
+                          variant={getSensorVisualVariant(msg.recommendation!.sensorTierId)}
+                          title={msg.recommendation!.sensorTierName || 'Sensor'}
+                          class="aspect-[4/3]"
+                        />
                       </div>
-                      <div class="text-sm text-text-secondary mb-2">
-                        {msg.recommendation!.reasoning}
+                      <div class="p-4">
+                        <div class="mb-3 flex items-center justify-between gap-3">
+                          <div class="font-mono text-[11px] uppercase tracking-wider text-accent">
+                            Recommended Build
+                          </div>
+                          <div class="rounded-full border border-accent/20 bg-accent/8 px-2.5 py-1 font-mono text-[11px] text-text-primary">
+                            x{msg.recommendation!.qty} sensors
+                          </div>
+                        </div>
+                        <div class="mb-2 grid gap-2">
+                          <div class="rounded-xl border border-white/6 bg-black/12 px-3 py-2 text-[13px] text-text-secondary">
+                            <span class="text-text-primary">{msg.recommendation!.hubTierName || msg.recommendation!.hubTypeName}</span>
+                          </div>
+                          <div class="rounded-xl border border-white/6 bg-black/12 px-3 py-2 text-[13px] text-text-secondary">
+                            <span class="text-text-primary">{msg.recommendation!.sensorTierName}</span>
+                          </div>
+                        </div>
+                        <div class="mb-4">
+                          <MarkdownMessage content={msg.recommendation!.reasoning} class="text-[13px]" />
+                        </div>
+                        <a
+                          href={`/build?hub_type=${msg.recommendation!.hubTypeId}&hub_tier=${msg.recommendation!.hubTierId || ''}&sensor_tier=${msg.recommendation!.sensorTierId}`}
+                          class="inline-flex items-center rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim"
+                        >
+                          Apply this build →
+                        </a>
                       </div>
-                      <a
-                        href={`/build?hub_type=${msg.recommendation!.hubTypeId}&hub_tier=${msg.recommendation!.hubTierId || ''}&sensor_tier=${msg.recommendation!.sensorTierId}`}
-                        class="inline-block px-4 py-2 bg-accent text-bg-deep text-sm font-semibold rounded-lg hover:bg-accent-dim transition-colors"
-                      >
-                        Apply this build &rarr;
-                      </a>
                     </div>
                   </Show>
                 </div>

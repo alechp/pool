@@ -54,6 +54,7 @@ When recommending a configuration, include a JSON block in your response like th
 \`\`\`
 
 Consider: pool size, distance from house, budget, number of children, notification preferences, and power availability.
+Format the visible response in clean GitHub-flavored Markdown with short headings or bullets when useful.
 Keep responses concise (2-4 sentences) unless asked for detail.`;
 
     // Call Claude API
@@ -94,6 +95,20 @@ Keep responses concise (2-4 sentences) unless asked for detail.`;
     if (recMatch) {
       try {
         recommendation = JSON.parse(recMatch[1].trim());
+        if (recommendation?.hubTypeId && recommendation?.sensorTierId) {
+          const hubType = db.select().from(hubTypes).where(eq(hubTypes.id, recommendation.hubTypeId)).get();
+          const hubTier = recommendation.hubTierId
+            ? db.select().from(hubTiers).where(eq(hubTiers.id, recommendation.hubTierId)).get()
+            : null;
+          const sensorTier = db.select().from(sensorTiers).where(eq(sensorTiers.id, recommendation.sensorTierId)).get();
+
+          recommendation = {
+            ...recommendation,
+            hubTypeName: hubType?.name ?? recommendation.hubTypeId,
+            hubTierName: hubTier?.name ?? null,
+            sensorTierName: sensorTier?.name ?? recommendation.sensorTierId,
+          };
+        }
       } catch {
         // Recommendation parsing failed, continue without it
       }

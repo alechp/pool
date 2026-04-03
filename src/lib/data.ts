@@ -120,6 +120,9 @@ export type ChatMessage = {
     sensorTierId: string;
     qty: number;
     reasoning: string;
+    hubTypeName?: string;
+    hubTierName?: string | null;
+    sensorTierName?: string;
   };
 };
 
