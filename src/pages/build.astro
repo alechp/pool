@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import Viewer3D from '../components/Viewer3D.tsx';
 import BuildReview from '../components/BuildReview.tsx';
 import SelectableCard from '../components/SelectableCard.astro';
 import { db } from '../lib/db';
@@ -55,6 +54,17 @@ function buildHref({
 
 const hubParts = selectedHubTier ? catalog.hubParts[selectedHubTier.id] ?? [] : [];
 const sensorParts = selectedSensorTier ? catalog.sensorParts[selectedSensorTier.id] ?? [] : [];
+const previewSpecs = selectedSensorTier
+  ? [
+      { label: 'Sensor tier', value: selectedSensorTier.badge },
+      { label: 'Battery', value: selectedSensorTier.battery },
+      { label: 'Range', value: selectedSensorTier.commRange },
+      {
+        label: 'Architecture',
+        value: selectedHubType?.badge ?? 'Standalone',
+      },
+    ]
+  : [];
 const stepTabs = [
   { num: 1, label: 'Hub type', href: '/build', disabled: false },
   {
@@ -210,7 +220,50 @@ const stepTabs = [
           <p class="text-sm text-text-secondary mt-1">Complete bill of materials with on-demand 3D preview. Adjust fleet size below.</p>
         </div>
 
-        <Viewer3D client:visible accentColor={selectedSensorTier.accentColor} visible={true} />
+        <section class="my-12">
+          <div class="bg-bg-surface border border-border rounded-xl overflow-hidden">
+            <div
+              class="relative min-h-[380px] px-8 py-10"
+              style={`background:
+                radial-gradient(circle at 22% 18%, ${selectedSensorTier.accentColor}22, transparent 34%),
+                radial-gradient(circle at 78% 28%, rgba(255,255,255,0.08), transparent 30%),
+                linear-gradient(135deg, rgba(255,255,255,0.03), rgba(10,11,15,0.95));`}
+            >
+              <div class="absolute inset-0 opacity-40" style="background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 28px 28px;"></div>
+              <div class="relative z-10 grid md:grid-cols-[1.1fr_0.9fr] gap-8 items-center">
+                <div>
+                  <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent mb-2">System preview</div>
+                  <h3 class="text-2xl font-semibold tracking-tight mb-3">
+                    {selectedSensorTier.name}
+                    {selectedHubTier ? ` with ${selectedHubTier.name}` : ' in standalone mode'}
+                  </h3>
+                  <p class="text-sm text-text-secondary max-w-[40rem]">
+                    The default build flow now renders this review server-side. Heavy interactive visualization is no longer blocking initial paint or step navigation.
+                  </p>
+                  <div class="grid sm:grid-cols-2 gap-3 mt-6">
+                    {previewSpecs.map((item) => (
+                      <div class="bg-bg-card/70 border border-border rounded-lg px-4 py-3">
+                        <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary mb-1">{item.label}</div>
+                        <div class="text-sm font-medium">{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div class="relative h-[280px]">
+                  <div class="absolute inset-x-10 bottom-0 h-8 rounded-full blur-2xl" style={`background: ${selectedSensorTier.accentColor}33;`}></div>
+                  <div class="absolute left-1/2 top-7 -translate-x-1/2 w-[250px] h-[166px] rounded-[32px] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] shadow-[0_20px_80px_rgba(0,0,0,0.45)]"></div>
+                  <div class="absolute left-1/2 top-[58px] -translate-x-1/2 w-[214px] h-[128px] rounded-[24px] border border-white/8 bg-bg-card/90 backdrop-blur"></div>
+                  <div class="absolute left-[calc(50%-86px)] top-[88px] w-[72px] h-[72px] rounded-[22px] border border-white/8 bg-[radial-gradient(circle_at_35%_35%,rgba(255,255,255,0.2),rgba(255,255,255,0.03))]"></div>
+                  <div class="absolute left-[calc(50%-62px)] top-[112px] w-6 h-6 rounded-full border-4 border-bg-deep" style={`background: ${selectedSensorTier.accentColor}; box-shadow: 0 0 18px ${selectedSensorTier.accentColor}88;`}></div>
+                  <div class="absolute left-[calc(50%+12px)] top-[94px] w-[74px] h-[18px] rounded-full bg-bg-elevated border border-white/8"></div>
+                  <div class="absolute left-[calc(50%+12px)] top-[122px] w-[92px] h-[18px] rounded-full bg-bg-elevated border border-white/8"></div>
+                  <div class="absolute left-[calc(50%-92px)] top-[196px] w-[182px] h-[22px] rounded-full border border-white/8 bg-bg-surface/75"></div>
+                  <div class="absolute right-[44px] top-[26px] font-mono text-[11px] text-text-tertiary">Server-rendered preview</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div class="my-12">
           {selectedHubTier && (
