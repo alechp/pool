@@ -84,6 +84,7 @@ const ChatSidebar: Component = () => {
   const [input, setInput] = createSignal('');
   const [loading, setLoading] = createSignal(false);
   const [historyOpen, setHistoryOpen] = createSignal(true);
+  const [savedBuilds, setSavedBuilds] = createSignal<any[]>([]);
 
   let messagesEndRef: HTMLDivElement | undefined;
   let isResizing = false;
@@ -191,6 +192,10 @@ const ChatSidebar: Component = () => {
     }
 
     touchRouteContext(window.location.pathname);
+    fetch('/api/configs')
+      .then((response) => response.json())
+      .then((data) => setSavedBuilds(Array.isArray(data) ? data.slice(0, 6) : []))
+      .catch(() => {});
     document.addEventListener('keydown', handleKeyDown);
     window.addEventListener('pointermove', handleResizeMove);
     window.addEventListener('pointerup', stopResizing);
@@ -395,6 +400,27 @@ const ChatSidebar: Component = () => {
                 </div>
               </Show>
             </div>
+            <Show when={savedBuilds().length > 0}>
+              <div class="mt-3 rounded-xl border border-white/6 bg-black/12 p-2">
+                <div class="px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+                  Saved builds
+                </div>
+                <div class="space-y-1">
+                  <For each={savedBuilds()}>
+                    {(build) => (
+                      <div class="rounded-lg px-2 py-2 hover:bg-white/4">
+                        <div class="truncate text-[13px] font-medium text-text-primary">{build.name}</div>
+                        <div class="mt-1 flex items-center gap-3 text-[11px] text-text-tertiary">
+                          <a href={`/build?config_id=${build.id}`} class="text-accent hover:underline">Edit</a>
+                          <a href={`/build?fork_from=${build.id}`} class="text-accent-blue hover:underline">Fork</a>
+                          <a href={`/bom?hub_type=${build.hubType?.id ?? ''}&hub_tier=${build.hubTier?.id ?? ''}&sensor_tier=${build.sensorTier?.id ?? ''}&qty=${build.qty}`} class="hover:underline">BOM</a>
+                        </div>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </div>
+            </Show>
           </div>
 
           {/* Messages area */}

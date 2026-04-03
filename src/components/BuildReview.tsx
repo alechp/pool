@@ -7,14 +7,18 @@ interface Props {
   hubTypeId: string;
   hubTier: HubTier | null;
   sensorTier: SensorTier;
+  configId?: number | null;
+  forkFromId?: number | null;
+  initialQty?: number;
+  initialName?: string;
 }
 
 const BuildReview: Component<Props> = (props) => {
-  const [qty, setQty] = createSignal(4);
+  const [qty, setQty] = createSignal(props.initialQty ?? 4);
   const [saving, setSaving] = createSignal(false);
   const [saved, setSaved] = createSignal(false);
   const [saveError, setSaveError] = createSignal<string | null>(null);
-  const [configName, setConfigName] = createSignal('');
+  const [configName, setConfigName] = createSignal(props.initialName ?? '');
   const [showSave, setShowSave] = createSignal(false);
   const [sessionId, setSessionId] = createSignal<number | null>(null);
 
@@ -68,8 +72,9 @@ const BuildReview: Component<Props> = (props) => {
     setSaveError(null);
 
     try {
-      const response = await fetch('/api/configs', {
-        method: 'POST',
+      const isEditing = Boolean(props.configId);
+      const response = await fetch(isEditing ? `/api/configs/${props.configId}` : '/api/configs', {
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: configName().trim() || autoName(),
@@ -77,6 +82,7 @@ const BuildReview: Component<Props> = (props) => {
           hubTierId: props.hubTier?.id ?? null,
           sensorTierId: props.sensorTier.id,
           qty: qty(),
+          forkFromId: props.forkFromId ?? null,
         }),
       });
 
@@ -152,7 +158,7 @@ const BuildReview: Component<Props> = (props) => {
               onClick={() => setShowSave(true)}
               class="px-5 py-2.5 bg-accent text-bg-deep font-semibold text-sm rounded-lg hover:bg-accent-dim transition-colors"
             >
-              Save configuration
+              {props.configId ? 'Update configuration' : props.forkFromId ? 'Save fork' : 'Save configuration'}
             </button>
           </Show>
         </Show>

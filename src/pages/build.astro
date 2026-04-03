@@ -5,9 +5,10 @@ import SelectableCard from '../components/SelectableCard.astro';
 import HardwareThumbnail from '../components/HardwareThumbnail.tsx';
 import PartDetailRow from '../components/PartDetailRow.tsx';
 import { db } from '../lib/db';
-import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../lib/schema';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
 import { getHubVisualVariant, getSensorVisualVariant } from '../lib/hardwareVisuals';
+import { eq } from 'drizzle-orm';
 
 const raw = {
   hubTypes: db.select().from(hubTypes).all(),
@@ -18,9 +19,19 @@ const raw = {
 };
 const catalog = loadCatalog(raw);
 
-const hubTypeParam = Astro.url.searchParams.get('hub_type');
-const hubTierParam = Astro.url.searchParams.get('hub_tier');
-const sensorTierParam = Astro.url.searchParams.get('sensor_tier');
+const configIdParam = Astro.url.searchParams.get('config_id');
+const forkFromParam = Astro.url.searchParams.get('fork_from');
+const configId = configIdParam ? Number.parseInt(configIdParam, 10) : null;
+const forkFromId = forkFromParam ? Number.parseInt(forkFromParam, 10) : null;
+const sourceConfig = configId
+  ? db.select().from(savedConfigs).where(eq(savedConfigs.id, configId)).get()
+  : forkFromId
+  ? db.select().from(savedConfigs).where(eq(savedConfigs.id, forkFromId)).get()
+  : null;
+
+const hubTypeParam = Astro.url.searchParams.get('hub_type') ?? sourceConfig?.hubTypeId ?? null;
+const hubTierParam = Astro.url.searchParams.get('hub_tier') ?? sourceConfig?.hubTierId ?? null;
+const sensorTierParam = Astro.url.searchParams.get('sensor_tier') ?? sourceConfig?.sensorTierId ?? null;
 
 const selectedHubType = catalog.hubTypes.find((type) => type.id === hubTypeParam) ?? null;
 const requiresHubTier = selectedHubType ? selectedHubType.id !== 'none' : false;
@@ -35,6 +46,12 @@ const filteredSensorTiers = selectedHubType
   : [];
 const selectedSensorTier = filteredSensorTiers.find((tier) => tier.id === sensorTierParam) ?? null;
 const currentStep = !selectedHubType ? 1 : requiresHubTier && !selectedHubTier ? 2 : !selectedSensorTier ? 3 : 4;
+const initialQty = sourceConfig?.qty ?? 4;
+const initialName = configId
+  ? sourceConfig?.name ?? ''
+  : forkFromId
+  ? `${sourceConfig?.name ?? 'Forked build'} (fork)`
+  : '';
 
 function buildHref({
   hubTypeId,
@@ -50,6 +67,8 @@ function buildHref({
   if (hubTypeId) params.set('hub_type', hubTypeId);
   if (hubTierId && hubTypeId !== 'none') params.set('hub_tier', hubTierId);
   if (sensorTierId) params.set('sensor_tier', sensorTierId);
+  if (configId) params.set('config_id', String(configId));
+  if (forkFromId) params.set('fork_from', String(forkFromId));
 
   const query = params.toString();
   return query ? `/build?${query}` : '/build';
@@ -304,6 +323,10 @@ const stepTabs = [
           hubTypeId={selectedHubType.id}
           hubTier={selectedHubTier}
           sensorTier={selectedSensorTier}
+          configId={configId}
+          forkFromId={forkFromId}
+          initialQty={initialQty}
+          initialName={initialName}
         />
       </div>
     )}

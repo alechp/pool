@@ -11,6 +11,11 @@ type WorkspacePart = Part & {
 
 type SortKey = 'part' | 'supplier' | 'price' | 'confidence';
 type FilterMode = 'best-price' | 'best-quality';
+type InitialState = {
+  filterMode?: FilterMode | null;
+  selections?: SelectedLinkMap;
+  selectionSource?: Record<string, SelectionSource>;
+};
 
 interface Props {
   buildKey: string;
@@ -20,12 +25,15 @@ interface Props {
   quantity: number;
   hubParts: Part[];
   sensorParts: Part[];
+  initialState?: InitialState;
 }
 
 type SelectedLinkMap = Record<string, string>;
+type SelectionSource = 'default' | 'filter' | 'manual';
 type BomWorkspaceState = {
   filterMode: FilterMode;
   selections: SelectedLinkMap;
+  selectionSource: Record<string, SelectionSource>;
 };
 
 const STORAGE_KEY = 'poolguard-bom-workspace';
@@ -65,18 +73,19 @@ function chooseLink(links: BomLink[], mode: FilterMode) {
 
 function loadWorkspaceState(buildKey: string): BomWorkspaceState {
   if (typeof localStorage === 'undefined') {
-    return { filterMode: 'best-quality', selections: {} };
+    return { filterMode: 'best-quality', selections: {}, selectionSource: {} };
   }
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY}:${buildKey}`);
-    if (!raw) return { filterMode: 'best-quality', selections: {} };
+    if (!raw) return { filterMode: 'best-quality', selections: {}, selectionSource: {} };
     const parsed = JSON.parse(raw) as Partial<BomWorkspaceState>;
     return {
       filterMode: parsed.filterMode === 'best-price' ? 'best-price' : 'best-quality',
       selections: parsed.selections ?? {},
+      selectionSource: parsed.selectionSource ?? {},
     };
   } catch {
-    return { filterMode: 'best-quality', selections: {} };
+    return { filterMode: 'best-quality', selections: {}, selectionSource: {} };
   }
 }
 
@@ -88,6 +97,7 @@ function saveWorkspaceState(buildKey: string, state: BomWorkspaceState) {
 const BomWorkspace: Component<Props> = (props) => {
   const [filterMode, setFilterMode] = createSignal<FilterMode>('best-quality');
   const [selectedLinks, setSelectedLinks] = createSignal<SelectedLinkMap>({});
+  const [selectionSource, setSelectionSource] = createSignal<Record<string, SelectionSource>>({});
   const [sortKey, setSortKey] = createSignal<SortKey>('part');
   const [descending, setDescending] = createSignal(false);
   const [linksByPart, setLinksByPart] = createSignal<Record<string, BomLink[]>>({});
@@ -100,9 +110,17 @@ const BomWorkspace: Component<Props> = (props) => {
   ]);
 
   onMount(() => {
+    if (props.initialState?.selections && Object.keys(props.initialState.selections).length > 0) {
+      setFilterMode(props.initialState.filterMode === 'best-price' ? 'best-price' : 'best-quality');
+      setSelectedLinks(props.initialState.selections);
+      setSelectionSource(props.initialState.selectionSource ?? {});
+      return;
+    }
+
     const stored = loadWorkspaceState(props.buildKey);
     setFilterMode(stored.filterMode);
     setSelectedLinks(stored.selections);
+    setSelectionSource(stored.selectionSource);
   });
 
   createEffect(() => {
@@ -110,11 +128,16 @@ const BomWorkspace: Component<Props> = (props) => {
     const currentLinks = linksByPart();
     setSelectedLinks((current) => {
       const next = { ...current };
+      const source = { ...selectionSource() };
       for (const part of parts()) {
         if (current[part.name]) continue;
         const chosen = chooseLink(currentLinks[part.name] ?? [], mode);
-        if (chosen) next[part.name] = chosen.url;
+        if (chosen) {
+          next[part.name] = chosen.url;
+          if (!source[part.name]) source[part.name] = 'default';
+        }
       }
+      setSelectionSource(source);
       return next;
     });
   });
@@ -163,10 +186,15 @@ const BomWorkspace: Component<Props> = (props) => {
     setSaveState('idle');
     setSelectedLinks((current) => {
       const next = { ...current };
+      const source = { ...selectionSource() };
       for (const part of parts()) {
         const chosen = chooseLink(linksByPart()[part.name] ?? [], mode);
-        if (chosen) next[part.name] = chosen.url;
+        if (chosen) {
+          next[part.name] = chosen.url;
+          source[part.name] = 'filter';
+        }
       }
+      setSelectionSource(source);
       return next;
     });
   }
@@ -180,11 +208,35 @@ const BomWorkspace: Component<Props> = (props) => {
     setDescending(false);
   }
 
-  function persistSelection() {
+  async function persistSelection() {
     saveWorkspaceState(props.buildKey, {
       filterMode: filterMode(),
       selections: selectedLinks(),
+      selectionSource: selectionSource(),
     });
+
+    const payload = parts()
+      .map((part) => {
+        const selected = (linksByPart()[part.name] ?? []).find((link) => link.url === selectedLinks()[part.name]) ?? null;
+        return {
+          partName: part.name,
+          selectedUrl: selectedLinks()[part.name],
+          selectedSupplier: selected?.supplier ?? null,
+          selectionSource: selectionSource()[part.name] ?? 'default',
+        };
+      })
+      .filter((row) => row.selectedUrl);
+
+    await fetch('/api/bom-selections', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        buildKey: props.buildKey,
+        filterMode: filterMode(),
+        selections: payload,
+      }),
+    });
+
     setSaveState('saved');
   }
 
@@ -263,6 +315,19 @@ const BomWorkspace: Component<Props> = (props) => {
           >
             Save BOM selection
           </button>
+          <button
+            onClick={() => {
+              for (const part of rows()) {
+                const selected = (linksByPart()[part.name] ?? []).find((link) => link.url === selectedLinks()[part.name]) ?? null;
+                if (selected?.url) {
+                  window.open(selected.url, '_blank', 'noopener,noreferrer');
+                }
+              }
+            }}
+            class="rounded-full bg-white/6 px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/10"
+          >
+            Open all selected links
+          </button>
           <Show when={saveState() === 'saved'}>
             <div class="rounded-full border border-accent/25 bg-accent/10 px-4 py-2 text-sm text-accent">
               Saved
@@ -302,7 +367,12 @@ const BomWorkspace: Component<Props> = (props) => {
                   <div class="text-sm text-text-primary">
                     {selected()?.price ? `${selected()!.price}${part.quantity > 1 ? ` × ${part.quantity}` : ''}` : '—'}
                   </div>
-                  <div class="text-sm text-text-secondary">{selected()?.confidence ?? '—'}</div>
+                  <div>
+                    <div class="text-sm text-text-secondary">{selected()?.confidence ?? '—'}</div>
+                    <div class="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+                      {selectionSource()[part.name] ?? 'default'}
+                    </div>
+                  </div>
                   <div class="text-right">
                     <Show when={selected()} fallback={<span class="text-xs text-text-tertiary">Waiting</span>}>
                       {(link) => (
@@ -340,6 +410,7 @@ const BomWorkspace: Component<Props> = (props) => {
                                 checked={selectedLinks()[part.name] === link.url}
                                 onChange={() => {
                                   setSelectedLinks((current) => ({ ...current, [part.name]: link.url }));
+                                  setSelectionSource((current) => ({ ...current, [part.name]: 'manual' }));
                                   setSaveState('idle');
                                 }}
                               />

@@ -95,6 +95,17 @@ export const bomLinks = sqliteTable('bom_links', {
   fetchedAt: text('fetched_at').notNull(),
 });
 
+export const bomSelections = sqliteTable('bom_selections', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  buildKey: text('build_key').notNull(),
+  partName: text('part_name').notNull(),
+  selectedUrl: text('selected_url').notNull(),
+  selectedSupplier: text('selected_supplier'),
+  selectionSource: text('selection_source').notNull(),
+  filterMode: text('filter_mode').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 // Build session tracking
 export const buildSessions = sqliteTable('build_sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),

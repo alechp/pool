@@ -2,8 +2,9 @@
 import Base from '../layouts/Base.astro';
 import BomWorkspace from '../components/BomWorkspace.tsx';
 import { db } from '../lib/db';
-import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../lib/schema';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs, bomSelections } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
+import { eq } from 'drizzle-orm';
 
 const raw = {
   hubTypes: db.select().from(hubTypes).all(),
@@ -26,6 +27,32 @@ const sensorTier = catalog.sensorTiers.find((item) => item.id === sensorTierPara
 const hubParts = hubTier ? catalog.hubParts[hubTier.id] ?? [] : [];
 const sensorParts = sensorTier ? catalog.sensorParts[sensorTier.id] ?? [] : [];
 const buildKey = [hubType?.id ?? 'none', hubTier?.id ?? 'none', sensorTier?.id ?? 'none', qty].join(':');
+const savedConfigsRows = db.select().from(savedConfigs).all()
+  .map((row) => {
+    const ht = catalog.hubTypes.find((item) => item.id === row.hubTypeId) ?? null;
+    const hub = row.hubTierId ? catalog.hubTiers.find((item) => item.id === row.hubTierId) ?? null : null;
+    const sensor = catalog.sensorTiers.find((item) => item.id === row.sensorTierId) ?? null;
+    return {
+      id: row.id,
+      name: row.name,
+      qty: row.qty,
+      hubTypeId: row.hubTypeId,
+      hubTierId: row.hubTierId,
+      sensorTierId: row.sensorTierId,
+      hubTypeName: ht?.name ?? row.hubTypeId,
+      hubTierName: hub?.name ?? null,
+      sensorTierName: sensor?.name ?? row.sensorTierId,
+    };
+  })
+  .sort((a, b) => b.id - a.id);
+const persistedSelections = sensorTier
+  ? db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all()
+  : [];
+const initialState = {
+  filterMode: persistedSelections[0]?.filterMode ?? null,
+  selections: Object.fromEntries(persistedSelections.map((row) => [row.partName, row.selectedUrl])),
+  selectionSource: Object.fromEntries(persistedSelections.map((row) => [row.partName, row.selectionSource])),
+};
 ---
 <Base title="Pool Security — BOM Workspace">
   <main class="max-w-[1240px] mx-auto px-8">
@@ -38,6 +65,53 @@ const buildKey = [hubType?.id ?? 'none', hubTier?.id ?? 'none', sensorTier?.id ?
       </p>
     </section>
 
+    <section class="mb-8 rounded-2xl border border-border bg-bg-surface p-6">
+      <div class="flex items-center justify-between gap-4 mb-5">
+        <div>
+          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">Select a build</div>
+          <h2 class="mt-2 text-xl font-semibold">Existing saved builds</h2>
+        </div>
+        <a href="/build" class="rounded-full bg-white/6 px-4 py-2 text-sm font-medium text-text-primary">
+          Create another build
+        </a>
+      </div>
+      {savedConfigsRows.length > 0 ? (
+        <div class="grid md:grid-cols-2 gap-4">
+          {savedConfigsRows.map((config) => (
+            <div
+              class={`rounded-2xl border p-4 transition-colors ${
+                config.hubTierId === hubTierParam && config.sensorTierId === sensorTierParam && config.qty === qty
+                  ? 'border-accent/35 bg-accent/8'
+                  : 'border-white/6 bg-black/10 hover:border-white/12'
+              }`}
+            >
+              <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Saved build #{config.id}</div>
+              <div class="mt-2 text-base font-semibold text-text-primary">{config.name}</div>
+              <div class="mt-2 text-sm text-text-secondary">
+                {config.hubTierName ? `${config.hubTierName} + ` : ''}{config.sensorTierName}
+              </div>
+              <div class="mt-1 text-xs text-text-tertiary">
+                {config.hubTypeName} · qty {config.qty}
+              </div>
+              <div class="mt-4 flex items-center gap-3">
+                <a href={`/bom?hub_type=${config.hubTypeId}&hub_tier=${config.hubTierId ?? ''}&sensor_tier=${config.sensorTierId}&qty=${config.qty}`} class="text-sm text-accent hover:underline">
+                  Open BOM
+                </a>
+                <a href={`/build?config_id=${config.id}`} class="text-sm text-accent hover:underline">
+                  Edit
+                </a>
+                <a href={`/build?fork_from=${config.id}`} class="text-sm text-accent-blue hover:underline">
+                  Fork
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="text-sm text-text-secondary">No saved builds yet. Save a configuration from the build page first.</div>
+      )}
+    </section>
+
     {sensorTier ? (
       <BomWorkspace
         client:load
@@ -48,6 +122,7 @@ const buildKey = [hubType?.id ?? 'none', hubTier?.id ?? 'none', sensorTier?.id ?
         quantity={qty}
         hubParts={hubParts}
         sensorParts={sensorParts}
+        initialState={initialState}
       />
     ) : (
       <section class="rounded-2xl border border-border bg-bg-surface p-8 text-center">

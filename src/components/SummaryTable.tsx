@@ -608,6 +608,10 @@ const SummaryTable: Component<Props> = (props) => {
                     params.set('hub_type', config.hubTypeId);
                     if (config.hubTierId) params.set('hub_tier', config.hubTierId);
                     params.set('sensor_tier', config.sensorTierId);
+                    params.set('config_id', String(config.id));
+                    const forkParams = new URLSearchParams(params);
+                    forkParams.delete('config_id');
+                    forkParams.set('fork_from', String(config.id));
                     return (
                       <tr class="border-b border-white/3 hover:bg-bg-card-hover/50 transition-colors">
                         <td class="px-4 py-3 text-sm font-medium">{config.name}</td>
@@ -618,7 +622,10 @@ const SummaryTable: Component<Props> = (props) => {
                         <td class="px-4 py-3">
                           <div class="flex items-center gap-3">
                             <a href={`/build?${params.toString()}`} class="text-xs text-accent hover:underline">
-                              Load
+                              Edit
+                            </a>
+                            <a href={`/build?${forkParams.toString()}`} class="text-xs text-accent-blue hover:underline">
+                              Fork
                             </a>
                             <button
                               onClick={() => deleteConfig(config.id)}
