@@ -113,6 +113,13 @@ const BuildReview: Component<Props> = (props) => {
       />
 
       <div class="flex items-center gap-4 mt-8 flex-wrap">
+        <a
+          href={`/bom?hub_type=${props.hubTypeId}&hub_tier=${props.hubTier?.id ?? ''}&sensor_tier=${props.sensorTier.id}&qty=${qty()}`}
+          class="rounded-full border border-white/10 bg-white/4 px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/8"
+        >
+          Open BOM workspace
+        </a>
+
         <Show when={!saved()}>
           <Show
             when={!showSave()}

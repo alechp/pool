@@ -1,4 +1,4 @@
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show, onCleanup } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { BomLink, Part } from '../lib/data';
 import HardwareThumbnail from './HardwareThumbnail';
@@ -15,6 +15,29 @@ const PartDetailRow: Component<Props> = (props) => {
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [loaded, setLoaded] = createSignal(false);
+  const [panelX, setPanelX] = createSignal(0);
+  const [panelY, setPanelY] = createSignal(0);
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function cancelClose() {
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = undefined;
+    }
+  }
+
+  function scheduleClose() {
+    cancelClose();
+    closeTimer = setTimeout(() => setOpen(false), 140);
+  }
+
+  function placePanel(e: MouseEvent | FocusEvent) {
+    if (e instanceof MouseEvent) {
+      const width = Math.min(520, window.innerWidth - 48);
+      setPanelX(Math.min(e.clientX + 18, window.innerWidth - width - 24));
+      setPanelY(Math.max(88, e.clientY - 36));
+    }
+  }
 
   async function loadLinks(forceLive = false) {
     if (loading()) return;
@@ -57,8 +80,10 @@ const PartDetailRow: Component<Props> = (props) => {
     }
   }
 
-  function handleOpen() {
+  function handleOpen(e?: MouseEvent | FocusEvent) {
+    cancelClose();
     setOpen(true);
+    if (e) placePanel(e);
     if (!loaded()) {
       loadLinks();
     }
@@ -79,11 +104,16 @@ const PartDetailRow: Component<Props> = (props) => {
     }
   }
 
+  onCleanup(() => {
+    if (closeTimer) clearTimeout(closeTimer);
+  });
+
   return (
     <div
       class="group relative grid grid-cols-[88px_1fr_auto] gap-4 py-3 border-b border-white/3 last:border-b-0 items-center"
       onMouseEnter={handleOpen}
-      onMouseLeave={() => setOpen(false)}
+      onMouseMove={placePanel}
+      onMouseLeave={scheduleClose}
     >
       <HardwareThumbnail
         variant={getPartVisualVariant(props.part.name)}
@@ -121,7 +151,12 @@ const PartDetailRow: Component<Props> = (props) => {
       </div>
 
       <Show when={open()}>
-        <div class="absolute right-0 top-full z-20 mt-2 w-[min(32rem,calc(100vw-4rem))] rounded-2xl border border-white/8 bg-[#0f1218]/98 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur">
+        <div
+          class="fixed z-30 w-[min(32rem,calc(100vw-4rem))] rounded-2xl border border-white/8 bg-[#0f1218]/98 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur"
+          style={{ left: `${panelX()}px`, top: `${panelY()}px` }}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+        >
           <div class="mb-3 flex items-start justify-between gap-3">
             <div>
               <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">{props.sectionLabel}</div>

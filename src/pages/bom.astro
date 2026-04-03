@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import BomWorkspace from '../components/BomWorkspace.tsx';
+import { db } from '../lib/db';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../lib/schema';
+import { loadCatalog } from '../lib/data';
+
+const raw = {
+  hubTypes: db.select().from(hubTypes).all(),
+  hubTiers: db.select().from(hubTiers).all(),
+  sensorTiers: db.select().from(sensorTiers).all(),
+  hubParts: db.select().from(hubTierParts).all(),
+  sensorParts: db.select().from(sensorTierParts).all(),
+};
+const catalog = loadCatalog(raw);
+
+const hubTypeParam = Astro.url.searchParams.get('hub_type');
+const hubTierParam = Astro.url.searchParams.get('hub_tier');
+const sensorTierParam = Astro.url.searchParams.get('sensor_tier');
+const qtyParam = Number.parseInt(Astro.url.searchParams.get('qty') ?? '4', 10);
+const qty = Number.isFinite(qtyParam) && qtyParam > 0 ? qtyParam : 4;
+
+const hubType = catalog.hubTypes.find((item) => item.id === hubTypeParam) ?? null;
+const hubTier = catalog.hubTiers.find((item) => item.id === hubTierParam) ?? null;
+const sensorTier = catalog.sensorTiers.find((item) => item.id === sensorTierParam) ?? null;
+const hubParts = hubTier ? catalog.hubParts[hubTier.id] ?? [] : [];
+const sensorParts = sensorTier ? catalog.sensorParts[sensorTier.id] ?? [] : [];
+const buildKey = [hubType?.id ?? 'none', hubTier?.id ?? 'none', sensorTier?.id ?? 'none', qty].join(':');
+---
+<Base title="Pool Security — BOM Workspace">
+  <main class="max-w-[1240px] mx-auto px-8">
+    <section class="py-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+        Bill of <span class="text-accent">materials</span>
+      </h1>
+      <p class="text-base text-text-secondary max-w-[640px] mx-auto leading-relaxed">
+        Select the supplier links you actually want for every part, compare price vs quality across the full build, and keep your chosen BOM saved locally.
+      </p>
+    </section>
+
+    {sensorTier ? (
+      <BomWorkspace
+        client:load
+        buildKey={buildKey}
+        title={`${hubTier ? `${hubTier.name} + ` : ''}${sensorTier.name}`}
+        hubName={hubTier?.name ?? null}
+        sensorName={sensorTier.name}
+        quantity={qty}
+        hubParts={hubParts}
+        sensorParts={sensorParts}
+      />
+    ) : (
+      <section class="rounded-2xl border border-border bg-bg-surface p-8 text-center">
+        <h2 class="text-xl font-semibold">Select a build first</h2>
+        <p class="mt-2 text-sm text-text-secondary">
+          Open a saved configuration from the build page to populate the BOM workspace.
+        </p>
+        <a href="/build" class="mt-5 inline-flex rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep">
+          Go to build
+        </a>
+      </section>
+    )}
+  </main>
+</Base>
