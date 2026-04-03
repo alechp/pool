@@ -25,6 +25,6 @@ const configs = db.select().from(savedConfigs).all();
         Compare every valid hub + sensor combination. Sort by price, filter by architecture, and jump straight to the configurator.
       </p>
     </section>
-    <SummaryTable client:load catalog={catalog} savedConfigs={configs} />
+    <SummaryTable client:idle catalog={catalog} savedConfigs={configs} />
   </main>
 </Base>

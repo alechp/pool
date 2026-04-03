@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, Show, For } from 'solid-js';
+import { createSignal, onCleanup, Show, For, onMount } from 'solid-js';
 import type { Component } from 'solid-js';
 
 interface DropdownProps {
@@ -75,9 +75,11 @@ const Dropdown: Component<DropdownProps> = (props) => {
     }
   }
 
-  document.addEventListener('mousedown', handleClickOutside);
-  onCleanup(() => {
-    document.removeEventListener('mousedown', handleClickOutside);
+  onMount(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    onCleanup(() => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    });
   });
 
   return (

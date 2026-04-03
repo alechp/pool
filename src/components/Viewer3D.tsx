@@ -1,6 +1,5 @@
 import { onMount, onCleanup, createEffect } from 'solid-js';
 import type { Component } from 'solid-js';
-import * as THREE from 'three';
 
 interface Props {
   accentColor: string;
@@ -9,10 +8,11 @@ interface Props {
 
 const Viewer3D: Component<Props> = (props) => {
   let canvasRef: HTMLCanvasElement | undefined;
-  let scene: THREE.Scene;
-  let camera: THREE.PerspectiveCamera;
-  let renderer: THREE.WebGLRenderer;
-  let meshGroup: THREE.Group;
+  let threeModule: typeof import('three') | null = null;
+  let scene: import('three').Scene;
+  let camera: import('three').PerspectiveCamera;
+  let renderer: import('three').WebGLRenderer;
+  let meshGroup: import('three').Group;
   let animFrameId: number;
   let isDrag = false;
   let pX = 0;
@@ -21,8 +21,12 @@ const Viewer3D: Component<Props> = (props) => {
     return parseInt(hex.replace('#', ''), 16);
   }
 
-  function init3D() {
+  async function init3D() {
     if (!canvasRef) return;
+    if (!threeModule) {
+      threeModule = await import('three');
+    }
+    const THREE = threeModule;
     const w = canvasRef.parentElement!.clientWidth;
     const h = 380;
 
@@ -65,7 +69,7 @@ const Viewer3D: Component<Props> = (props) => {
   }
 
   function onPointerMove(e: PointerEvent) {
-    if (isDrag) {
+    if (isDrag && meshGroup) {
       meshGroup.rotation.y += (e.clientX - pX) * 0.008;
       pX = e.clientX;
     }
@@ -86,7 +90,8 @@ const Viewer3D: Component<Props> = (props) => {
   }
 
   function buildModel(accentHex: string) {
-    if (!meshGroup) return;
+    if (!meshGroup || !threeModule) return;
+    const THREE = threeModule;
     while (meshGroup.children.length) meshGroup.remove(meshGroup.children[0]);
     const c = hexToThreeColor(accentHex);
 
@@ -215,8 +220,9 @@ const Viewer3D: Component<Props> = (props) => {
   }
 
   onMount(() => {
-    init3D();
-    if (props.accentColor) buildModel(props.accentColor);
+    init3D().then(() => {
+      if (props.accentColor) buildModel(props.accentColor);
+    });
   });
 
   createEffect(() => {

@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onCleanup, For, Show } from 'solid-js';
+import { createSignal, createMemo, createEffect, onCleanup, For, Show, onMount } from 'solid-js';
 import type { Component } from 'solid-js';
 import {
   createSolidTable,
@@ -32,6 +32,7 @@ const borderColors: Record<string, string> = {
 const VISIBILITY_STORAGE_KEY = 'poolguard-col-visibility';
 
 function loadVisibility(): VisibilityState {
+  if (typeof localStorage === 'undefined') return {};
   try {
     const raw = localStorage.getItem(VISIBILITY_STORAGE_KEY);
     if (raw) return JSON.parse(raw);
@@ -42,6 +43,7 @@ function loadVisibility(): VisibilityState {
 }
 
 function saveVisibility(state: VisibilityState) {
+  if (typeof localStorage === 'undefined') return;
   try {
     localStorage.setItem(VISIBILITY_STORAGE_KEY, JSON.stringify(state));
   } catch {
@@ -138,9 +140,11 @@ const SummaryTable: Component<Props> = (props) => {
     }
   }
 
-  document.addEventListener('mousedown', handleColumnsClickOutside);
-  onCleanup(() => {
-    document.removeEventListener('mousedown', handleColumnsClickOutside);
+  onMount(() => {
+    document.addEventListener('mousedown', handleColumnsClickOutside);
+    onCleanup(() => {
+      document.removeEventListener('mousedown', handleColumnsClickOutside);
+    });
   });
 
   const allCombos = createMemo(() => buildCombos(props.catalog));

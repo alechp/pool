@@ -1,4 +1,4 @@
-import { createSignal, Show, For, createEffect, onCleanup } from 'solid-js';
+import { createSignal, Show, For, createEffect, onCleanup, onMount } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { ChatMessage } from '../lib/data';
 
@@ -28,12 +28,12 @@ const ChatSidebar: Component = () => {
     }
   }
 
-  if (typeof document !== 'undefined') {
+  onMount(() => {
     document.addEventListener('keydown', handleKeyDown);
     onCleanup(() => {
       document.removeEventListener('keydown', handleKeyDown);
     });
-  }
+  });
 
   async function sendMessage() {
     const text = input().trim();

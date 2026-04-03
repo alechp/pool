@@ -1,6 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
-import Configurator from '../components/Configurator.tsx';
+import Viewer3D from '../components/Viewer3D.tsx';
+import BuildReview from '../components/BuildReview.tsx';
+import SelectableCard from '../components/SelectableCard.astro';
 import { db } from '../lib/db';
 import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
@@ -17,6 +19,69 @@ const catalog = loadCatalog(raw);
 const hubTypeParam = Astro.url.searchParams.get('hub_type');
 const hubTierParam = Astro.url.searchParams.get('hub_tier');
 const sensorTierParam = Astro.url.searchParams.get('sensor_tier');
+
+const selectedHubType = catalog.hubTypes.find((type) => type.id === hubTypeParam) ?? null;
+const requiresHubTier = selectedHubType ? selectedHubType.id !== 'none' : false;
+const filteredHubTiers = selectedHubType
+  ? catalog.hubTiers.filter((tier) => tier.hubTypeId === selectedHubType.id)
+  : [];
+const selectedHubTier = requiresHubTier
+  ? filteredHubTiers.find((tier) => tier.id === hubTierParam) ?? null
+  : null;
+const filteredSensorTiers = selectedHubType
+  ? catalog.sensorTiers.filter((tier) => tier.hubTypeId === selectedHubType.id)
+  : [];
+const selectedSensorTier = filteredSensorTiers.find((tier) => tier.id === sensorTierParam) ?? null;
+const currentStep = !selectedHubType ? 1 : requiresHubTier && !selectedHubTier ? 2 : !selectedSensorTier ? 3 : 4;
+
+function buildHref({
+  hubTypeId,
+  hubTierId,
+  sensorTierId,
+}: {
+  hubTypeId?: string | null;
+  hubTierId?: string | null;
+  sensorTierId?: string | null;
+}) {
+  const params = new URLSearchParams();
+
+  if (hubTypeId) params.set('hub_type', hubTypeId);
+  if (hubTierId && hubTypeId !== 'none') params.set('hub_tier', hubTierId);
+  if (sensorTierId) params.set('sensor_tier', sensorTierId);
+
+  const query = params.toString();
+  return query ? `/build?${query}` : '/build';
+}
+
+const hubParts = selectedHubTier ? catalog.hubParts[selectedHubTier.id] ?? [] : [];
+const sensorParts = selectedSensorTier ? catalog.sensorParts[selectedSensorTier.id] ?? [] : [];
+const stepTabs = [
+  { num: 1, label: 'Hub type', href: '/build', disabled: false },
+  {
+    num: 2,
+    label: 'Hub tier',
+    href: selectedHubType ? buildHref({ hubTypeId: selectedHubType.id }) : '#',
+    disabled: !selectedHubType || selectedHubType.id === 'none',
+  },
+  {
+    num: 3,
+    label: 'Sensor tier',
+    href: selectedHubType
+      ? buildHref({ hubTypeId: selectedHubType.id, hubTierId: selectedHubTier?.id ?? null })
+      : '#',
+    disabled: !selectedHubType || (requiresHubTier && !selectedHubTier),
+  },
+  {
+    num: 4,
+    label: 'Review',
+    href: buildHref({
+      hubTypeId: selectedHubType?.id ?? null,
+      hubTierId: selectedHubTier?.id ?? null,
+      sensorTierId: selectedSensorTier?.id ?? null,
+    }),
+    disabled: !selectedSensorTier,
+  },
+];
 ---
 <Base title="Pool Security — Build">
   <main class="max-w-[1120px] mx-auto px-8">
@@ -28,12 +93,176 @@ const sensorTierParam = Astro.url.searchParams.get('sensor_tier');
         Configure sensors and hubs for full backyard coverage. Real-time pricing from Amazon and direct suppliers.
       </p>
     </section>
-    <Configurator
-      client:load
-      catalog={catalog}
-      initialHubType={hubTypeParam}
-      initialHubTier={hubTierParam}
-      initialSensorTier={sensorTierParam}
-    />
+    <div class="flex gap-0.5 mb-12 bg-bg-surface rounded-xl p-1 border border-border">
+      {stepTabs.map((tab) => (
+        <a
+          href={tab.disabled ? undefined : tab.href}
+          class={`flex-1 py-3 px-4 text-center text-[13px] font-medium rounded-lg transition-all relative ${
+            currentStep === tab.num
+              ? 'bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
+              : 'text-text-tertiary'
+          } ${tab.disabled ? 'opacity-30 pointer-events-none' : ''}`}
+          data-astro-prefetch
+        >
+          <div class="flex items-center justify-center gap-1.5">
+            {tab.num < currentStep && (
+              <svg class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+            <span class={`font-mono text-[11px] block mb-0.5 ${
+              currentStep === tab.num || tab.num < currentStep ? 'text-accent' : 'text-text-tertiary'
+            }`}>
+              {String(tab.num).padStart(2, '0')}
+            </span>
+          </div>
+          {tab.label}
+        </a>
+      ))}
+    </div>
+
+    {currentStep === 1 && (
+      <div class="mb-12 animate-[fade-up_0.4s_ease]">
+        <div class="mb-6">
+          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent mb-1.5">Step 01</div>
+          <h2 class="text-2xl font-semibold tracking-tight">Choose your architecture</h2>
+          <p class="text-sm text-text-secondary mt-1">Decide how sensors communicate with your AI stack.</p>
+        </div>
+        <div class="grid grid-cols-3 max-md:grid-cols-1 gap-3">
+          {catalog.hubTypes.map((hubType) => (
+            <SelectableCard
+              href={buildHref({ hubTypeId: hubType.id })}
+              title={hubType.name}
+              badge={hubType.badge}
+              badgeClass={hubType.badgeClass}
+              description={hubType.description}
+              specs={hubType.specs}
+              selected={selectedHubType?.id === hubType.id}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+    {currentStep === 2 && selectedHubType && (
+      <div class="mb-12 animate-[fade-up_0.4s_ease]">
+        <div class="mb-6">
+          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent mb-1.5">Step 02</div>
+          <h2 class="text-2xl font-semibold tracking-tight">
+            Choose your {selectedHubType.id === 'zigbee' ? 'Zigbee hub' : 'LoRaWAN gateway'} tier
+          </h2>
+          <p class="text-sm text-text-secondary mt-1">Select the build quality for your central hub.</p>
+        </div>
+        <div class="grid grid-cols-2 max-md:grid-cols-1 gap-3">
+          {filteredHubTiers.map((tier) => (
+            <SelectableCard
+              href={buildHref({ hubTypeId: selectedHubType.id, hubTierId: tier.id })}
+              title={tier.name}
+              badge={tier.badge}
+              badgeClass={tier.badgeClass}
+              description={tier.description}
+              price={tier.price}
+              priceNote="one-time"
+              specs={tier.specs}
+              selected={selectedHubTier?.id === tier.id}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+    {currentStep === 3 && selectedHubType && (
+      <div class="mb-12 animate-[fade-up_0.4s_ease]">
+        <div class="mb-6">
+          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent mb-1.5">Step 03</div>
+          <h2 class="text-2xl font-semibold tracking-tight">Choose your sensor tier</h2>
+          <p class="text-sm text-text-secondary mt-1">
+            Each sensor includes camera, mmWave radar, battery, and IP67 enclosure.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 max-md:grid-cols-1 gap-3">
+          {filteredSensorTiers.map((tier) => (
+            <SelectableCard
+              href={buildHref({
+                hubTypeId: selectedHubType.id,
+                hubTierId: selectedHubTier?.id ?? null,
+                sensorTierId: tier.id,
+              })}
+              title={tier.name}
+              badge={tier.badge}
+              badgeClass={tier.badgeClass}
+              description={tier.description}
+              price={tier.price}
+              priceNote="per unit"
+              specs={tier.specs}
+              selected={selectedSensorTier?.id === tier.id}
+            />
+          ))}
+        </div>
+      </div>
+    )}
+
+    {currentStep === 4 && selectedHubType && selectedSensorTier && (
+      <div class="mb-12 animate-[fade-up_0.4s_ease]">
+        <div class="mb-6">
+          <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent mb-1.5">Step 04</div>
+          <h2 class="text-2xl font-semibold tracking-tight">Your build</h2>
+          <p class="text-sm text-text-secondary mt-1">Complete bill of materials with on-demand 3D preview. Adjust fleet size below.</p>
+        </div>
+
+        <Viewer3D client:visible accentColor={selectedSensorTier.accentColor} visible={true} />
+
+        <div class="my-12">
+          {selectedHubTier && (
+            <div class="mb-8">
+              <div class="flex items-center gap-2.5 mb-3 pb-2 border-b border-border">
+                <h3 class="text-sm font-semibold">Hub -- {selectedHubTier.name}</h3>
+                <span class="font-mono text-[11px] text-text-tertiary bg-white/4 px-2 py-0.5 rounded-full">
+                  {hubParts.length} parts
+                </span>
+              </div>
+              {hubParts.map((part) => (
+                <div class="grid grid-cols-[1fr_auto] gap-4 py-2.5 border-b border-white/3 last:border-b-0 items-center">
+                  <div>
+                    <div class="text-sm font-medium">{part.name}</div>
+                    <div class="text-xs text-text-tertiary mt-0.5">{part.description}</div>
+                  </div>
+                  <div class="font-mono text-sm font-medium text-right whitespace-nowrap">
+                    ${part.price}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div class="mb-8">
+            <div class="flex items-center gap-2.5 mb-3 pb-2 border-b border-border">
+              <h3 class="text-sm font-semibold">Sensor -- {selectedSensorTier.name}</h3>
+              <span class="font-mono text-[11px] text-text-tertiary bg-white/4 px-2 py-0.5 rounded-full">
+                {sensorParts.length} parts
+              </span>
+            </div>
+            {sensorParts.map((part) => (
+              <div class="grid grid-cols-[1fr_auto] gap-4 py-2.5 border-b border-white/3 last:border-b-0 items-center">
+                <div>
+                  <div class="text-sm font-medium">{part.name}</div>
+                  <div class="text-xs text-text-tertiary mt-0.5">{part.description}</div>
+                </div>
+                <div class="font-mono text-sm font-medium text-right whitespace-nowrap">
+                  ${part.price}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <BuildReview
+          client:load
+          hubTypeId={selectedHubType.id}
+          hubTier={selectedHubTier}
+          sensorTier={selectedSensorTier}
+        />
+      </div>
+    )}
   </main>
 </Base>
