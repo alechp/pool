@@ -8,7 +8,7 @@
     "preview": "astro preview",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx scripts/seed.ts",
+    "db:seed": "node --import tsx scripts/seed.ts",
     "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {

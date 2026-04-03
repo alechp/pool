@@ -91,7 +91,7 @@ async function dbSetup() {
   await $`npx drizzle-kit migrate`.quiet();
 
   console.log(`${YELLOW}${BOLD}\u25b8 Seeding database...${RESET}`);
-  await $`npx tsx scripts/seed.ts`.quiet();
+  await $`node --import tsx scripts/seed.ts`.quiet();
 
   console.log(`${GREEN}${BOLD}\u2713 Database ready${RESET}\n`);
 }
@@ -146,7 +146,7 @@ async function previewProd() {
 async function seedOnly() {
   await ensureDeps();
   console.log(`${YELLOW}${BOLD}\u25b8 Seeding database...${RESET}`);
-  await $`npx tsx scripts/seed.ts`.quiet();
+  await $`node --import tsx scripts/seed.ts`.quiet();
   console.log(`${GREEN}${BOLD}\u2713 Seed complete${RESET}`);
 }
 

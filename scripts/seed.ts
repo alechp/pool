@@ -17,6 +17,7 @@ db.run(sql`DELETE FROM preselections`);
 db.run(sql`DELETE FROM build_sessions`);
 db.run(sql`DELETE FROM chat_sessions`);
 db.run(sql`DELETE FROM bom_links`);
+db.run(sql`DELETE FROM bom_selections`);
 db.run(sql`DELETE FROM sensor_tier_parts`);
 db.run(sql`DELETE FROM hub_tier_parts`);
 db.run(sql`DELETE FROM saved_configs`);
