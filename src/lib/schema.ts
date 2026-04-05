@@ -91,6 +91,7 @@ export const bomLinks = sqliteTable('bom_links', {
   supplier: text('supplier').notNull(),
   url: text('url').notNull(),
   price: text('price'),
+  rating: integer('rating'),
   confidence: text('confidence').notNull(),
   fetchedAt: text('fetched_at').notNull(),
 });

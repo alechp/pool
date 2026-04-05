@@ -74,10 +74,11 @@ export const POST: APIRoute = async ({ request }) => {
       max_tokens: 1024,
       system: `You are a hardware procurement assistant. Given an electronic component name and description, suggest purchase links from major suppliers. Return ONLY valid JSON array with this exact structure:
 [
-  { "supplier": "Amazon", "url": "https://amazon.com/dp/...", "price": "$XX.XX", "confidence": "high" },
-  { "supplier": "AliExpress", "url": "https://aliexpress.com/item/...", "price": "$XX.XX", "confidence": "medium" }
+  { "supplier": "Amazon", "url": "https://amazon.com/dp/...", "price": "$XX.XX", "rating": 46, "confidence": "high" },
+  { "supplier": "AliExpress", "url": "https://aliexpress.com/item/...", "price": "$XX.XX", "rating": 40, "confidence": "medium" }
 ]
 Confidence levels: "high" = exact match found, "medium" = close match, "low" = general category.
+Rating must be an integer from 10 to 50 representing a 1.0 to 5.0 star rating in tenths.
 Only include suppliers where you're reasonably confident the product exists. Target price is approximately $${targetPrice ?? 0}.`,
       messages: [
         {
@@ -123,6 +124,7 @@ Only include suppliers where you're reasonably confident the product exists. Tar
           supplier: link.supplier || 'Unknown',
           url: link.url || '#',
           price: link.price || null,
+          rating: Number.isFinite(Number(link.rating)) ? Math.max(10, Math.min(50, Math.round(Number(link.rating)))) : null,
           confidence: link.confidence || 'low',
           fetchedAt: now,
         })

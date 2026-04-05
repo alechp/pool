@@ -429,7 +429,7 @@ const ChatSidebar: Component = () => {
             <Show when={messages().length === 0}>
               <div class="text-center py-8">
                 <div class="text-text-tertiary text-sm mb-3">
-                  Ask me about pool security hardware.
+                  Ask me about SwimSentry hardware.
                 </div>
                 <div class="text-text-tertiary text-xs leading-relaxed">
                   I can help you choose the right hub, sensors, and configuration

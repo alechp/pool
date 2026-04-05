@@ -41,7 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
       .map((t) => ({ ...t, price: t.price / 100 }));
 
     // Build system prompt with catalog data
-    const systemPrompt = `You are PoolGuard's AI advisor helping users choose pool security hardware.
+    const systemPrompt = `You are SwimSentry's AI advisor helping users choose pool safety hardware.
 
 Available hardware catalog:
 [Hub Types]: ${JSON.stringify(hubTypesData)}

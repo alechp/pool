@@ -85,6 +85,7 @@ export type BomLink = {
   supplier: string;
   url: string;
   price: string | null;
+  rating: number | null;
   confidence: 'high' | 'medium' | 'low';
   fetchedAt: string;
 };

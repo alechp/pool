@@ -1,0 +1,278 @@
+<section class="relative isolate overflow-hidden rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,229,160,0.14),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-6 py-10 md:px-10 md:py-14">
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.18),transparent_22%),radial-gradient(circle_at_80%_18%,rgba(0,229,160,0.18),transparent_28%),radial-gradient(circle_at_50%_80%,rgba(167,139,250,0.1),transparent_30%)]"></div>
+  <div class="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+    <div class="relative z-10">
+      <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">SwimSentry</div>
+      <h1 class="mt-4 max-w-[12ch] text-5xl font-semibold tracking-tight text-text-primary md:text-6xl">
+        Pool safety, staged from signal to shopping.
+      </h1>
+      <p class="mt-5 max-w-[56ch] text-base leading-7 text-text-secondary">
+        Start with a guided recommendation, move into a concrete hardware build, then finish procurement with a saved BOM that remembers the links you actually want to buy.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href="/build" class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-bg-deep">
+          Start a build
+        </a>
+        <a href="/personas" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-text-primary">
+          Open guided flow
+        </a>
+        <a href="/bom/compare" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-text-primary">
+          Compare systems
+        </a>
+      </div>
+    </div>
+
+    <div class="signal-scene relative z-10 h-[28rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-[linear-gradient(180deg,rgba(10,11,15,0.68),rgba(10,11,15,0.92))]">
+      <div class="signal-grid"></div>
+      <div class="signal-layer signal-layer-back"></div>
+      <div class="signal-layer signal-layer-mid"></div>
+      <div class="signal-layer signal-layer-front"></div>
+
+      <div class="scene-node node-hub hub-main">
+        <div class="node-shell">
+          <div class="node-led"></div>
+          <div class="node-title">Command Hub</div>
+          <div class="node-subtitle">ingest + alert routing</div>
+        </div>
+      </div>
+
+      <div class="scene-node node-hub hub-edge">
+        <div class="node-shell">
+          <div class="node-led"></div>
+          <div class="node-title">Edge Gateway</div>
+          <div class="node-subtitle">bridge + buffering</div>
+        </div>
+      </div>
+
+      <div class="scene-node node-sensor sensor-a">
+        <div class="node-shell">
+          <div class="node-led"></div>
+          <div class="node-title">Sensor A</div>
+          <div class="node-subtitle">camera + mmWave</div>
+        </div>
+      </div>
+      <div class="scene-node node-sensor sensor-b">
+        <div class="node-shell">
+          <div class="node-led"></div>
+          <div class="node-title">Sensor B</div>
+          <div class="node-subtitle">coverage lane</div>
+        </div>
+      </div>
+      <div class="scene-node node-sensor sensor-c">
+        <div class="node-shell">
+          <div class="node-led"></div>
+          <div class="node-title">Sensor C</div>
+          <div class="node-subtitle">entry zone</div>
+        </div>
+      </div>
+      <div class="scene-node node-sensor sensor-d">
+        <div class="node-shell">
+          <div class="node-led"></div>
+          <div class="node-title">Sensor D</div>
+          <div class="node-subtitle">pool perimeter</div>
+        </div>
+      </div>
+
+      <div class="beam beam-a"></div>
+      <div class="beam beam-b"></div>
+      <div class="beam beam-c"></div>
+      <div class="beam beam-d"></div>
+      <div class="beam beam-e"></div>
+
+      <div class="pulse pulse-a"></div>
+      <div class="pulse pulse-b"></div>
+      <div class="pulse pulse-c"></div>
+      <div class="pulse pulse-d"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .signal-scene {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+  }
+
+  .signal-grid,
+  .signal-layer {
+    position: absolute;
+    inset: 0;
+  }
+
+  .signal-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.95) 18%, rgba(0, 0, 0, 0.95) 80%, transparent);
+    transform: rotateX(66deg) translateY(22%);
+    transform-origin: bottom center;
+  }
+
+  .signal-layer {
+    border-radius: 22px;
+    inset-inline: 8%;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    animation: layer-float 7s ease-in-out infinite;
+  }
+
+  .signal-layer-back {
+    inset-block: 18% 40%;
+    --layer-transform: translateZ(-120px) rotateX(72deg);
+    transform: var(--layer-transform);
+    opacity: 0.45;
+  }
+
+  .signal-layer-mid {
+    inset-block: 31% 25%;
+    --layer-transform: translateZ(-35px) rotateX(72deg);
+    transform: var(--layer-transform);
+    opacity: 0.7;
+    animation-delay: -2s;
+  }
+
+  .signal-layer-front {
+    inset-block: 48% 8%;
+    --layer-transform: translateZ(50px) rotateX(72deg);
+    transform: var(--layer-transform);
+    opacity: 0.92;
+    animation-delay: -4s;
+  }
+
+  .scene-node {
+    position: absolute;
+    width: 10rem;
+    transform-style: preserve-3d;
+    animation: node-drift 6s ease-in-out infinite;
+  }
+
+  .node-shell {
+    border-radius: 1.3rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)),
+      linear-gradient(180deg, rgba(12, 14, 20, 0.88), rgba(10, 11, 15, 0.98));
+    box-shadow:
+      0 14px 50px rgba(0, 0, 0, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: 1rem 1rem 0.9rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .node-hub .node-shell {
+    min-height: 6.2rem;
+  }
+
+  .node-sensor .node-shell {
+    min-height: 5.4rem;
+  }
+
+  .node-led {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    background: #00e5a0;
+    box-shadow: 0 0 18px rgba(0, 229, 160, 0.85);
+  }
+
+  .node-title {
+    margin-top: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e8e9ed;
+  }
+
+  .node-subtitle {
+    margin-top: 0.18rem;
+    font-size: 0.74rem;
+    letter-spacing: 0.03em;
+    color: #8b8d98;
+  }
+
+  .hub-main { top: 16%; left: 40%; animation-delay: -1s; }
+  .hub-edge { top: 38%; left: 59%; animation-delay: -3s; }
+  .sensor-a { top: 60%; left: 14%; }
+  .sensor-b { top: 70%; left: 33%; animation-delay: -1.4s; }
+  .sensor-c { top: 66%; left: 55%; animation-delay: -2.8s; }
+  .sensor-d { top: 57%; left: 74%; animation-delay: -4.2s; }
+
+  .node-hub {
+    --node-transform: translateZ(60px) rotateX(14deg);
+    transform: var(--node-transform);
+  }
+
+  .node-sensor {
+    width: 8.8rem;
+    --node-transform: translateZ(18px) rotateX(18deg);
+    transform: var(--node-transform);
+  }
+
+  .beam,
+  .pulse {
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .beam {
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(0, 229, 160, 0.02), rgba(0, 229, 160, 0.9), rgba(59, 130, 246, 0.16));
+    box-shadow: 0 0 20px rgba(0, 229, 160, 0.25);
+    transform-origin: left center;
+    animation: beam-flicker 2.6s ease-in-out infinite;
+  }
+
+  .beam-a { top: 34%; left: 27%; width: 19%; transform: rotate(-28deg); }
+  .beam-b { top: 48%; left: 41%; width: 17%; transform: rotate(26deg); animation-delay: -0.7s; }
+  .beam-c { top: 53%; left: 24%; width: 24%; transform: rotate(-9deg); animation-delay: -1.2s; }
+  .beam-d { top: 58%; left: 48%; width: 18%; transform: rotate(9deg); animation-delay: -1.8s; }
+  .beam-e { top: 45%; left: 58%; width: 19%; transform: rotate(33deg); animation-delay: -0.35s; }
+
+  .pulse {
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.95);
+    box-shadow: 0 0 22px rgba(59, 130, 246, 0.65);
+    animation: pulse-run 2.4s linear infinite;
+  }
+
+  .pulse-a { top: 33.5%; left: 28%; }
+  .pulse-b { top: 52%; left: 25%; animation-delay: -0.6s; }
+  .pulse-c { top: 47.4%; left: 42%; animation-delay: -1.2s; }
+  .pulse-d { top: 45.5%; left: 60%; animation-delay: -1.8s; }
+
+  @keyframes layer-float {
+    0%, 100% { transform: var(--layer-transform) translateY(0); }
+    50% { transform: var(--layer-transform) translateY(-8px); }
+  }
+
+  @keyframes node-drift {
+    0%, 100% { transform: var(--node-transform) translateY(0); }
+    50% { transform: var(--node-transform) translateY(-6px) translateZ(18px); }
+  }
+
+  @keyframes beam-flicker {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes pulse-run {
+    0% { transform: translateX(0) scale(0.7); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateX(140px) scale(1); opacity: 0; }
+  }
+
+  @media (max-width: 1023px) {
+    .signal-scene {
+      height: 24rem;
+    }
+
+    .scene-node {
+      transform: scale(0.88);
+      transform-origin: top left;
+    }
+  }
+</style>

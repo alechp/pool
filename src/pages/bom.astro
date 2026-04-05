@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import BomWorkspace from '../components/BomWorkspace.tsx';
+import SectionSubnav from '../components/SectionSubnav.astro';
 import { db } from '../lib/db';
 import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs, bomSelections } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
@@ -53,9 +54,16 @@ const initialState = {
   selections: Object.fromEntries(persistedSelections.map((row) => [row.partName, row.selectedUrl])),
   selectionSource: Object.fromEntries(persistedSelections.map((row) => [row.partName, row.selectionSource])),
 };
+const subnavItems = [
+  { href: '/bom', label: 'Workspace' },
+  { href: '/bom/compare', label: 'Compare' },
+];
 ---
-<Base title="Pool Security — BOM Workspace">
+<Base title="SwimSentry — BOM Workspace">
   <main class="max-w-[1240px] mx-auto px-8">
+    <section class="pt-2">
+      <SectionSubnav items={subnavItems} />
+    </section>
     <section class="py-12 text-center">
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
         Bill of <span class="text-accent">materials</span>
@@ -117,6 +125,9 @@ const initialState = {
         client:load
         buildKey={buildKey}
         title={`${hubTier ? `${hubTier.name} + ` : ''}${sensorTier.name}`}
+        hubTypeId={hubType?.id ?? 'none'}
+        hubTierId={hubTier?.id ?? null}
+        sensorTierId={sensorTier.id}
         hubName={hubTier?.name ?? null}
         sensorName={sensorTier.name}
         quantity={qty}

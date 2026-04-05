@@ -439,8 +439,8 @@ const CustomBuilder: Component<CustomBuilderProps> = (props) => {
               <a href="/build" class="text-sm text-accent hover:underline">
                 Back to guided wizard
               </a>
-              <a href="/" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
-                View all builds
+              <a href="/bom/compare" class="text-sm text-text-tertiary hover:text-text-secondary transition-colors">
+                Compare builds
               </a>
             </div>
           </div>

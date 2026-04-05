@@ -176,7 +176,7 @@ const BuildReview: Component<Props> = (props) => {
           <span class="text-accent-coral text-sm">{saveError()}</span>
         </Show>
 
-        <a href="/" class="text-sm text-accent hover:underline ml-auto" data-astro-prefetch>View all builds</a>
+        <a href="/bom/compare" class="text-sm text-accent hover:underline ml-auto" data-astro-prefetch>Compare builds</a>
 
         <button
           onClick={resetReviewState}

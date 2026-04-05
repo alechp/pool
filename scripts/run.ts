@@ -40,7 +40,7 @@ const options = [
 
 function banner() {
   console.log(`
-${GREEN}${BOLD}  PoolGuard v2${RESET} ${DIM}/ configurator${RESET}
+${GREEN}${BOLD}  SwimSentry v2${RESET} ${DIM}/ configurator${RESET}
 ${DIM}  ─────────────────────────${RESET}
 `);
 }
@@ -65,7 +65,7 @@ function printRouteTable() {
   // Top border
   console.log(`${DIM}\u250c${'\u2500'.repeat(totalW)}\u2510${RESET}`);
   // Title row
-  console.log(`${DIM}\u2502${RESET}  ${GREEN}${BOLD}PoolGuard v2${RESET}${' '.repeat(totalW - 14 - base.length)}${CYAN}${base}${RESET}  ${DIM}\u2502${RESET}`);
+  console.log(`${DIM}\u2502${RESET}  ${GREEN}${BOLD}SwimSentry v2${RESET}${' '.repeat(totalW - 15 - base.length)}${CYAN}${base}${RESET}  ${DIM}\u2502${RESET}`);
   // Separator
   console.log(`${DIM}\u251c${'\u2500'.repeat(labelW + 2)}\u252c${'\u2500'.repeat(urlW + 2)}\u2524${RESET}`);
   // Route rows

@@ -1,9 +1,9 @@
 ---
 import Base from '../../layouts/Base.astro';
 import SectionSubnav from '../../components/SectionSubnav.astro';
-import CustomBuilder from '../../components/CustomBuilder.tsx';
+import SummaryTable from '../../components/SummaryTable.tsx';
 import { db } from '../../lib/db';
-import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts } from '../../lib/schema';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../../lib/schema';
 import { loadCatalog } from '../../lib/data';
 
 const raw = {
@@ -14,25 +14,25 @@ const raw = {
   sensorParts: db.select().from(sensorTierParts).all(),
 };
 const catalog = loadCatalog(raw);
+const configs = db.select().from(savedConfigs).all();
 const subnavItems = [
-  { href: '/personas', label: 'Guided' },
-  { href: '/build', label: 'Preset' },
-  { href: '/build/custom', label: 'Custom' },
+  { href: '/bom', label: 'Workspace' },
+  { href: '/bom/compare', label: 'Compare' },
 ];
 ---
-<Base title="SwimSentry — Custom Build">
+<Base title="SwimSentry — Compare Systems">
   <main class="max-w-[1120px] mx-auto px-8">
     <section class="pt-2">
       <SectionSubnav items={subnavItems} />
     </section>
-    <section class="py-12 text-center">
+    <section class="py-8 text-center">
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
-        Custom <span class="text-accent">build</span>
+        Compare <span class="text-accent">build options</span>
       </h1>
       <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
-        Pick individual components for a bespoke setup. Mix and match parts across tiers.
+        Review every valid hub and sensor combination, sort by cost and architecture, then jump directly into a build or saved BOM workflow.
       </p>
     </section>
-    <CustomBuilder client:load catalog={catalog} />
+    <SummaryTable client:idle catalog={catalog} savedConfigs={configs} />
   </main>
 </Base>

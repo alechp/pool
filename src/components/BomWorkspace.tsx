@@ -9,10 +9,10 @@ type WorkspacePart = Part & {
   quantity: number;
 };
 
-type SortKey = 'part' | 'supplier' | 'price' | 'confidence';
-type FilterMode = 'best-price' | 'best-quality';
+type SortKey = 'part' | 'supplier' | 'price' | 'rating';
+type LinkStrategy = 'cheapest' | 'most-expensive' | 'highest-rating';
 type InitialState = {
-  filterMode?: FilterMode | null;
+  filterMode?: string | null;
   selections?: SelectedLinkMap;
   selectionSource?: Record<string, SelectionSource>;
 };
@@ -20,6 +20,9 @@ type InitialState = {
 interface Props {
   buildKey: string;
   title: string;
+  hubTypeId: string;
+  hubTierId?: string | null;
+  sensorTierId: string;
   hubName?: string | null;
   sensorName: string;
   quantity: number;
@@ -31,12 +34,13 @@ interface Props {
 type SelectedLinkMap = Record<string, string>;
 type SelectionSource = 'default' | 'filter' | 'manual';
 type BomWorkspaceState = {
-  filterMode: FilterMode;
+  filterMode: LinkStrategy;
   selections: SelectedLinkMap;
   selectionSource: Record<string, SelectionSource>;
 };
 
 const STORAGE_KEY = 'poolguard-bom-workspace';
+const SENSOR_QTY_OPTIONS = [1, 2, 4, 6, 8, 12, 16];
 
 function parsePrice(value: string | null): number {
   if (!value) return Number.POSITIVE_INFINITY;
@@ -56,36 +60,72 @@ function confidenceRank(confidence: BomLink['confidence']): number {
   }
 }
 
-function chooseLink(links: BomLink[], mode: FilterMode) {
+function ratingRank(rating: number | null): number {
+  return typeof rating === 'number' ? rating : -1;
+}
+
+function formatRating(rating: number | null) {
+  return typeof rating === 'number' ? `${(rating / 10).toFixed(1)}★` : '—';
+}
+
+function normalizeStrategy(value: string | null | undefined): LinkStrategy {
+  switch (value) {
+    case 'best-price':
+    case 'cheapest':
+      return 'cheapest';
+    case 'most-expensive':
+      return 'most-expensive';
+    case 'best-quality':
+    case 'highest-rating':
+    default:
+      return 'highest-rating';
+  }
+}
+
+function chooseLink(links: BomLink[], mode: LinkStrategy) {
   const ordered = [...links].sort((a, b) => {
-    if (mode === 'best-price') {
+    if (mode === 'cheapest') {
       const priceDiff = parsePrice(a.price) - parsePrice(b.price);
       if (priceDiff !== 0) return priceDiff;
+      const ratingDiff = ratingRank(b.rating) - ratingRank(a.rating);
+      if (ratingDiff !== 0) return ratingDiff;
       return confidenceRank(b.confidence) - confidenceRank(a.confidence);
     }
 
+    if (mode === 'most-expensive') {
+      const priceDiff = parsePrice(b.price) - parsePrice(a.price);
+      if (priceDiff !== 0) return priceDiff;
+      const ratingDiff = ratingRank(b.rating) - ratingRank(a.rating);
+      if (ratingDiff !== 0) return ratingDiff;
+      return confidenceRank(b.confidence) - confidenceRank(a.confidence);
+    }
+
+    const ratingDiff = ratingRank(b.rating) - ratingRank(a.rating);
+    if (ratingDiff !== 0) return ratingDiff;
     const confidenceDiff = confidenceRank(b.confidence) - confidenceRank(a.confidence);
     if (confidenceDiff !== 0) return confidenceDiff;
     return parsePrice(a.price) - parsePrice(b.price);
   });
+
   return ordered[0] ?? null;
 }
 
 function loadWorkspaceState(buildKey: string): BomWorkspaceState {
   if (typeof localStorage === 'undefined') {
-    return { filterMode: 'best-quality', selections: {}, selectionSource: {} };
+    return { filterMode: 'highest-rating', selections: {}, selectionSource: {} };
   }
+
   try {
     const raw = localStorage.getItem(`${STORAGE_KEY}:${buildKey}`);
-    if (!raw) return { filterMode: 'best-quality', selections: {}, selectionSource: {} };
+    if (!raw) return { filterMode: 'highest-rating', selections: {}, selectionSource: {} };
     const parsed = JSON.parse(raw) as Partial<BomWorkspaceState>;
     return {
-      filterMode: parsed.filterMode === 'best-price' ? 'best-price' : 'best-quality',
+      filterMode: normalizeStrategy(parsed.filterMode),
       selections: parsed.selections ?? {},
       selectionSource: parsed.selectionSource ?? {},
     };
   } catch {
-    return { filterMode: 'best-quality', selections: {}, selectionSource: {} };
+    return { filterMode: 'highest-rating', selections: {}, selectionSource: {} };
   }
 }
 
@@ -95,7 +135,7 @@ function saveWorkspaceState(buildKey: string, state: BomWorkspaceState) {
 }
 
 const BomWorkspace: Component<Props> = (props) => {
-  const [filterMode, setFilterMode] = createSignal<FilterMode>('best-quality');
+  const [filterMode, setFilterMode] = createSignal<LinkStrategy>('highest-rating');
   const [selectedLinks, setSelectedLinks] = createSignal<SelectedLinkMap>({});
   const [selectionSource, setSelectionSource] = createSignal<Record<string, SelectionSource>>({});
   const [sortKey, setSortKey] = createSignal<SortKey>('part');
@@ -103,6 +143,7 @@ const BomWorkspace: Component<Props> = (props) => {
   const [linksByPart, setLinksByPart] = createSignal<Record<string, BomLink[]>>({});
   const [loadingParts, setLoadingParts] = createSignal<string[]>([]);
   const [saveState, setSaveState] = createSignal<'idle' | 'saved'>('idle');
+  const [bulkState, setBulkState] = createSignal<'idle' | 'loading' | 'loaded'>('idle');
 
   const parts = createMemo<WorkspacePart[]>(() => [
     ...props.hubParts.map((part) => ({ ...part, scope: 'hub' as const, quantity: 1 })),
@@ -111,7 +152,7 @@ const BomWorkspace: Component<Props> = (props) => {
 
   onMount(() => {
     if (props.initialState?.selections && Object.keys(props.initialState.selections).length > 0) {
-      setFilterMode(props.initialState.filterMode === 'best-price' ? 'best-price' : 'best-quality');
+      setFilterMode(normalizeStrategy(props.initialState.filterMode));
       setSelectedLinks(props.initialState.selections);
       setSelectionSource(props.initialState.selectionSource ?? {});
       return;
@@ -129,6 +170,7 @@ const BomWorkspace: Component<Props> = (props) => {
     setSelectedLinks((current) => {
       const next = { ...current };
       const source = { ...selectionSource() };
+
       for (const part of parts()) {
         if (current[part.name]) continue;
         const chosen = chooseLink(currentLinks[part.name] ?? [], mode);
@@ -137,6 +179,7 @@ const BomWorkspace: Component<Props> = (props) => {
           if (!source[part.name]) source[part.name] = 'default';
         }
       }
+
       setSelectionSource(source);
       return next;
     });
@@ -173,20 +216,20 @@ const BomWorkspace: Component<Props> = (props) => {
     }
   }
 
-  createEffect(() => {
-    for (const part of parts()) {
-      if (!linksByPart()[part.name] && !loadingParts().includes(part.name)) {
-        ensureLinks(part);
-      }
-    }
-  });
+  async function findLinksForAllParts(refresh = false) {
+    setBulkState('loading');
+    await Promise.all(parts().map((part) => ensureLinks(part, refresh)));
+    setBulkState('loaded');
+  }
 
-  function applyGlobalMode(mode: FilterMode) {
+  async function generateSelectionBy(mode: LinkStrategy) {
+    await findLinksForAllParts(false);
     setFilterMode(mode);
     setSaveState('idle');
     setSelectedLinks((current) => {
       const next = { ...current };
       const source = { ...selectionSource() };
+
       for (const part of parts()) {
         const chosen = chooseLink(linksByPart()[part.name] ?? [], mode);
         if (chosen) {
@@ -194,6 +237,7 @@ const BomWorkspace: Component<Props> = (props) => {
           source[part.name] = 'filter';
         }
       }
+
       setSelectionSource(source);
       return next;
     });
@@ -240,6 +284,15 @@ const BomWorkspace: Component<Props> = (props) => {
     setSaveState('saved');
   }
 
+  function navigateToQuantity(nextQty: number) {
+    const params = new URLSearchParams();
+    params.set('hub_type', props.hubTypeId);
+    if (props.hubTierId) params.set('hub_tier', props.hubTierId);
+    params.set('sensor_tier', props.sensorTierId);
+    params.set('qty', String(nextQty));
+    window.location.href = `/bom?${params.toString()}`;
+  }
+
   const rows = createMemo(() => {
     const sorted = [...parts()].sort((a, b) => {
       const selectedA = (linksByPart()[a.name] ?? []).find((link) => link.url === selectedLinks()[a.name]) ?? null;
@@ -253,15 +306,17 @@ const BomWorkspace: Component<Props> = (props) => {
         case 'price':
           result = parsePrice(selectedA?.price ?? null) - parsePrice(selectedB?.price ?? null);
           break;
-        case 'confidence':
-          result = confidenceRank(selectedA?.confidence ?? 'low') - confidenceRank(selectedB?.confidence ?? 'low');
+        case 'rating':
+          result = ratingRank(selectedA?.rating ?? null) - ratingRank(selectedB?.rating ?? null);
           break;
         default:
           result = a.name.localeCompare(b.name);
+          break;
       }
 
       return descending() ? result * -1 : result;
     });
+
     return sorted;
   });
 
@@ -280,8 +335,8 @@ const BomWorkspace: Component<Props> = (props) => {
           <div>
             <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">BOM workspace</div>
             <h2 class="mt-2 text-2xl font-semibold tracking-tight">{props.title}</h2>
-            <p class="mt-2 max-w-[48rem] text-sm text-text-secondary">
-              Compare supplier options across the full bill of materials, apply a global price or quality strategy, then override any individual part and save the exact links you want this build to use.
+            <p class="mt-2 max-w-[52rem] text-sm text-text-secondary">
+              Find supplier links across the full bill of materials, generate a default selection by price or rating, then override any individual part and save the exact shopping set you want.
             </p>
           </div>
           <div class="rounded-2xl border border-white/8 bg-black/12 px-4 py-3 text-right">
@@ -289,26 +344,53 @@ const BomWorkspace: Component<Props> = (props) => {
             <div class="mt-1 text-2xl font-semibold text-accent">${grandTotal().toFixed(2)}</div>
           </div>
         </div>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={() => applyGlobalMode('best-quality')}
-            class={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              filterMode() === 'best-quality' ? 'bg-accent text-bg-deep' : 'bg-white/6 text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Best quality
-          </button>
-          <button
-            onClick={() => applyGlobalMode('best-price')}
-            class={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-              filterMode() === 'best-price' ? 'bg-accent text-bg-deep' : 'bg-white/6 text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            Best price
-          </button>
-          <div class="rounded-full border border-white/8 px-4 py-2 text-sm text-text-tertiary">
-            Sensor quantity: <span class="text-text-primary">{props.quantity}</span>
+
+        <div class="mt-6 grid gap-4 md:grid-cols-[1.2fr_1fr_auto]">
+          <label class="rounded-2xl border border-white/8 bg-black/12 p-4">
+            <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Generate links by</div>
+            <select
+              value={filterMode()}
+              onChange={(e) => setFilterMode(e.currentTarget.value as LinkStrategy)}
+              class="mt-3 w-full rounded-xl border border-white/10 bg-bg-card px-4 py-3 text-sm text-text-primary outline-none"
+            >
+              <option value="cheapest">Cheapest</option>
+              <option value="most-expensive">Most Expensive</option>
+              <option value="highest-rating">Highest Rating</option>
+            </select>
+          </label>
+
+          <label class="rounded-2xl border border-white/8 bg-black/12 p-4">
+            <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Sensor quantity</div>
+            <select
+              value={String(props.quantity)}
+              onChange={(e) => navigateToQuantity(Number(e.currentTarget.value))}
+              class="mt-3 w-full rounded-xl border border-white/10 bg-bg-card px-4 py-3 text-sm text-text-primary outline-none"
+            >
+              <For each={SENSOR_QTY_OPTIONS}>
+                {(qty) => <option value={qty}>{qty} sensors</option>}
+              </For>
+            </select>
+          </label>
+
+          <div class="flex flex-col gap-3">
+            <button
+              onClick={() => void generateSelectionBy(filterMode())}
+              disabled={bulkState() === 'loading'}
+              class="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim disabled:opacity-60"
+            >
+              {bulkState() === 'loading' ? 'Generating…' : 'Generate selection'}
+            </button>
+            <button
+              onClick={() => void findLinksForAllParts(true)}
+              disabled={bulkState() === 'loading'}
+              class="rounded-full bg-white/6 px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 disabled:opacity-60"
+            >
+              {bulkState() === 'loading' ? 'Finding links…' : 'Find links for all parts'}
+            </button>
           </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-3">
           <button
             onClick={persistSelection}
             class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim"
@@ -326,8 +408,13 @@ const BomWorkspace: Component<Props> = (props) => {
             }}
             class="rounded-full bg-white/6 px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/10"
           >
-            Open all selected links
+            Open all selected shopping links
           </button>
+          <Show when={bulkState() === 'loaded'}>
+            <div class="rounded-full border border-white/8 bg-white/4 px-4 py-2 text-sm text-text-secondary">
+              Link set loaded
+            </div>
+          </Show>
           <Show when={saveState() === 'saved'}>
             <div class="rounded-full border border-accent/25 bg-accent/10 px-4 py-2 text-sm text-accent">
               Saved
@@ -337,11 +424,12 @@ const BomWorkspace: Component<Props> = (props) => {
       </section>
 
       <section class="rounded-2xl border border-border bg-bg-surface overflow-hidden">
-        <div class="grid grid-cols-[1.2fr_0.85fr_0.85fr_0.65fr_0.55fr] gap-4 border-b border-white/6 px-5 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+        <div class="grid grid-cols-[1.15fr_0.8fr_0.65fr_0.55fr_0.55fr_0.45fr] gap-4 border-b border-white/6 px-5 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
           <button class="text-left" onClick={() => setSort('part')}>Part</button>
-          <button class="text-left" onClick={() => setSort('supplier')}>Selected supplier</button>
+          <button class="text-left" onClick={() => setSort('supplier')}>Supplier</button>
           <button class="text-left" onClick={() => setSort('price')}>Price</button>
-          <button class="text-left" onClick={() => setSort('confidence')}>Confidence</button>
+          <button class="text-left" onClick={() => setSort('rating')}>Rating</button>
+          <div class="text-left">Source</div>
           <div class="text-right">Open</div>
         </div>
 
@@ -349,9 +437,10 @@ const BomWorkspace: Component<Props> = (props) => {
           {(part) => {
             const links = () => linksByPart()[part.name] ?? [];
             const selected = () => links().find((link) => link.url === selectedLinks()[part.name]) ?? chooseLink(links(), filterMode());
+
             return (
               <div class="border-b border-white/4 px-5 py-4 last:border-b-0">
-                <div class="grid grid-cols-[1.2fr_0.85fr_0.85fr_0.65fr_0.55fr] gap-4 items-center">
+                <div class="grid grid-cols-[1.15fr_0.8fr_0.65fr_0.55fr_0.55fr_0.45fr] gap-4 items-center">
                   <div class="flex items-center gap-3 min-w-0">
                     <HardwareThumbnail variant={getPartVisualVariant(part.name)} title={part.name} class="h-14 w-20 flex-none" />
                     <div class="min-w-0">
@@ -363,16 +452,21 @@ const BomWorkspace: Component<Props> = (props) => {
                     </div>
                   </div>
 
-                  <div class="text-sm text-text-primary">{selected()?.supplier ?? 'Loading…'}</div>
+                  <div>
+                    <div class="text-sm text-text-primary">{selected()?.supplier ?? 'No link yet'}</div>
+                    <div class="mt-1 text-xs text-text-tertiary">{selected()?.confidence ?? 'Not ranked'}</div>
+                  </div>
+
                   <div class="text-sm text-text-primary">
                     {selected()?.price ? `${selected()!.price}${part.quantity > 1 ? ` × ${part.quantity}` : ''}` : '—'}
                   </div>
-                  <div>
-                    <div class="text-sm text-text-secondary">{selected()?.confidence ?? '—'}</div>
-                    <div class="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
-                      {selectionSource()[part.name] ?? 'default'}
-                    </div>
+
+                  <div class="text-sm text-text-primary">{formatRating(selected()?.rating ?? null)}</div>
+
+                  <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+                    {selectionSource()[part.name] ?? 'default'}
                   </div>
+
                   <div class="text-right">
                     <Show when={selected()} fallback={<span class="text-xs text-text-tertiary">Waiting</span>}>
                       {(link) => (
@@ -388,13 +482,14 @@ const BomWorkspace: Component<Props> = (props) => {
                   <div class="mb-3 flex items-center justify-between gap-3">
                     <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Available links</div>
                     <button
-                      onClick={() => ensureLinks(part, true)}
+                      onClick={() => void ensureLinks(part, true)}
                       class="text-xs text-text-tertiary hover:text-text-primary"
                     >
-                      Refresh live links
+                      Refresh this part
                     </button>
                   </div>
-                  <Show when={links().length > 0} fallback={<div class="text-sm text-text-tertiary">Loading supplier options…</div>}>
+
+                  <Show when={links().length > 0} fallback={<div class="text-sm text-text-tertiary">No supplier links yet. Use “Find links for all parts” or refresh this part.</div>}>
                     <div class="space-y-2">
                       <For each={links()}>
                         {(link) => (
@@ -417,7 +512,7 @@ const BomWorkspace: Component<Props> = (props) => {
                               <div class="min-w-0">
                                 <div class="text-sm font-medium text-text-primary">{link.supplier}</div>
                                 <div class="mt-1 text-xs text-text-tertiary">
-                                  {link.price ?? 'Price unavailable'} · {link.confidence} confidence
+                                  {link.price ?? 'Price unavailable'} · {formatRating(link.rating ?? null)} · {link.confidence} confidence
                                 </div>
                               </div>
                             </div>

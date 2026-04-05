@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import BuildReview from '../components/BuildReview.tsx';
+import SectionSubnav from '../components/SectionSubnav.astro';
 import SelectableCard from '../components/SelectableCard.astro';
 import HardwareThumbnail from '../components/HardwareThumbnail.tsx';
 import PartDetailRow from '../components/PartDetailRow.tsx';
@@ -114,12 +115,20 @@ const stepTabs = [
     disabled: !selectedSensorTier,
   },
 ];
+const subnavItems = [
+  { href: '/personas', label: 'Guided' },
+  { href: '/build', label: 'Preset' },
+  { href: '/build/custom', label: 'Custom' },
+];
 ---
-<Base title="Pool Security — Build">
+<Base title="SwimSentry — Build">
   <main class="max-w-[1120px] mx-auto px-8">
+    <section class="pt-2">
+      <SectionSubnav items={subnavItems} />
+    </section>
     <section class="py-12 text-center">
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
-        Build your <span class="text-accent">pool security</span> system
+        Build your <span class="text-accent">SwimSentry</span> system
       </h1>
       <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
         Configure sensors and hubs for full backyard coverage. Real-time pricing from Amazon and direct suppliers.

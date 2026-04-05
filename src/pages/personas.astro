@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import SectionSubnav from '../components/SectionSubnav.astro';
 import PersonaGrid from '../components/PersonaGrid.tsx';
 import { db } from '../lib/db';
 import { personas, personaFactors, personaBundles, hubTypes, hubTiers, sensorTiers, hubTierParts, sensorTierParts } from '../lib/schema';
@@ -29,12 +30,20 @@ const personaData: Persona[] = personaRows.map(p => ({
     .filter(b => b.personaId === p.id)
     .sort((a, b) => a.sortOrder - b.sortOrder),
 }));
+const subnavItems = [
+  { href: '/personas', label: 'Guided' },
+  { href: '/build', label: 'Preset' },
+  { href: '/build/custom', label: 'Custom' },
+];
 ---
-<Base title="Pool Security — Personas">
+<Base title="SwimSentry — Guided Build">
   <main class="max-w-[1120px] mx-auto px-8">
+    <section class="pt-2">
+      <SectionSubnav items={subnavItems} />
+    </section>
     <section class="py-12 text-center">
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
-        Find your <span class="text-accent">fit</span>
+        Start with a <span class="text-accent">guided fit</span>
       </h1>
       <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
         Select a persona that matches your situation. We'll recommend the best hardware bundle for your needs.

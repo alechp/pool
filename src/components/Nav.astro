@@ -1,11 +1,9 @@
 ---
 const pathname = Astro.url.pathname;
 const tabs = [
-  { href: '/', label: 'Pricing' },
-  { href: '/build', label: 'Quick Build' },
+  { href: '/', label: 'Home' },
+  { href: '/build', label: 'Build' },
   { href: '/bom', label: 'BOM' },
-  { href: '/build/custom', label: 'Custom Build' },
-  { href: '/personas', label: 'Personas' },
 ];
 ---
 <nav class="max-w-[1120px] mx-auto px-8 pt-6 pb-2">
@@ -15,7 +13,11 @@ const tabs = [
         href={tab.href}
         class:list={[
           "px-5 py-2.5 rounded-md text-sm font-medium transition-all",
-          pathname === tab.href ? "bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]" : "text-text-tertiary hover:text-text-secondary"
+          pathname === tab.href
+            || (tab.href === '/build' && (pathname === '/build/custom' || pathname === '/personas'))
+            || (tab.href === '/bom' && pathname === '/bom/compare')
+            ? "bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
+            : "text-text-tertiary hover:text-text-secondary"
         ]}
       >
         {tab.label}
