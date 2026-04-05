@@ -1,13 +1,13 @@
 <section class="relative isolate overflow-hidden rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,229,160,0.14),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-6 py-10 md:px-10 md:py-14">
-  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.18),transparent_22%),radial-gradient(circle_at_80%_18%,rgba(0,229,160,0.18),transparent_28%),radial-gradient(circle_at_50%_80%,rgba(167,139,250,0.1),transparent_30%)]"></div>
-  <div class="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.18),transparent_24%),radial-gradient(circle_at_82%_16%,rgba(0,229,160,0.16),transparent_24%),radial-gradient(circle_at_50%_82%,rgba(245,158,11,0.1),transparent_30%)]"></div>
+  <div class="grid items-center gap-10 lg:grid-cols-[0.94fr_1.06fr]">
     <div class="relative z-10">
       <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">SwimSentry</div>
       <h1 class="mt-4 max-w-[12ch] text-5xl font-semibold tracking-tight text-text-primary md:text-6xl">
-        Pool safety, staged from signal to shopping.
+        From sensor shell to hub stack, the system fits together visibly.
       </h1>
-      <p class="mt-5 max-w-[56ch] text-base leading-7 text-text-secondary">
-        Start with a guided recommendation, move into a concrete hardware build, then finish procurement with a saved BOM that remembers the links you actually want to buy.
+      <p class="mt-5 max-w-[58ch] text-base leading-7 text-text-secondary">
+        The home experience now introduces the actual SwimSentry product layers: each outdoor sensor assembly, the communication path into the home hub, and the central command stack that turns events into alerts.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="/build" class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-bg-deep">
@@ -22,257 +22,441 @@
       </div>
     </div>
 
-    <div class="signal-scene relative z-10 h-[28rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-[linear-gradient(180deg,rgba(10,11,15,0.68),rgba(10,11,15,0.92))]">
-      <div class="signal-grid"></div>
-      <div class="signal-layer signal-layer-back"></div>
-      <div class="signal-layer signal-layer-mid"></div>
-      <div class="signal-layer signal-layer-front"></div>
+    <div class="iot-stage relative z-10 h-[34rem] overflow-hidden rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(8,10,14,0.88),rgba(9,11,15,0.98))]">
+      <div class="iot-atmosphere"></div>
+      <div class="iot-floor"></div>
 
-      <div class="scene-node node-hub hub-main">
-        <div class="node-shell">
-          <div class="node-led"></div>
-          <div class="node-title">Command Hub</div>
-          <div class="node-subtitle">ingest + alert routing</div>
+      <div class="device-cluster device-sensor-left">
+        <div class="device-sensor">
+          <div class="sensor-shell">
+            <div class="sensor-faceplate"></div>
+            <div class="sensor-lens lens-upper"></div>
+            <div class="sensor-lens lens-lower"></div>
+            <div class="sensor-radar"></div>
+            <div class="sensor-base"></div>
+          </div>
+          <div class="device-caption">
+            <div class="caption-title">Sensor Assembly</div>
+            <div class="caption-subtitle">camera + mmWave + weather shell</div>
+          </div>
         </div>
-      </div>
-
-      <div class="scene-node node-hub hub-edge">
-        <div class="node-shell">
-          <div class="node-led"></div>
-          <div class="node-title">Edge Gateway</div>
-          <div class="node-subtitle">bridge + buffering</div>
-        </div>
-      </div>
-
-      <div class="scene-node node-sensor sensor-a">
-        <div class="node-shell">
-          <div class="node-led"></div>
-          <div class="node-title">Sensor A</div>
-          <div class="node-subtitle">camera + mmWave</div>
-        </div>
-      </div>
-      <div class="scene-node node-sensor sensor-b">
-        <div class="node-shell">
-          <div class="node-led"></div>
-          <div class="node-title">Sensor B</div>
-          <div class="node-subtitle">coverage lane</div>
-        </div>
-      </div>
-      <div class="scene-node node-sensor sensor-c">
-        <div class="node-shell">
-          <div class="node-led"></div>
-          <div class="node-title">Sensor C</div>
-          <div class="node-subtitle">entry zone</div>
-        </div>
-      </div>
-      <div class="scene-node node-sensor sensor-d">
-        <div class="node-shell">
-          <div class="node-led"></div>
-          <div class="node-title">Sensor D</div>
-          <div class="node-subtitle">pool perimeter</div>
+        <div class="stack-explainer">
+          <div>Optics</div>
+          <div>Radar</div>
+          <div>Battery</div>
         </div>
       </div>
 
-      <div class="beam beam-a"></div>
-      <div class="beam beam-b"></div>
-      <div class="beam beam-c"></div>
-      <div class="beam beam-d"></div>
-      <div class="beam beam-e"></div>
+      <div class="device-cluster device-sensor-right">
+        <div class="device-sensor sensor-tall">
+          <div class="sensor-shell">
+            <div class="sensor-faceplate"></div>
+            <div class="sensor-lens lens-upper"></div>
+            <div class="sensor-lens lens-lower"></div>
+            <div class="sensor-radar"></div>
+            <div class="sensor-base"></div>
+          </div>
+          <div class="device-caption">
+            <div class="caption-title">Perimeter Sensor</div>
+            <div class="caption-subtitle">coverage lane + gate watch</div>
+          </div>
+        </div>
+        <div class="stack-explainer">
+          <div>Enclosure</div>
+          <div>Compute</div>
+          <div>Radio</div>
+        </div>
+      </div>
 
-      <div class="pulse pulse-a"></div>
-      <div class="pulse pulse-b"></div>
-      <div class="pulse pulse-c"></div>
-      <div class="pulse pulse-d"></div>
+      <div class="device-cluster device-hub">
+        <div class="hub-stack">
+          <div class="hub-layer hub-cap"></div>
+          <div class="hub-layer hub-core">
+            <div class="hub-led"></div>
+            <div class="hub-ports">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+          <div class="hub-layer hub-base"></div>
+          <div class="hub-shadow"></div>
+        </div>
+        <div class="device-caption">
+          <div class="caption-title">Hub Stack</div>
+          <div class="caption-subtitle">radio bridge + local processing + alert routing</div>
+        </div>
+      </div>
+
+      <div class="signal-link link-left"></div>
+      <div class="signal-link link-right"></div>
+      <div class="signal-packet packet-left"></div>
+      <div class="signal-packet packet-right"></div>
+
+      <div class="layer-label label-sensor-left">
+        <span class="label-chip">Outdoor sensing</span>
+        <span class="label-copy">High-visibility enclosure with stacked sensor layers.</span>
+      </div>
+      <div class="layer-label label-transport">
+        <span class="label-chip">Wireless link</span>
+        <span class="label-copy">Events stream from the yard into the home network.</span>
+      </div>
+      <div class="layer-label label-hub">
+        <span class="label-chip">Command layer</span>
+        <span class="label-copy">The hub stack routes detections, notifications, and saved build data.</span>
+      </div>
     </div>
   </div>
 </section>
 
 <style>
-  .signal-scene {
-    perspective: 1200px;
+  .iot-stage {
+    perspective: 1400px;
     transform-style: preserve-3d;
   }
 
-  .signal-grid,
-  .signal-layer {
+  .iot-atmosphere,
+  .iot-floor {
     position: absolute;
     inset: 0;
   }
 
-  .signal-grid {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-    background-size: 42px 42px;
-    mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.95) 18%, rgba(0, 0, 0, 0.95) 80%, transparent);
-    transform: rotateX(66deg) translateY(22%);
-    transform-origin: bottom center;
+  .iot-atmosphere {
+    background:
+      radial-gradient(circle at 22% 18%, rgba(59, 130, 246, 0.22), transparent 24%),
+      radial-gradient(circle at 80% 22%, rgba(0, 229, 160, 0.18), transparent 26%),
+      radial-gradient(circle at 50% 65%, rgba(255, 255, 255, 0.05), transparent 32%);
   }
 
-  .signal-layer {
-    border-radius: 22px;
-    inset-inline: 8%;
+  .iot-floor {
+    inset: auto 8% 8% 8%;
+    height: 34%;
+    border-radius: 28px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
+      linear-gradient(180deg, rgba(11, 15, 21, 0.76), rgba(7, 9, 12, 0.96));
     border: 1px solid rgba(255, 255, 255, 0.05);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    animation: layer-float 7s ease-in-out infinite;
+    transform: rotateX(75deg) translateZ(-14px);
+    transform-origin: bottom center;
+    box-shadow: 0 50px 90px rgba(0, 0, 0, 0.42);
   }
 
-  .signal-layer-back {
-    inset-block: 18% 40%;
-    --layer-transform: translateZ(-120px) rotateX(72deg);
-    transform: var(--layer-transform);
-    opacity: 0.45;
-  }
-
-  .signal-layer-mid {
-    inset-block: 31% 25%;
-    --layer-transform: translateZ(-35px) rotateX(72deg);
-    transform: var(--layer-transform);
-    opacity: 0.7;
-    animation-delay: -2s;
-  }
-
-  .signal-layer-front {
-    inset-block: 48% 8%;
-    --layer-transform: translateZ(50px) rotateX(72deg);
-    transform: var(--layer-transform);
-    opacity: 0.92;
-    animation-delay: -4s;
-  }
-
-  .scene-node {
+  .device-cluster,
+  .signal-link,
+  .signal-packet,
+  .layer-label {
     position: absolute;
-    width: 10rem;
-    transform-style: preserve-3d;
-    animation: node-drift 6s ease-in-out infinite;
+    z-index: 2;
   }
 
-  .node-shell {
-    border-radius: 1.3rem;
+  .device-cluster {
+    animation: float-cluster 6s ease-in-out infinite;
+  }
+
+  .device-sensor-left { left: 8%; top: 24%; animation-delay: -0.6s; }
+  .device-sensor-right { right: 12%; top: 22%; animation-delay: -2.2s; }
+  .device-hub { left: 38%; top: 16%; animation-delay: -1.3s; }
+
+  .device-sensor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .sensor-shell {
+    position: relative;
+    width: 8rem;
+    height: 11.8rem;
+    border-radius: 2rem;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 16%, rgba(20, 24, 31, 0.92) 18%, rgba(7, 8, 11, 0.98)),
+      linear-gradient(180deg, rgba(17, 22, 29, 0.82), rgba(8, 10, 14, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 26px 60px rgba(0, 0, 0, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    transform: rotateX(14deg) rotateY(-14deg);
+  }
+
+  .sensor-tall .sensor-shell {
+    transform: rotateX(14deg) rotateY(14deg);
+  }
+
+  .sensor-faceplate {
+    position: absolute;
+    inset: 1rem 0.95rem 1.4rem;
+    border-radius: 1.4rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .sensor-lens {
+    position: absolute;
+    left: 50%;
+    width: 3.15rem;
+    height: 3.15rem;
+    border-radius: 999px;
+    transform: translateX(-50%);
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.45), rgba(59, 130, 246, 0.38) 22%, rgba(7, 10, 14, 0.96) 55%, rgba(0, 0, 0, 0.98));
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 0 25px rgba(59, 130, 246, 0.16);
+  }
+
+  .lens-upper { top: 1.7rem; }
+  .lens-lower { top: 5.1rem; width: 2.35rem; height: 2.35rem; }
+
+  .sensor-radar {
+    position: absolute;
+    left: 50%;
+    bottom: 2.45rem;
+    width: 3.55rem;
+    height: 0.7rem;
+    border-radius: 999px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(0, 229, 160, 0.76), rgba(255, 255, 255, 0.14));
+    box-shadow: 0 0 22px rgba(0, 229, 160, 0.28);
+  }
+
+  .sensor-base {
+    position: absolute;
+    inset: auto 1.2rem 0.9rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .hub-stack {
+    position: relative;
+    width: 11.5rem;
+    height: 12rem;
+    transform: rotateX(16deg) rotateY(-12deg);
+  }
+
+  .hub-layer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 1.2rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)),
-      linear-gradient(180deg, rgba(12, 14, 20, 0.88), rgba(10, 11, 15, 0.98));
-    box-shadow:
-      0 14px 50px rgba(0, 0, 0, 0.38),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    padding: 1rem 1rem 0.9rem;
+      linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
+      linear-gradient(180deg, rgba(18, 23, 31, 0.9), rgba(8, 11, 16, 0.98));
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+  }
+
+  .hub-cap {
+    top: 0;
+    width: 7.2rem;
+    height: 2.1rem;
+  }
+
+  .hub-core {
+    top: 1.7rem;
+    width: 9rem;
+    height: 5.4rem;
+  }
+
+  .hub-base {
+    top: 6.2rem;
+    width: 10.6rem;
+    height: 3.4rem;
+  }
+
+  .hub-shadow {
+    position: absolute;
+    inset: auto 0 -0.2rem;
+    height: 1rem;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.45), transparent 68%);
+    filter: blur(9px);
+  }
+
+  .hub-led {
+    position: absolute;
+    top: 1.1rem;
+    left: 1rem;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 999px;
+    background: #00e5a0;
+    box-shadow: 0 0 20px rgba(0, 229, 160, 0.72);
+  }
+
+  .hub-ports {
+    position: absolute;
+    right: 1rem;
+    bottom: 1.2rem;
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .hub-ports span {
+    width: 1.2rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .device-caption {
+    max-width: 12rem;
+    text-align: center;
+  }
+
+  .caption-title {
+    color: #e8e9ed;
+    font-size: 0.94rem;
+    font-weight: 600;
+  }
+
+  .caption-subtitle {
+    margin-top: 0.2rem;
+    color: #8b8d98;
+    font-size: 0.74rem;
+    line-height: 1.45;
+  }
+
+  .stack-explainer {
+    position: absolute;
+    top: 1.4rem;
+    width: 5rem;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .device-sensor-left .stack-explainer {
+    left: 7.8rem;
+  }
+
+  .device-sensor-right .stack-explainer {
+    right: 7.6rem;
+  }
+
+  .stack-explainer div {
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.4rem 0.7rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #e8e9ed;
     backdrop-filter: blur(10px);
   }
 
-  .node-hub .node-shell {
-    min-height: 6.2rem;
-  }
-
-  .node-sensor .node-shell {
-    min-height: 5.4rem;
-  }
-
-  .node-led {
-    width: 0.7rem;
-    height: 0.7rem;
-    border-radius: 999px;
-    background: #00e5a0;
-    box-shadow: 0 0 18px rgba(0, 229, 160, 0.85);
-  }
-
-  .node-title {
-    margin-top: 0.9rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #e8e9ed;
-  }
-
-  .node-subtitle {
-    margin-top: 0.18rem;
-    font-size: 0.74rem;
-    letter-spacing: 0.03em;
-    color: #8b8d98;
-  }
-
-  .hub-main { top: 16%; left: 40%; animation-delay: -1s; }
-  .hub-edge { top: 38%; left: 59%; animation-delay: -3s; }
-  .sensor-a { top: 60%; left: 14%; }
-  .sensor-b { top: 70%; left: 33%; animation-delay: -1.4s; }
-  .sensor-c { top: 66%; left: 55%; animation-delay: -2.8s; }
-  .sensor-d { top: 57%; left: 74%; animation-delay: -4.2s; }
-
-  .node-hub {
-    --node-transform: translateZ(60px) rotateX(14deg);
-    transform: var(--node-transform);
-  }
-
-  .node-sensor {
-    width: 8.8rem;
-    --node-transform: translateZ(18px) rotateX(18deg);
-    transform: var(--node-transform);
-  }
-
-  .beam,
-  .pulse {
-    position: absolute;
-    pointer-events: none;
-  }
-
-  .beam {
+  .signal-link {
+    top: 38%;
     height: 2px;
     border-radius: 999px;
-    background: linear-gradient(90deg, rgba(0, 229, 160, 0.02), rgba(0, 229, 160, 0.9), rgba(59, 130, 246, 0.16));
-    box-shadow: 0 0 20px rgba(0, 229, 160, 0.25);
+    background: linear-gradient(90deg, rgba(0, 229, 160, 0.08), rgba(0, 229, 160, 0.92), rgba(59, 130, 246, 0.2));
+    box-shadow: 0 0 20px rgba(0, 229, 160, 0.2);
     transform-origin: left center;
-    animation: beam-flicker 2.6s ease-in-out infinite;
+    animation: shimmer-link 2.4s ease-in-out infinite;
   }
 
-  .beam-a { top: 34%; left: 27%; width: 19%; transform: rotate(-28deg); }
-  .beam-b { top: 48%; left: 41%; width: 17%; transform: rotate(26deg); animation-delay: -0.7s; }
-  .beam-c { top: 53%; left: 24%; width: 24%; transform: rotate(-9deg); animation-delay: -1.2s; }
-  .beam-d { top: 58%; left: 48%; width: 18%; transform: rotate(9deg); animation-delay: -1.8s; }
-  .beam-e { top: 45%; left: 58%; width: 19%; transform: rotate(33deg); animation-delay: -0.35s; }
+  .link-left {
+    left: 25%;
+    width: 17%;
+    transform: rotate(-11deg);
+  }
 
-  .pulse {
-    width: 0.85rem;
-    height: 0.85rem;
+  .link-right {
+    left: 56%;
+    width: 17%;
+    transform: rotate(8deg);
+    animation-delay: -1.2s;
+  }
+
+  .signal-packet {
+    top: 37.2%;
+    width: 0.8rem;
+    height: 0.8rem;
     border-radius: 999px;
     background: rgba(59, 130, 246, 0.95);
-    box-shadow: 0 0 22px rgba(59, 130, 246, 0.65);
-    animation: pulse-run 2.4s linear infinite;
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.62);
+    animation: move-packet 2.8s linear infinite;
   }
 
-  .pulse-a { top: 33.5%; left: 28%; }
-  .pulse-b { top: 52%; left: 25%; animation-delay: -0.6s; }
-  .pulse-c { top: 47.4%; left: 42%; animation-delay: -1.2s; }
-  .pulse-d { top: 45.5%; left: 60%; animation-delay: -1.8s; }
+  .packet-left { left: 25%; }
+  .packet-right { left: 56%; animation-delay: -1.4s; }
 
-  @keyframes layer-float {
-    0%, 100% { transform: var(--layer-transform) translateY(0); }
-    50% { transform: var(--layer-transform) translateY(-8px); }
+  .layer-label {
+    max-width: 12.5rem;
+    display: grid;
+    gap: 0.5rem;
   }
 
-  @keyframes node-drift {
-    0%, 100% { transform: var(--node-transform) translateY(0); }
-    50% { transform: var(--node-transform) translateY(-6px) translateZ(18px); }
+  .label-sensor-left { left: 6%; bottom: 10%; }
+  .label-transport { left: 39%; bottom: 6%; text-align: center; }
+  .label-hub { right: 8%; bottom: 9%; text-align: right; }
+
+  .label-chip {
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 229, 160, 0.24);
+    background: rgba(0, 229, 160, 0.08);
+    padding: 0.35rem 0.7rem;
+    color: #00e5a0;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
   }
 
-  @keyframes beam-flicker {
+  .label-transport .label-chip {
+    margin-inline: auto;
+  }
+
+  .label-hub .label-chip {
+    margin-left: auto;
+  }
+
+  .label-copy {
+    color: #8b8d98;
+    font-size: 0.76rem;
+    line-height: 1.5;
+  }
+
+  @keyframes float-cluster {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+  }
+
+  @keyframes shimmer-link {
     0%, 100% { opacity: 0.45; }
     50% { opacity: 1; }
   }
 
-  @keyframes pulse-run {
-    0% { transform: translateX(0) scale(0.7); opacity: 0; }
-    20% { opacity: 1; }
-    100% { transform: translateX(140px) scale(1); opacity: 0; }
+  @keyframes move-packet {
+    0% { transform: translateX(0) scale(0.8); opacity: 0; }
+    15% { opacity: 1; }
+    100% { transform: translateX(130px) scale(1); opacity: 0; }
   }
 
   @media (max-width: 1023px) {
-    .signal-scene {
-      height: 24rem;
+    .iot-stage {
+      height: 29rem;
     }
 
-    .scene-node {
-      transform: scale(0.88);
-      transform-origin: top left;
+    .device-hub {
+      left: 35%;
+      top: 14%;
+    }
+
+    .device-sensor-left {
+      left: 2%;
+    }
+
+    .device-sensor-right {
+      right: 4%;
+    }
+
+    .stack-explainer,
+    .layer-label {
+      display: none;
     }
   }
 </style>
