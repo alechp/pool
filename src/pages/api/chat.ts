@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { messages, sessionId } = body;
+    const { messages, sessionId, image } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(
@@ -54,6 +54,7 @@ When recommending a configuration, include a JSON block in your response like th
 \`\`\`
 
 Consider: pool size, distance from house, budget, number of children, notification preferences, and power availability.
+If the user uploads a layout, site plan, or pool image, inspect it carefully. Extract exact dimensions only when the drawing explicitly shows measurements, scale marks, or dimension labels. If exact size cannot be read directly from the image, say that clearly and identify what reference is missing rather than inventing a number.
 Format the visible response in clean GitHub-flavored Markdown with short headings or bullets when useful.
 Keep responses concise (2-4 sentences) unless asked for detail.`;
 
@@ -73,10 +74,35 @@ Keep responses concise (2-4 sentences) unless asked for detail.`;
 
     const client = new Anthropic({ apiKey });
 
-    const apiMessages = messages.map((m: any) => ({
-      role: m.role as 'user' | 'assistant',
-      content: m.content,
-    }));
+    const latestUserIndex = [...messages].reverse().findIndex((m: any) => m.role === 'user');
+    const imageMessageIndex = latestUserIndex === -1 ? -1 : messages.length - 1 - latestUserIndex;
+
+    const apiMessages = messages.map((m: any, index: number) => {
+      if (image && index === imageMessageIndex && m.role === 'user') {
+        return {
+          role: 'user' as const,
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: image.mediaType,
+                data: image.data,
+              },
+            },
+            {
+              type: 'text',
+              text: m.content,
+            },
+          ],
+        };
+      }
+
+      return {
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      };
+    });
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',

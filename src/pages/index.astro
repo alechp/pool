@@ -1,11 +1,16 @@
 ---
 import Base from '../layouts/Base.astro';
 import LandingSignalScene from '../components/LandingSignalScene.astro';
+import HomeAdvisor from '../components/HomeAdvisor.tsx';
 ---
-<Base title="SwimSentry — Home">
+<Base title="SwimSentry — Home" showAdvisor={false}>
   <main class="max-w-[1200px] mx-auto px-8">
     <section class="py-10">
       <LandingSignalScene />
+    </section>
+
+    <section class="pb-10">
+      <HomeAdvisor client:load />
     </section>
 
     <section class="grid gap-5 pb-12 lg:grid-cols-3">

@@ -115,6 +115,7 @@ export type Preselection = {
 export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
+  imageName?: string | null;
   recommendation?: {
     hubTypeId: string;
     hubTierId?: string;

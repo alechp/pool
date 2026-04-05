@@ -9,6 +9,12 @@ const ADVISOR_STORAGE_KEY = 'poolguard-ai-advisor';
 const MIN_WIDTH = 380;
 const MAX_WIDTH = 760;
 
+type ImageAttachment = {
+  name: string;
+  mediaType: string;
+  data: string;
+};
+
 type AdvisorConversation = {
   id: string;
   title: string;
@@ -75,6 +81,23 @@ function saveAdvisorState(state: AdvisorState) {
   localStorage.setItem(ADVISOR_STORAGE_KEY, JSON.stringify(state));
 }
 
+function fileToAttachment(file: File): Promise<ImageAttachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? '');
+      const [, data = ''] = result.split(',');
+      resolve({
+        name: file.name,
+        mediaType: file.type || 'image/png',
+        data,
+      });
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 const ChatSidebar: Component = () => {
   const [open, setOpen] = createSignal(false);
   const [highContrast, setHighContrast] = createSignal(false);
@@ -85,8 +108,10 @@ const ChatSidebar: Component = () => {
   const [loading, setLoading] = createSignal(false);
   const [historyOpen, setHistoryOpen] = createSignal(true);
   const [savedBuilds, setSavedBuilds] = createSignal<any[]>([]);
+  const [selectedImage, setSelectedImage] = createSignal<ImageAttachment | null>(null);
 
   let messagesEndRef: HTMLDivElement | undefined;
+  let fileInputRef: HTMLInputElement | undefined;
   let isResizing = false;
 
   const activeConversation = () =>
@@ -212,13 +237,15 @@ const ChatSidebar: Component = () => {
 
   async function sendMessage() {
     const text = input().trim();
-    if (!text || loading()) return;
+    const image = selectedImage();
+    if ((!text && !image) || loading()) return;
 
-    const conversation = ensureActiveConversation(text);
-    const userMessage: ChatMessage = { role: 'user', content: text };
+    const prompt = text || 'Please analyze the attached pool layout and extract dimensions.';
+    const conversation = ensureActiveConversation(prompt);
+    const userMessage: ChatMessage = { role: 'user', content: prompt, imageName: image?.name ?? null };
     updateActiveConversation((current) => ({
       ...current,
-      title: current.messages.length === 0 ? text.slice(0, 56) : current.title,
+      title: current.messages.length === 0 ? prompt.slice(0, 56) : current.title,
       messages: [...current.messages, userMessage],
       updatedAt: new Date().toISOString(),
     }));
@@ -238,6 +265,7 @@ const ChatSidebar: Component = () => {
         body: JSON.stringify({
           messages: apiMessages,
           sessionId: conversation.sessionId,
+          image,
         }),
       });
 
@@ -268,7 +296,16 @@ const ChatSidebar: Component = () => {
       }));
     } finally {
       setLoading(false);
+      setSelectedImage(null);
+      if (fileInputRef) fileInputRef.value = '';
     }
+  }
+
+  async function handleImageSelect(e: Event) {
+    const target = e.currentTarget as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    setSelectedImage(await fileToAttachment(file));
   }
 
   function handleInputKeyDown(e: KeyboardEvent) {
@@ -448,6 +485,11 @@ const ChatSidebar: Component = () => {
                         : 'border border-white/6 bg-bg-card/85 text-text-secondary shadow-[0_12px_30px_rgba(0,0,0,0.2)]'
                     }`}
                   >
+                    <Show when={msg.imageName}>
+                      <div class="mb-3 inline-flex rounded-full border border-accent/20 bg-accent/8 px-3 py-1 text-[11px] font-mono uppercase tracking-[0.08em] text-accent">
+                        Image: {msg.imageName}
+                      </div>
+                    </Show>
                     <Show
                       when={msg.role === 'assistant'}
                       fallback={<div class="whitespace-pre-wrap">{msg.content}</div>}
@@ -517,6 +559,20 @@ const ChatSidebar: Component = () => {
 
           {/* Input area */}
           <div class={`p-4 border-t ${highContrast() ? 'border-white/10' : 'border-border'}`}>
+            <Show when={selectedImage()}>
+              <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-3 py-1 text-[11px] font-mono uppercase tracking-[0.08em] text-accent">
+                <span>{selectedImage()!.name}</span>
+                <button
+                  onClick={() => {
+                    setSelectedImage(null);
+                    if (fileInputRef) fileInputRef.value = '';
+                  }}
+                  class="text-text-primary"
+                >
+                  ×
+                </button>
+              </div>
+            </Show>
             <div class="flex gap-2">
               <input
                 type="text"
@@ -527,9 +583,17 @@ const ChatSidebar: Component = () => {
                 disabled={loading()}
                 class="flex-1 bg-bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-border-active transition-colors disabled:opacity-50"
               />
+              <input ref={fileInputRef} type="file" accept="image/*" class="hidden" onChange={handleImageSelect} />
+              <button
+                onClick={() => fileInputRef?.click()}
+                class="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/8"
+                title="Add layout image"
+              >
+                Image
+              </button>
               <button
                 onClick={sendMessage}
-                disabled={loading() || !input().trim()}
+                disabled={loading() || (!input().trim() && !selectedImage())}
                 class="bg-accent text-bg-deep px-3 py-2 rounded-lg text-sm font-semibold hover:bg-accent-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center"
                 title="Send"
               >
