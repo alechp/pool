@@ -1,13 +1,13 @@
 <section class="relative isolate overflow-hidden rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,229,160,0.14),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-6 py-10 md:px-10 md:py-14">
-  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.16),transparent_24%),radial-gradient(circle_at_82%_16%,rgba(0,229,160,0.14),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(255,255,255,0.05),transparent_28%)]"></div>
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.14),transparent_24%),radial-gradient(circle_at_82%_16%,rgba(0,229,160,0.12),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(255,255,255,0.04),transparent_28%)]"></div>
   <div class="grid items-center gap-10 lg:grid-cols-[0.94fr_1.06fr]">
     <div class="relative z-10">
       <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">SwimSentry</div>
       <h1 class="mt-4 max-w-[12ch] text-5xl font-semibold tracking-tight text-text-primary md:text-6xl">
-        One clear sensor slice, instead of a whole crowded system.
+        A realistic sensor cutaway, not a symbolic diagram.
       </h1>
       <p class="mt-5 max-w-[58ch] text-base leading-7 text-text-secondary">
-        This view focuses on a single SwimSentry sensor body and its internal layers: weather shell, optics, compute, and power. It introduces the product without making the user decode a complex scene first.
+        The home page now shows a single exploded SwimSentry device as one coherent object: front enclosure, optics barrel, processing board, battery sled, and rear body. The goal is product realism first, explanation second.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="/build" class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-bg-deep">
@@ -22,305 +22,475 @@
       </div>
     </div>
 
-    <div class="slice-stage relative z-10 h-[34rem] overflow-hidden rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(8,10,14,0.9),rgba(9,11,15,0.98))]">
-      <div class="slice-atmosphere"></div>
-      <div class="slice-floor"></div>
+    <div class="cutaway-stage relative z-10 h-[34rem] overflow-hidden rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(8,10,14,0.92),rgba(8,9,13,0.99))]">
+      <div class="cutaway-atmosphere"></div>
+      <div class="cutaway-floor"></div>
 
-      <div class="device-slice">
-        <div class="slice-layer shell-layer">
-          <div class="layer-card">
-            <div class="layer-chip">Outer shell</div>
-            <div class="layer-shape shell-shape"></div>
-            <div class="layer-copy">IP-rated enclosure and faceplate</div>
+      <div class="device-axis">
+        <div class="device-part part-face">
+          <div class="part-shadow"></div>
+          <div class="face-body">
+            <div class="face-bezel"></div>
+            <div class="face-lens"></div>
+            <div class="face-radar"></div>
+            <div class="face-screws screw-a"></div>
+            <div class="face-screws screw-b"></div>
+            <div class="face-screws screw-c"></div>
+            <div class="face-screws screw-d"></div>
           </div>
         </div>
 
-        <div class="slice-layer optics-layer">
-          <div class="layer-card">
-            <div class="layer-chip">Optics</div>
-            <div class="layer-shape optics-shape">
-              <span class="lens-ring lens-top"></span>
-              <span class="lens-ring lens-bottom"></span>
+        <div class="spacer spacer-sm"></div>
+
+        <div class="device-part part-optics">
+          <div class="optic-ring ring-front"></div>
+          <div class="optic-ring ring-mid"></div>
+          <div class="optic-ring ring-back"></div>
+          <div class="optic-shaft"></div>
+        </div>
+
+        <div class="spacer spacer-xs"></div>
+
+        <div class="device-part part-board">
+          <div class="board-panel">
+            <div class="board-chip chip-main"></div>
+            <div class="board-chip chip-radio"></div>
+            <div class="board-chip chip-sensor"></div>
+            <div class="board-trace trace-1"></div>
+            <div class="board-trace trace-2"></div>
+            <div class="board-trace trace-3"></div>
+            <div class="board-port"></div>
+          </div>
+        </div>
+
+        <div class="spacer spacer-sm"></div>
+
+        <div class="device-part part-battery">
+          <div class="battery-pack">
+            <div class="battery-cell cell-a"></div>
+            <div class="battery-cell cell-b"></div>
+            <div class="battery-cap"></div>
+          </div>
+        </div>
+
+        <div class="spacer spacer-md"></div>
+
+        <div class="device-part part-back">
+          <div class="back-shell">
+            <div class="back-core"></div>
+            <div class="back-vents">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
-            <div class="layer-copy">Visible camera plus close-range sensing</div>
-          </div>
-        </div>
-
-        <div class="slice-layer core-layer">
-          <div class="layer-card">
-            <div class="layer-chip">Compute</div>
-            <div class="layer-shape core-shape">
-              <span class="trace trace-a"></span>
-              <span class="trace trace-b"></span>
-              <span class="trace trace-c"></span>
-            </div>
-            <div class="layer-copy">Processing, radio, and local logic</div>
-          </div>
-        </div>
-
-        <div class="slice-layer power-layer">
-          <div class="layer-card">
-            <div class="layer-chip">Power</div>
-            <div class="layer-shape power-shape"></div>
-            <div class="layer-copy">Battery and power regulation base</div>
+            <div class="back-foot"></div>
           </div>
         </div>
       </div>
 
-      <div class="slice-callout callout-top">
-        <div class="callout-line"></div>
-        <div class="callout-box">
-          <div class="callout-title">Exploded slice</div>
-          <div class="callout-copy">Each layer is separated just enough to show how the hardware stacks.</div>
-        </div>
-      </div>
-
-      <div class="slice-callout callout-side">
-        <div class="callout-line"></div>
-        <div class="callout-box">
-          <div class="callout-title">Single device focus</div>
-          <div class="callout-copy">The page now teaches one product clearly before moving into builds and BOMs.</div>
-        </div>
+      <div class="label-row">
+        <div class="label-pill">Front shell</div>
+        <div class="label-pill">Optics</div>
+        <div class="label-pill">Compute</div>
+        <div class="label-pill">Power</div>
+        <div class="label-pill">Rear housing</div>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .slice-stage {
-    perspective: 1400px;
+  .cutaway-stage {
+    perspective: 1800px;
     transform-style: preserve-3d;
   }
 
-  .slice-atmosphere,
-  .slice-floor {
+  .cutaway-atmosphere,
+  .cutaway-floor {
     position: absolute;
     inset: 0;
   }
 
-  .slice-atmosphere {
+  .cutaway-atmosphere {
     background:
-      radial-gradient(circle at 25% 20%, rgba(59, 130, 246, 0.18), transparent 26%),
-      radial-gradient(circle at 74% 18%, rgba(0, 229, 160, 0.14), transparent 22%),
-      radial-gradient(circle at 52% 58%, rgba(255, 255, 255, 0.05), transparent 30%);
+      radial-gradient(circle at 24% 20%, rgba(59, 130, 246, 0.18), transparent 24%),
+      radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.06), transparent 26%),
+      radial-gradient(circle at 60% 76%, rgba(0, 229, 160, 0.08), transparent 28%);
   }
 
-  .slice-floor {
-    inset: auto 12% 8% 12%;
-    height: 30%;
-    border-radius: 28px;
+  .cutaway-floor {
+    inset: auto 8% 10% 8%;
+    height: 23%;
+    border-radius: 36px;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
-      linear-gradient(180deg, rgba(11, 15, 21, 0.78), rgba(7, 9, 12, 0.96));
+      linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.008)),
+      linear-gradient(180deg, rgba(20, 24, 31, 0.84), rgba(7, 8, 11, 0.96));
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transform: rotateX(76deg) translateZ(-14px);
+    transform: rotateX(78deg) translateZ(-8px);
     transform-origin: bottom center;
-    box-shadow: 0 50px 90px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 42px 80px rgba(0, 0, 0, 0.44);
   }
 
-  .device-slice {
+  .device-axis {
     position: absolute;
     left: 50%;
-    top: 12%;
-    width: 15rem;
-    transform: translateX(-50%);
+    top: 42%;
+    display: flex;
+    align-items: center;
+    transform: translate(-50%, -50%) rotateX(11deg) rotateY(-14deg);
+    transform-style: preserve-3d;
   }
 
-  .slice-layer {
+  .device-part,
+  .spacer {
     position: relative;
-    animation: layer-drift 6.5s ease-in-out infinite;
+    flex: none;
   }
 
-  .shell-layer { z-index: 4; animation-delay: -0.2s; }
-  .optics-layer { z-index: 3; margin-top: 1.1rem; animation-delay: -1.2s; }
-  .core-layer { z-index: 2; margin-top: 1.1rem; animation-delay: -2.2s; }
-  .power-layer { z-index: 1; margin-top: 1.1rem; animation-delay: -3.2s; }
+  .device-part {
+    animation: part-float 6.8s ease-in-out infinite;
+  }
 
-  .layer-card {
+  .part-face { animation-delay: -0.3s; }
+  .part-optics { animation-delay: -1.1s; }
+  .part-board { animation-delay: -1.8s; }
+  .part-battery { animation-delay: -2.6s; }
+  .part-back { animation-delay: -3.4s; }
+
+  .spacer-xs { width: 1rem; }
+  .spacer-sm { width: 1.6rem; }
+  .spacer-md { width: 2.1rem; }
+
+  .part-shadow {
+    position: absolute;
+    inset: auto 8% -1.2rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0.42), transparent 70%);
+    filter: blur(8px);
+  }
+
+  .face-body {
     position: relative;
-    border-radius: 1.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    width: 7.4rem;
+    height: 10.2rem;
+    border-radius: 1.9rem;
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
-      linear-gradient(180deg, rgba(18, 23, 31, 0.92), rgba(8, 11, 16, 0.98));
+      linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05) 20%, rgba(32, 38, 47, 0.92) 45%, rgba(12, 14, 18, 0.98)),
+      linear-gradient(180deg, rgba(20, 24, 31, 0.9), rgba(7, 8, 11, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow:
-      0 26px 50px rgba(0, 0, 0, 0.34),
+      0 28px 48px rgba(0, 0, 0, 0.38),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    padding: 1rem 1rem 1.1rem;
-    transform: rotateX(14deg) rotateY(-11deg);
   }
 
-  .layer-chip {
-    display: inline-flex;
-    border-radius: 999px;
-    border: 1px solid rgba(0, 229, 160, 0.2);
-    background: rgba(0, 229, 160, 0.08);
-    padding: 0.3rem 0.65rem;
-    color: #00e5a0;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.66rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+  .face-bezel {
+    position: absolute;
+    inset: 0.9rem;
+    border-radius: 1.4rem;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.015));
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .layer-shape {
-    position: relative;
-    margin: 0.95rem auto 0;
-    border-radius: 1.25rem;
-  }
-
-  .shell-shape {
-    width: 8rem;
-    height: 5.4rem;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-      linear-gradient(180deg, rgba(22, 27, 35, 0.9), rgba(8, 10, 14, 1));
-  }
-
-  .optics-shape {
-    width: 7rem;
-    height: 4.6rem;
-    background: linear-gradient(180deg, rgba(18, 24, 32, 0.9), rgba(8, 10, 14, 0.96));
-  }
-
-  .lens-ring {
+  .face-lens {
     position: absolute;
     left: 50%;
+    top: 1.55rem;
+    width: 3.2rem;
+    height: 3.2rem;
     border-radius: 999px;
     transform: translateX(-50%);
     background:
-      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.4), rgba(59, 130, 246, 0.34) 24%, rgba(7, 10, 14, 0.96) 56%, rgba(0, 0, 0, 0.98));
-    box-shadow: 0 0 22px rgba(59, 130, 246, 0.15);
+      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.45), rgba(125, 165, 255, 0.4) 24%, rgba(10, 14, 20, 0.96) 58%, rgba(0, 0, 0, 0.98));
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.08),
+      0 0 26px rgba(59, 130, 246, 0.16);
   }
 
-  .lens-top {
-    top: 0.5rem;
-    width: 2.4rem;
-    height: 2.4rem;
-  }
-
-  .lens-bottom {
-    bottom: 0.45rem;
-    width: 1.8rem;
-    height: 1.8rem;
-  }
-
-  .core-shape {
-    width: 7.8rem;
-    height: 4.8rem;
-    background:
-      linear-gradient(180deg, rgba(15, 38, 33, 0.76), rgba(10, 19, 21, 0.96)),
-      linear-gradient(180deg, rgba(18, 24, 32, 0.92), rgba(8, 10, 14, 0.98));
-    overflow: hidden;
-  }
-
-  .trace {
+  .face-radar {
     position: absolute;
-    background: rgba(0, 229, 160, 0.72);
-    box-shadow: 0 0 16px rgba(0, 229, 160, 0.18);
+    left: 50%;
+    bottom: 2rem;
+    width: 3.6rem;
+    height: 0.78rem;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(0, 229, 160, 0.78), rgba(255, 255, 255, 0.12));
+    box-shadow: 0 0 18px rgba(0, 229, 160, 0.18);
   }
 
-  .trace-a {
+  .face-screws {
+    position: absolute;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(140, 145, 154, 0.24));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .screw-a { left: 1rem; top: 1rem; }
+  .screw-b { right: 1rem; top: 1rem; }
+  .screw-c { left: 1rem; bottom: 1rem; }
+  .screw-d { right: 1rem; bottom: 1rem; }
+
+  .part-optics {
+    width: 6.4rem;
+    height: 4.2rem;
+  }
+
+  .optic-ring,
+  .optic-shaft {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.06) 24%, rgba(84, 88, 96, 0.86) 54%, rgba(28, 31, 37, 0.98)),
+      linear-gradient(180deg, rgba(72, 78, 86, 0.92), rgba(18, 20, 24, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  }
+
+  .ring-front {
+    left: 0;
+    width: 1.65rem;
+    height: 3.3rem;
+  }
+
+  .ring-mid {
+    left: 1.45rem;
+    width: 1.2rem;
+    height: 2.7rem;
+  }
+
+  .ring-back {
+    right: 0;
+    width: 1.9rem;
+    height: 3.7rem;
+  }
+
+  .optic-shaft {
+    left: 1.15rem;
+    right: 1.3rem;
+    height: 1rem;
+    border-radius: 999px;
+  }
+
+  .board-panel {
+    position: relative;
+    width: 6.7rem;
+    height: 9rem;
+    border-radius: 0.7rem;
+    background:
+      linear-gradient(180deg, rgba(24, 68, 49, 0.86), rgba(11, 24, 20, 0.98)),
+      linear-gradient(180deg, rgba(22, 28, 35, 0.92), rgba(8, 10, 14, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 24px 42px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .board-chip {
+    position: absolute;
+    border-radius: 0.45rem;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.03)),
+      linear-gradient(180deg, rgba(34, 38, 45, 0.96), rgba(11, 12, 15, 1));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .chip-main {
+    left: 1.45rem;
+    top: 1.6rem;
+    width: 2.6rem;
+    height: 2rem;
+  }
+
+  .chip-radio {
+    right: 1rem;
+    top: 3rem;
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .chip-sensor {
+    left: 1.15rem;
+    bottom: 1.4rem;
+    width: 1.55rem;
+    height: 1.25rem;
+  }
+
+  .board-trace,
+  .board-port {
+    position: absolute;
+  }
+
+  .board-trace {
+    background: rgba(0, 229, 160, 0.76);
+    box-shadow: 0 0 14px rgba(0, 229, 160, 0.16);
+  }
+
+  .trace-1 {
     left: 1rem;
     top: 1rem;
-    width: 4.6rem;
-    height: 0.18rem;
+    width: 4.2rem;
+    height: 0.16rem;
   }
 
-  .trace-b {
-    left: 2.2rem;
-    top: 2rem;
-    width: 0.18rem;
-    height: 1.6rem;
+  .trace-2 {
+    right: 1.3rem;
+    top: 2.05rem;
+    width: 0.16rem;
+    height: 3.6rem;
   }
 
-  .trace-c {
-    left: 2.2rem;
-    bottom: 1rem;
-    width: 3.5rem;
-    height: 0.18rem;
-  }
-
-  .power-shape {
-    width: 8.4rem;
-    height: 3.1rem;
-    background:
-      linear-gradient(180deg, rgba(245, 158, 11, 0.14), rgba(245, 158, 11, 0.06)),
-      linear-gradient(180deg, rgba(23, 20, 14, 0.92), rgba(10, 10, 12, 0.98));
-  }
-
-  .layer-copy {
-    margin-top: 0.85rem;
-    text-align: center;
-    color: #8b8d98;
-    font-size: 0.76rem;
-    line-height: 1.45;
-  }
-
-  .slice-callout {
-    position: absolute;
-    z-index: 3;
-    display: flex;
-    gap: 0.8rem;
-    align-items: flex-start;
-  }
-
-  .callout-top {
-    top: 9%;
-    right: 8%;
-  }
-
-  .callout-side {
-    left: 8%;
-    bottom: 14%;
-  }
-
-  .callout-line {
+  .trace-3 {
+    left: 2rem;
+    bottom: 2rem;
     width: 2.8rem;
-    height: 1px;
-    margin-top: 0.95rem;
-    background: linear-gradient(90deg, rgba(0, 229, 160, 0.18), rgba(0, 229, 160, 0.82));
+    height: 0.16rem;
   }
 
-  .callout-box {
-    max-width: 11rem;
+  .board-port {
+    right: -0.4rem;
+    top: 4rem;
+    width: 0.5rem;
+    height: 1.7rem;
+    border-radius: 0.22rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(122,130,140,0.28));
+  }
+
+  .battery-pack {
+    position: relative;
+    width: 5.8rem;
+    height: 7.8rem;
     border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    padding: 0.85rem 0.95rem;
+  }
+
+  .battery-cell,
+  .battery-cap {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04)),
+      linear-gradient(180deg, rgba(52, 58, 67, 0.96), rgba(14, 16, 20, 0.98));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 18px 32px rgba(0,0,0,0.24);
+  }
+
+  .cell-a {
+    top: 0.8rem;
+    width: 2.3rem;
+    height: 4.7rem;
+  }
+
+  .cell-b {
+    top: 2rem;
+    width: 1.9rem;
+    height: 3.8rem;
+    left: 66%;
+  }
+
+  .battery-cap {
+    bottom: 0.6rem;
+    width: 4rem;
+    height: 1rem;
+    border-radius: 0.6rem;
+  }
+
+  .back-shell {
+    position: relative;
+    width: 8.8rem;
+    height: 10.6rem;
+    border-radius: 2.1rem;
+    background:
+      linear-gradient(150deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05) 18%, rgba(42, 48, 56, 0.94) 46%, rgba(12, 14, 18, 1)),
+      linear-gradient(180deg, rgba(24, 28, 34, 0.94), rgba(7, 8, 10, 0.99));
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow:
+      0 28px 48px rgba(0,0,0,0.36),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  .back-core {
+    position: absolute;
+    inset: 1.1rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .back-vents {
+    position: absolute;
+    right: 1.4rem;
+    top: 2rem;
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .back-vents span {
+    width: 2.2rem;
+    height: 0.28rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .back-foot {
+    position: absolute;
+    left: 50%;
+    bottom: -0.3rem;
+    width: 3rem;
+    height: 0.7rem;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  .label-row {
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    display: flex;
+    gap: 0.7rem;
+    transform: translateX(-50%);
+    flex-wrap: wrap;
+    justify-content: center;
+    width: min(92%, 40rem);
+  }
+
+  .label-pill {
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    padding: 0.45rem 0.8rem;
+    color: #c7c9d0;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
     backdrop-filter: blur(10px);
   }
 
-  .callout-title {
-    color: #e8e9ed;
-    font-size: 0.82rem;
-    font-weight: 600;
-  }
-
-  .callout-copy {
-    margin-top: 0.28rem;
-    color: #8b8d98;
-    font-size: 0.72rem;
-    line-height: 1.45;
-  }
-
-  @keyframes layer-drift {
+  @keyframes part-float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    50% { transform: translateY(-5px); }
   }
 
   @media (max-width: 1023px) {
-    .slice-stage {
+    .cutaway-stage {
       height: 30rem;
     }
 
-    .device-slice {
-      top: 11%;
-      transform: translateX(-50%) scale(0.92);
+    .device-axis {
+      top: 42%;
+      transform: translate(-50%, -50%) scale(0.78) rotateX(11deg) rotateY(-12deg);
     }
 
-    .slice-callout {
-      display: none;
+    .label-row {
+      bottom: 7%;
+      gap: 0.45rem;
     }
   }
 </style>
