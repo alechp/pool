@@ -1,13 +1,13 @@
 <section class="relative isolate overflow-hidden rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,229,160,0.14),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-6 py-10 md:px-10 md:py-14">
-  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.18),transparent_24%),radial-gradient(circle_at_82%_16%,rgba(0,229,160,0.16),transparent_24%),radial-gradient(circle_at_50%_82%,rgba(245,158,11,0.1),transparent_30%)]"></div>
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.16),transparent_24%),radial-gradient(circle_at_82%_16%,rgba(0,229,160,0.14),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(255,255,255,0.05),transparent_28%)]"></div>
   <div class="grid items-center gap-10 lg:grid-cols-[0.94fr_1.06fr]">
     <div class="relative z-10">
       <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">SwimSentry</div>
       <h1 class="mt-4 max-w-[12ch] text-5xl font-semibold tracking-tight text-text-primary md:text-6xl">
-        From sensor shell to hub stack, the system fits together visibly.
+        One clear sensor slice, instead of a whole crowded system.
       </h1>
       <p class="mt-5 max-w-[58ch] text-base leading-7 text-text-secondary">
-        The home experience now introduces the actual SwimSentry product layers: each outdoor sensor assembly, the communication path into the home hub, and the central command stack that turns events into alerts.
+        This view focuses on a single SwimSentry sensor body and its internal layers: weather shell, optics, compute, and power. It introduces the product without making the user decode a complex scene first.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a href="/build" class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-bg-deep">
@@ -22,440 +22,304 @@
       </div>
     </div>
 
-    <div class="iot-stage relative z-10 h-[34rem] overflow-hidden rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(8,10,14,0.88),rgba(9,11,15,0.98))]">
-      <div class="iot-atmosphere"></div>
-      <div class="iot-floor"></div>
+    <div class="slice-stage relative z-10 h-[34rem] overflow-hidden rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(8,10,14,0.9),rgba(9,11,15,0.98))]">
+      <div class="slice-atmosphere"></div>
+      <div class="slice-floor"></div>
 
-      <div class="device-cluster device-sensor-left">
-        <div class="device-sensor">
-          <div class="sensor-shell">
-            <div class="sensor-faceplate"></div>
-            <div class="sensor-lens lens-upper"></div>
-            <div class="sensor-lens lens-lower"></div>
-            <div class="sensor-radar"></div>
-            <div class="sensor-base"></div>
-          </div>
-          <div class="device-caption">
-            <div class="caption-title">Sensor Assembly</div>
-            <div class="caption-subtitle">camera + mmWave + weather shell</div>
+      <div class="device-slice">
+        <div class="slice-layer shell-layer">
+          <div class="layer-card">
+            <div class="layer-chip">Outer shell</div>
+            <div class="layer-shape shell-shape"></div>
+            <div class="layer-copy">IP-rated enclosure and faceplate</div>
           </div>
         </div>
-        <div class="stack-explainer">
-          <div>Optics</div>
-          <div>Radar</div>
-          <div>Battery</div>
-        </div>
-      </div>
 
-      <div class="device-cluster device-sensor-right">
-        <div class="device-sensor sensor-tall">
-          <div class="sensor-shell">
-            <div class="sensor-faceplate"></div>
-            <div class="sensor-lens lens-upper"></div>
-            <div class="sensor-lens lens-lower"></div>
-            <div class="sensor-radar"></div>
-            <div class="sensor-base"></div>
-          </div>
-          <div class="device-caption">
-            <div class="caption-title">Perimeter Sensor</div>
-            <div class="caption-subtitle">coverage lane + gate watch</div>
-          </div>
-        </div>
-        <div class="stack-explainer">
-          <div>Enclosure</div>
-          <div>Compute</div>
-          <div>Radio</div>
-        </div>
-      </div>
-
-      <div class="device-cluster device-hub">
-        <div class="hub-stack">
-          <div class="hub-layer hub-cap"></div>
-          <div class="hub-layer hub-core">
-            <div class="hub-led"></div>
-            <div class="hub-ports">
-              <span></span>
-              <span></span>
-              <span></span>
+        <div class="slice-layer optics-layer">
+          <div class="layer-card">
+            <div class="layer-chip">Optics</div>
+            <div class="layer-shape optics-shape">
+              <span class="lens-ring lens-top"></span>
+              <span class="lens-ring lens-bottom"></span>
             </div>
+            <div class="layer-copy">Visible camera plus close-range sensing</div>
           </div>
-          <div class="hub-layer hub-base"></div>
-          <div class="hub-shadow"></div>
         </div>
-        <div class="device-caption">
-          <div class="caption-title">Hub Stack</div>
-          <div class="caption-subtitle">radio bridge + local processing + alert routing</div>
+
+        <div class="slice-layer core-layer">
+          <div class="layer-card">
+            <div class="layer-chip">Compute</div>
+            <div class="layer-shape core-shape">
+              <span class="trace trace-a"></span>
+              <span class="trace trace-b"></span>
+              <span class="trace trace-c"></span>
+            </div>
+            <div class="layer-copy">Processing, radio, and local logic</div>
+          </div>
+        </div>
+
+        <div class="slice-layer power-layer">
+          <div class="layer-card">
+            <div class="layer-chip">Power</div>
+            <div class="layer-shape power-shape"></div>
+            <div class="layer-copy">Battery and power regulation base</div>
+          </div>
         </div>
       </div>
 
-      <div class="signal-link link-left"></div>
-      <div class="signal-link link-right"></div>
-      <div class="signal-packet packet-left"></div>
-      <div class="signal-packet packet-right"></div>
+      <div class="slice-callout callout-top">
+        <div class="callout-line"></div>
+        <div class="callout-box">
+          <div class="callout-title">Exploded slice</div>
+          <div class="callout-copy">Each layer is separated just enough to show how the hardware stacks.</div>
+        </div>
+      </div>
 
-      <div class="layer-label label-sensor-left">
-        <span class="label-chip">Outdoor sensing</span>
-        <span class="label-copy">High-visibility enclosure with stacked sensor layers.</span>
-      </div>
-      <div class="layer-label label-transport">
-        <span class="label-chip">Wireless link</span>
-        <span class="label-copy">Events stream from the yard into the home network.</span>
-      </div>
-      <div class="layer-label label-hub">
-        <span class="label-chip">Command layer</span>
-        <span class="label-copy">The hub stack routes detections, notifications, and saved build data.</span>
+      <div class="slice-callout callout-side">
+        <div class="callout-line"></div>
+        <div class="callout-box">
+          <div class="callout-title">Single device focus</div>
+          <div class="callout-copy">The page now teaches one product clearly before moving into builds and BOMs.</div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .iot-stage {
+  .slice-stage {
     perspective: 1400px;
     transform-style: preserve-3d;
   }
 
-  .iot-atmosphere,
-  .iot-floor {
+  .slice-atmosphere,
+  .slice-floor {
     position: absolute;
     inset: 0;
   }
 
-  .iot-atmosphere {
+  .slice-atmosphere {
     background:
-      radial-gradient(circle at 22% 18%, rgba(59, 130, 246, 0.22), transparent 24%),
-      radial-gradient(circle at 80% 22%, rgba(0, 229, 160, 0.18), transparent 26%),
-      radial-gradient(circle at 50% 65%, rgba(255, 255, 255, 0.05), transparent 32%);
+      radial-gradient(circle at 25% 20%, rgba(59, 130, 246, 0.18), transparent 26%),
+      radial-gradient(circle at 74% 18%, rgba(0, 229, 160, 0.14), transparent 22%),
+      radial-gradient(circle at 52% 58%, rgba(255, 255, 255, 0.05), transparent 30%);
   }
 
-  .iot-floor {
-    inset: auto 8% 8% 8%;
-    height: 34%;
+  .slice-floor {
+    inset: auto 12% 8% 12%;
+    height: 30%;
     border-radius: 28px;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
-      linear-gradient(180deg, rgba(11, 15, 21, 0.76), rgba(7, 9, 12, 0.96));
+      linear-gradient(180deg, rgba(11, 15, 21, 0.78), rgba(7, 9, 12, 0.96));
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transform: rotateX(75deg) translateZ(-14px);
+    transform: rotateX(76deg) translateZ(-14px);
     transform-origin: bottom center;
-    box-shadow: 0 50px 90px rgba(0, 0, 0, 0.42);
+    box-shadow: 0 50px 90px rgba(0, 0, 0, 0.4);
   }
 
-  .device-cluster,
-  .signal-link,
-  .signal-packet,
-  .layer-label {
+  .device-slice {
     position: absolute;
-    z-index: 2;
+    left: 50%;
+    top: 12%;
+    width: 15rem;
+    transform: translateX(-50%);
   }
 
-  .device-cluster {
-    animation: float-cluster 6s ease-in-out infinite;
-  }
-
-  .device-sensor-left { left: 8%; top: 24%; animation-delay: -0.6s; }
-  .device-sensor-right { right: 12%; top: 22%; animation-delay: -2.2s; }
-  .device-hub { left: 38%; top: 16%; animation-delay: -1.3s; }
-
-  .device-sensor {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.9rem;
-  }
-
-  .sensor-shell {
+  .slice-layer {
     position: relative;
-    width: 8rem;
-    height: 11.8rem;
-    border-radius: 2rem;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04) 16%, rgba(20, 24, 31, 0.92) 18%, rgba(7, 8, 11, 0.98)),
-      linear-gradient(180deg, rgba(17, 22, 29, 0.82), rgba(8, 10, 14, 0.98));
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-      0 26px 60px rgba(0, 0, 0, 0.38),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    transform: rotateX(14deg) rotateY(-14deg);
+    animation: layer-drift 6.5s ease-in-out infinite;
   }
 
-  .sensor-tall .sensor-shell {
-    transform: rotateX(14deg) rotateY(14deg);
-  }
+  .shell-layer { z-index: 4; animation-delay: -0.2s; }
+  .optics-layer { z-index: 3; margin-top: 1.1rem; animation-delay: -1.2s; }
+  .core-layer { z-index: 2; margin-top: 1.1rem; animation-delay: -2.2s; }
+  .power-layer { z-index: 1; margin-top: 1.1rem; animation-delay: -3.2s; }
 
-  .sensor-faceplate {
-    position: absolute;
-    inset: 1rem 0.95rem 1.4rem;
-    border-radius: 1.4rem;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .sensor-lens {
-    position: absolute;
-    left: 50%;
-    width: 3.15rem;
-    height: 3.15rem;
-    border-radius: 999px;
-    transform: translateX(-50%);
-    background:
-      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.45), rgba(59, 130, 246, 0.38) 22%, rgba(7, 10, 14, 0.96) 55%, rgba(0, 0, 0, 0.98));
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.08),
-      0 0 25px rgba(59, 130, 246, 0.16);
-  }
-
-  .lens-upper { top: 1.7rem; }
-  .lens-lower { top: 5.1rem; width: 2.35rem; height: 2.35rem; }
-
-  .sensor-radar {
-    position: absolute;
-    left: 50%;
-    bottom: 2.45rem;
-    width: 3.55rem;
-    height: 0.7rem;
-    border-radius: 999px;
-    transform: translateX(-50%);
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(0, 229, 160, 0.76), rgba(255, 255, 255, 0.14));
-    box-shadow: 0 0 22px rgba(0, 229, 160, 0.28);
-  }
-
-  .sensor-base {
-    position: absolute;
-    inset: auto 1.2rem 0.9rem;
-    height: 0.55rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .hub-stack {
+  .layer-card {
     position: relative;
-    width: 11.5rem;
-    height: 12rem;
-    transform: rotateX(16deg) rotateY(-12deg);
-  }
-
-  .hub-layer {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 1.2rem;
+    border-radius: 1.8rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
-      linear-gradient(180deg, rgba(18, 23, 31, 0.9), rgba(8, 11, 16, 0.98));
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+      linear-gradient(180deg, rgba(18, 23, 31, 0.92), rgba(8, 11, 16, 0.98));
+    box-shadow:
+      0 26px 50px rgba(0, 0, 0, 0.34),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    padding: 1rem 1rem 1.1rem;
+    transform: rotateX(14deg) rotateY(-11deg);
   }
 
-  .hub-cap {
-    top: 0;
-    width: 7.2rem;
-    height: 2.1rem;
-  }
-
-  .hub-core {
-    top: 1.7rem;
-    width: 9rem;
-    height: 5.4rem;
-  }
-
-  .hub-base {
-    top: 6.2rem;
-    width: 10.6rem;
-    height: 3.4rem;
-  }
-
-  .hub-shadow {
-    position: absolute;
-    inset: auto 0 -0.2rem;
-    height: 1rem;
-    border-radius: 999px;
-    background: radial-gradient(circle, rgba(0, 0, 0, 0.45), transparent 68%);
-    filter: blur(9px);
-  }
-
-  .hub-led {
-    position: absolute;
-    top: 1.1rem;
-    left: 1rem;
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 999px;
-    background: #00e5a0;
-    box-shadow: 0 0 20px rgba(0, 229, 160, 0.72);
-  }
-
-  .hub-ports {
-    position: absolute;
-    right: 1rem;
-    bottom: 1.2rem;
-    display: flex;
-    gap: 0.45rem;
-  }
-
-  .hub-ports span {
-    width: 1.2rem;
-    height: 0.5rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  .device-caption {
-    max-width: 12rem;
-    text-align: center;
-  }
-
-  .caption-title {
-    color: #e8e9ed;
-    font-size: 0.94rem;
-    font-weight: 600;
-  }
-
-  .caption-subtitle {
-    margin-top: 0.2rem;
-    color: #8b8d98;
-    font-size: 0.74rem;
-    line-height: 1.45;
-  }
-
-  .stack-explainer {
-    position: absolute;
-    top: 1.4rem;
-    width: 5rem;
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .device-sensor-left .stack-explainer {
-    left: 7.8rem;
-  }
-
-  .device-sensor-right .stack-explainer {
-    right: 7.6rem;
-  }
-
-  .stack-explainer div {
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    padding: 0.4rem 0.7rem;
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #e8e9ed;
-    backdrop-filter: blur(10px);
-  }
-
-  .signal-link {
-    top: 38%;
-    height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, rgba(0, 229, 160, 0.08), rgba(0, 229, 160, 0.92), rgba(59, 130, 246, 0.2));
-    box-shadow: 0 0 20px rgba(0, 229, 160, 0.2);
-    transform-origin: left center;
-    animation: shimmer-link 2.4s ease-in-out infinite;
-  }
-
-  .link-left {
-    left: 25%;
-    width: 17%;
-    transform: rotate(-11deg);
-  }
-
-  .link-right {
-    left: 56%;
-    width: 17%;
-    transform: rotate(8deg);
-    animation-delay: -1.2s;
-  }
-
-  .signal-packet {
-    top: 37.2%;
-    width: 0.8rem;
-    height: 0.8rem;
-    border-radius: 999px;
-    background: rgba(59, 130, 246, 0.95);
-    box-shadow: 0 0 18px rgba(59, 130, 246, 0.62);
-    animation: move-packet 2.8s linear infinite;
-  }
-
-  .packet-left { left: 25%; }
-  .packet-right { left: 56%; animation-delay: -1.4s; }
-
-  .layer-label {
-    max-width: 12.5rem;
-    display: grid;
-    gap: 0.5rem;
-  }
-
-  .label-sensor-left { left: 6%; bottom: 10%; }
-  .label-transport { left: 39%; bottom: 6%; text-align: center; }
-  .label-hub { right: 8%; bottom: 9%; text-align: right; }
-
-  .label-chip {
+  .layer-chip {
     display: inline-flex;
-    width: fit-content;
     border-radius: 999px;
-    border: 1px solid rgba(0, 229, 160, 0.24);
+    border: 1px solid rgba(0, 229, 160, 0.2);
     background: rgba(0, 229, 160, 0.08);
-    padding: 0.35rem 0.7rem;
+    padding: 0.3rem 0.65rem;
     color: #00e5a0;
+    font-family: 'DM Mono', monospace;
     font-size: 0.66rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-family: 'DM Mono', monospace;
   }
 
-  .label-transport .label-chip {
-    margin-inline: auto;
+  .layer-shape {
+    position: relative;
+    margin: 0.95rem auto 0;
+    border-radius: 1.25rem;
   }
 
-  .label-hub .label-chip {
-    margin-left: auto;
+  .shell-shape {
+    width: 8rem;
+    height: 5.4rem;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+      linear-gradient(180deg, rgba(22, 27, 35, 0.9), rgba(8, 10, 14, 1));
   }
 
-  .label-copy {
+  .optics-shape {
+    width: 7rem;
+    height: 4.6rem;
+    background: linear-gradient(180deg, rgba(18, 24, 32, 0.9), rgba(8, 10, 14, 0.96));
+  }
+
+  .lens-ring {
+    position: absolute;
+    left: 50%;
+    border-radius: 999px;
+    transform: translateX(-50%);
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.4), rgba(59, 130, 246, 0.34) 24%, rgba(7, 10, 14, 0.96) 56%, rgba(0, 0, 0, 0.98));
+    box-shadow: 0 0 22px rgba(59, 130, 246, 0.15);
+  }
+
+  .lens-top {
+    top: 0.5rem;
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .lens-bottom {
+    bottom: 0.45rem;
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .core-shape {
+    width: 7.8rem;
+    height: 4.8rem;
+    background:
+      linear-gradient(180deg, rgba(15, 38, 33, 0.76), rgba(10, 19, 21, 0.96)),
+      linear-gradient(180deg, rgba(18, 24, 32, 0.92), rgba(8, 10, 14, 0.98));
+    overflow: hidden;
+  }
+
+  .trace {
+    position: absolute;
+    background: rgba(0, 229, 160, 0.72);
+    box-shadow: 0 0 16px rgba(0, 229, 160, 0.18);
+  }
+
+  .trace-a {
+    left: 1rem;
+    top: 1rem;
+    width: 4.6rem;
+    height: 0.18rem;
+  }
+
+  .trace-b {
+    left: 2.2rem;
+    top: 2rem;
+    width: 0.18rem;
+    height: 1.6rem;
+  }
+
+  .trace-c {
+    left: 2.2rem;
+    bottom: 1rem;
+    width: 3.5rem;
+    height: 0.18rem;
+  }
+
+  .power-shape {
+    width: 8.4rem;
+    height: 3.1rem;
+    background:
+      linear-gradient(180deg, rgba(245, 158, 11, 0.14), rgba(245, 158, 11, 0.06)),
+      linear-gradient(180deg, rgba(23, 20, 14, 0.92), rgba(10, 10, 12, 0.98));
+  }
+
+  .layer-copy {
+    margin-top: 0.85rem;
+    text-align: center;
     color: #8b8d98;
     font-size: 0.76rem;
-    line-height: 1.5;
+    line-height: 1.45;
   }
 
-  @keyframes float-cluster {
+  .slice-callout {
+    position: absolute;
+    z-index: 3;
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+  }
+
+  .callout-top {
+    top: 9%;
+    right: 8%;
+  }
+
+  .callout-side {
+    left: 8%;
+    bottom: 14%;
+  }
+
+  .callout-line {
+    width: 2.8rem;
+    height: 1px;
+    margin-top: 0.95rem;
+    background: linear-gradient(90deg, rgba(0, 229, 160, 0.18), rgba(0, 229, 160, 0.82));
+  }
+
+  .callout-box {
+    max-width: 11rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.85rem 0.95rem;
+    backdrop-filter: blur(10px);
+  }
+
+  .callout-title {
+    color: #e8e9ed;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .callout-copy {
+    margin-top: 0.28rem;
+    color: #8b8d98;
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  @keyframes layer-drift {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-7px); }
-  }
-
-  @keyframes shimmer-link {
-    0%, 100% { opacity: 0.45; }
-    50% { opacity: 1; }
-  }
-
-  @keyframes move-packet {
-    0% { transform: translateX(0) scale(0.8); opacity: 0; }
-    15% { opacity: 1; }
-    100% { transform: translateX(130px) scale(1); opacity: 0; }
+    50% { transform: translateY(-6px); }
   }
 
   @media (max-width: 1023px) {
-    .iot-stage {
-      height: 29rem;
+    .slice-stage {
+      height: 30rem;
     }
 
-    .device-hub {
-      left: 35%;
-      top: 14%;
+    .device-slice {
+      top: 11%;
+      transform: translateX(-50%) scale(0.92);
     }
 
-    .device-sensor-left {
-      left: 2%;
-    }
-
-    .device-sensor-right {
-      right: 4%;
-    }
-
-    .stack-explainer,
-    .layer-label {
+    .slice-callout {
       display: none;
     }
   }
