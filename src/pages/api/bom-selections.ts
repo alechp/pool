@@ -29,7 +29,7 @@ export const PUT: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'buildKey is required' }), { status: 400 });
   }
 
-  if (filterMode !== 'best-price' && filterMode !== 'best-quality') {
+  if (!['cheapest', 'most-expensive', 'highest-rating'].includes(filterMode)) {
     return new Response(JSON.stringify({ error: 'Invalid filterMode' }), { status: 400 });
   }
 

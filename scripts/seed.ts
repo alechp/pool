@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, personas, personaFactors, personaBundles } from '../src/lib/schema';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, personas, personaFactors, personaBundles, savedConfigs } from '../src/lib/schema';
 import { sql } from 'drizzle-orm';
 
 const sqlite = new Database('sqlite.db');
@@ -298,6 +298,15 @@ db.insert(personaBundles).values([
   { personaId: 'budget-conscious', label: 'Stretch Budget', hubTypeId: 'zigbee', hubTierId: 'zigbee-cheap', sensorTierId: 'zb-cheap', qty: 3, reasoning: 'A budget Zigbee hub ($28) adds mesh reliability and better battery life. Worth the small extra investment for more coverage.', sortOrder: 2 },
 ]).run();
 
+// Default saved configs (builds)
+const now = new Date().toISOString();
+db.insert(savedConfigs).values([
+  { name: 'Family Home', hubTypeId: 'zigbee', hubTierId: 'zigbee-cheap', sensorTierId: 'zb-cheap', qty: 4, createdAt: now, updatedAt: now },
+  { name: 'Budget Setup', hubTypeId: 'none', hubTierId: null, sensorTierId: 'sa-cheap', qty: 2, createdAt: now, updatedAt: now },
+  { name: 'Luxury Estate', hubTypeId: 'zigbee', hubTierId: 'zigbee-premium', sensorTierId: 'zb-premium', qty: 8, createdAt: now, updatedAt: now },
+  { name: 'Rural Property', hubTypeId: 'lorawan', hubTierId: 'lora-cheap', sensorTierId: 'lr-cheap', qty: 4, createdAt: now, updatedAt: now },
+]).run();
+
 console.log('Seed complete. Inserted:');
 console.log('  3 hub types');
 console.log('  4 hub tiers');
@@ -307,3 +316,4 @@ console.log('  39 sensor tier parts');
 console.log('  6 personas');
 console.log('  30 persona factors');
 console.log('  11 persona bundles');
+console.log('  4 saved configs');

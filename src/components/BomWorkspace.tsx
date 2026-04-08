@@ -144,10 +144,19 @@ const BomWorkspace: Component<Props> = (props) => {
   const [loadingParts, setLoadingParts] = createSignal<string[]>([]);
   const [saveState, setSaveState] = createSignal<'idle' | 'saved'>('idle');
   const [bulkState, setBulkState] = createSignal<'idle' | 'loading' | 'loaded'>('idle');
+  const [qty, setQty] = createSignal(props.quantity);
+  const currentBuildKey = createMemo(() => {
+    const params = new URLSearchParams();
+    params.set('hub_type', props.hubTypeId);
+    if (props.hubTierId) params.set('hub_tier', props.hubTierId);
+    params.set('sensor_tier', props.sensorTierId);
+    params.set('qty', String(qty()));
+    return params.toString();
+  });
 
   const parts = createMemo<WorkspacePart[]>(() => [
     ...props.hubParts.map((part) => ({ ...part, scope: 'hub' as const, quantity: 1 })),
-    ...props.sensorParts.map((part) => ({ ...part, scope: 'sensor' as const, quantity: props.quantity })),
+    ...props.sensorParts.map((part) => ({ ...part, scope: 'sensor' as const, quantity: qty() })),
   ]);
 
   onMount(() => {
@@ -155,13 +164,13 @@ const BomWorkspace: Component<Props> = (props) => {
       setFilterMode(normalizeStrategy(props.initialState.filterMode));
       setSelectedLinks(props.initialState.selections);
       setSelectionSource(props.initialState.selectionSource ?? {});
-      return;
+    } else {
+      const stored = loadWorkspaceState(currentBuildKey());
+      setFilterMode(stored.filterMode);
+      setSelectedLinks(stored.selections);
+      setSelectionSource(stored.selectionSource);
     }
-
-    const stored = loadWorkspaceState(props.buildKey);
-    setFilterMode(stored.filterMode);
-    setSelectedLinks(stored.selections);
-    setSelectionSource(stored.selectionSource);
+    void findLinksForAllParts(false);
   });
 
   createEffect(() => {
@@ -253,7 +262,7 @@ const BomWorkspace: Component<Props> = (props) => {
   }
 
   async function persistSelection() {
-    saveWorkspaceState(props.buildKey, {
+    saveWorkspaceState(currentBuildKey(), {
       filterMode: filterMode(),
       selections: selectedLinks(),
       selectionSource: selectionSource(),
@@ -275,7 +284,7 @@ const BomWorkspace: Component<Props> = (props) => {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        buildKey: props.buildKey,
+        buildKey: currentBuildKey(),
         filterMode: filterMode(),
         selections: payload,
       }),
@@ -284,13 +293,14 @@ const BomWorkspace: Component<Props> = (props) => {
     setSaveState('saved');
   }
 
-  function navigateToQuantity(nextQty: number) {
+  function handleQtyChange(nextQty: number) {
+    setQty(nextQty);
     const params = new URLSearchParams();
     params.set('hub_type', props.hubTypeId);
     if (props.hubTierId) params.set('hub_tier', props.hubTierId);
     params.set('sensor_tier', props.sensorTierId);
     params.set('qty', String(nextQty));
-    window.location.href = `/bom?${params.toString()}`;
+    history.replaceState(null, '', `/bom?${params.toString()}`);
   }
 
   const rows = createMemo(() => {
@@ -362,12 +372,12 @@ const BomWorkspace: Component<Props> = (props) => {
           <label class="rounded-2xl border border-white/8 bg-black/12 p-4">
             <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Sensor quantity</div>
             <select
-              value={String(props.quantity)}
-              onChange={(e) => navigateToQuantity(Number(e.currentTarget.value))}
+              value={String(qty())}
+              onChange={(e) => handleQtyChange(Number(e.currentTarget.value))}
               class="mt-3 w-full rounded-xl border border-white/10 bg-bg-card px-4 py-3 text-sm text-text-primary outline-none"
             >
               <For each={SENSOR_QTY_OPTIONS}>
-                {(qty) => <option value={qty}>{qty} sensors</option>}
+                {(q) => <option value={q}>{q} sensors</option>}
               </For>
             </select>
           </label>
