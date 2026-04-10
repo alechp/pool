@@ -4,6 +4,12 @@ import type { Component } from 'solid-js';
 interface Props {
   accentColor: string;
   visible: boolean;
+  label?: string;
+  partSummary?: string;
+  price?: string;
+  canvasHeight?: number;
+  reducedMotion?: boolean;
+  ariaLabel?: string;
 }
 
 const Viewer3D: Component<Props> = (props) => {
@@ -28,7 +34,7 @@ const Viewer3D: Component<Props> = (props) => {
     }
     const THREE = threeModule;
     const w = canvasRef.parentElement!.clientWidth;
-    const h = 380;
+    const h = props.canvasHeight ?? 380;
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
@@ -37,7 +43,7 @@ const Viewer3D: Component<Props> = (props) => {
 
     renderer = new THREE.WebGLRenderer({ canvas: canvasRef, antialias: true, alpha: true });
     renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, h <= 320 ? 1.5 : 2));
     renderer.setClearColor(0x000000, 0);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
@@ -62,7 +68,7 @@ const Viewer3D: Component<Props> = (props) => {
 
     function animate() {
       animFrameId = requestAnimationFrame(animate);
-      if (!isDrag) meshGroup.rotation.y += 0.002;
+      if (!isDrag && !props.reducedMotion) meshGroup.rotation.y += 0.002;
       renderer.render(scene, camera);
     }
     animate();
@@ -83,10 +89,11 @@ const Viewer3D: Component<Props> = (props) => {
   function onResize() {
     if (!canvasRef || !renderer) return;
     const nw = canvasRef.parentElement!.clientWidth;
-    const h = 380;
+    const h = props.canvasHeight ?? 380;
     camera.aspect = nw / h;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, h <= 320 ? 1.5 : 2));
   }
 
   function buildModel(accentHex: string) {
@@ -231,6 +238,12 @@ const Viewer3D: Component<Props> = (props) => {
     }
   });
 
+  createEffect(() => {
+    if (renderer && camera && canvasRef) {
+      onResize();
+    }
+  });
+
   onCleanup(() => {
     cancelAnimationFrame(animFrameId);
     window.removeEventListener('pointermove', onPointerMove);
@@ -245,7 +258,9 @@ const Viewer3D: Component<Props> = (props) => {
         <canvas
           ref={canvasRef}
           class="block w-full cursor-grab active:cursor-grabbing"
-          style="height: 380px"
+          style={{ height: `${props.canvasHeight ?? 380}px` }}
+          role="img"
+          aria-label={props.ariaLabel ?? '3D preview of a SwimSentry sensor node'}
         />
         <div class="absolute bottom-0 left-0 right-0 px-6 py-5 bg-gradient-to-t from-bg-surface/95 to-transparent flex justify-between items-end">
           <div class="text-sm font-medium">
@@ -254,6 +269,13 @@ const Viewer3D: Component<Props> = (props) => {
           <div class="font-mono text-[11px] text-text-tertiary">Drag to rotate</div>
         </div>
       </div>
+      {(props.label || props.partSummary || props.price) && (
+        <div class="mt-4 space-y-2 px-1">
+          {props.label && <div class="text-sm font-semibold text-text-primary">{props.label}</div>}
+          {props.partSummary && <div class="text-sm leading-6 text-text-secondary">{props.partSummary}</div>}
+          {props.price && <div class="font-mono text-[12px] uppercase tracking-[0.12em] text-accent">{props.price}</div>}
+        </div>
+      )}
     </div>
   );
 };

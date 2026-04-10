@@ -1,221 +1,26 @@
 ---
-const diagramSource = String.raw`---
-METADATA
-version: "2.4"
-created: "2026-04-06T08:00:00.000Z"
-updated: "2026-04-06T08:00:00.000Z"
-roomId: "swimsentry-home-flow"
-name: "SwimSentry Information Flow"
-description: "How a user moves from advisor guidance to build review to BOM sourcing"
----
-
----
-PILLS
-
-pill("user-need") {
-  position: (40, 165)
-  dimensions: (250, 110)
-  color: "#0ea5e9"
-  shape: rounded
-  content: """
-Pool owner need
-Uploads layout, describes gates, budget, and safety goals
-"""
-}
-
-pill("advisor") {
-  position: (350, 165)
-  dimensions: (260, 120)
-  color: "#14b8a6"
-  shape: rounded
-  content: """
-AI Advisor
-Interprets layout + family context and suggests a system
-"""
-}
-
-pill("build") {
-  position: (680, 72)
-  dimensions: (270, 110)
-  color: "#6366f1"
-  shape: rounded
-  content: """
-Build summary
-Explains architecture, hub tier, sensor count, and why it fits
-"""
-}
-
-pill("bom") {
-  position: (680, 265)
-  dimensions: (270, 120)
-  color: "#f59e0b"
-  shape: rounded
-  content: """
-BOM workspace
-Generates links, compares suppliers, and saves final shopping picks
-"""
-}
-
-pill("alerts") {
-  position: (1010, 165)
-  dimensions: (250, 110)
-  color: "#10b981"
-  shape: rounded
-  content: """
-Deployed SwimSentry system
-Sensors, hub, notifications, and saved procurement state
-"""
-}
-
----
-
----
-THREADS
-
-thread("t-user-advisor") {
-  from: "user-need"
-  to: "advisor"
-  fromHandle: right
-  toHandle: left
-  color: "#38bdf8"
-  thickness: 3
-  style: solid
-  label: "context"
-  curve: smoothstep
-}
-
-thread("t-advisor-build") {
-  from: "advisor"
-  to: "build"
-  fromHandle: right
-  toHandle: left
-  color: "#818cf8"
-  thickness: 3
-  style: solid
-  label: "recommended build"
-  curve: smoothstep
-}
-
-thread("t-advisor-bom") {
-  from: "advisor"
-  to: "bom"
-  fromHandle: right
-  toHandle: left
-  color: "#fbbf24"
-  thickness: 3
-  style: solid
-  label: "shopping path"
-  curve: smoothstep
-}
-
-thread("t-build-alerts") {
-  from: "build"
-  to: "alerts"
-  fromHandle: right
-  toHandle: left
-  color: "#34d399"
-  thickness: 3
-  style: solid
-  label: "configured system"
-  curve: smoothstep
-}
-
-thread("t-bom-alerts") {
-  from: "bom"
-  to: "alerts"
-  fromHandle: right
-  toHandle: left
-  color: "#34d399"
-  thickness: 3
-  style: solid
-  label: "sourced hardware"
-  curve: smoothstep
-}
-
----`;
 ---
 
 <section class="relative isolate overflow-hidden rounded-[2rem] border border-white/8 bg-[radial-gradient(circle_at_top,rgba(0,229,160,0.14),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-6 py-10 md:px-10 md:py-14">
   <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(59,130,246,0.14),transparent_24%),radial-gradient(circle_at_82%_16%,rgba(0,229,160,0.12),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(255,255,255,0.04),transparent_28%)]"></div>
-  <div class="grid items-center gap-10 lg:grid-cols-[0.88fr_1.12fr]">
-    <div class="relative z-10">
-      <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">SwimSentry</div>
-      <h1 class="mt-4 max-w-[13ch] text-5xl font-semibold tracking-tight text-text-primary md:text-6xl">
-        See how information moves from question to hardware.
-      </h1>
-      <p class="mt-5 max-w-[58ch] text-base leading-7 text-text-secondary">
-        This ThreadPilled diagram shows the actual home-page journey: the user gives layout context, the advisor interprets it, the build page explains the recommendation, and the BOM page turns that into supplier decisions.
-      </p>
-      <div class="mt-8 flex flex-wrap gap-3">
-        <a href="/build" class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-bg-deep">
-          Start a build
-        </a>
-        <a href="/personas" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-text-primary">
-          Open guided flow
-        </a>
-        <a href="/bom/compare" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-text-primary">
-          Compare systems
-        </a>
-      </div>
-    </div>
-
-    <div class="relative z-10 rounded-[1.8rem] border border-white/8 bg-[linear-gradient(180deg,rgba(8,10,14,0.92),rgba(8,9,13,0.99))] p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
-      <div class="mb-3 flex items-center justify-between gap-3 px-2">
-        <div>
-          <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-accent">ThreadPilled Diagram</div>
-          <div class="mt-1 text-sm text-text-secondary">User context, advisor interpretation, build explanation, and BOM sourcing.</div>
-        </div>
-      </div>
-      <div id="swimsentry-threadpilled-home" class="tp-home-embed"></div>
+  <div class="relative z-10">
+    <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">SwimSentry</div>
+    <h1 class="mt-4 max-w-[13ch] text-5xl font-semibold tracking-tight text-text-primary md:text-6xl">
+      See how information moves from question to hardware.
+    </h1>
+    <p class="mt-5 max-w-[58ch] text-base leading-7 text-text-secondary">
+      This diagram walks through the real user flow: ask the advisor, review a build, and convert that recommendation into a purchase-ready BOM.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="/build" class="rounded-full bg-accent px-5 py-3 text-sm font-semibold text-bg-deep transition-all duration-150 hover:-translate-y-px hover:bg-accent-dim hover:shadow-[0_14px_30px_rgba(0,229,160,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
+        Start a build
+      </a>
+      <a href="/personas" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
+        Open guided flow
+      </a>
+      <a href="/bom/compare" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
+        Compare systems
+      </a>
     </div>
   </div>
 </section>
-
-<script define:vars={{ diagramSource }} type="module">
-  import { ThreadPilledVanillaEmbed } from '@threadpilled-embed-vanilla';
-
-  const root = document.getElementById('swimsentry-threadpilled-home');
-  if (root) {
-    new ThreadPilledVanillaEmbed(root, {
-      source: diagramSource,
-      theme: {
-        preset: 'dark',
-        overrides: {
-          bg: '#090b10',
-          panelBg: '#0f141d',
-          text: '#e8e9ed',
-          textDim: '#93a0b4',
-          accent: '#00e5a0',
-        },
-      },
-      height: 520,
-      showControls: true,
-      showSourceToggle: false,
-      showOpenInApp: false,
-      accessibility: {
-        ariaLabel: 'SwimSentry information flow diagram',
-      },
-      layout: {
-        density: 'spacious',
-      },
-      size: {
-        fillContainer: true,
-      },
-    });
-  }
-</script>
-
-<style>
-  .tp-home-embed {
-    min-height: 520px;
-    border-radius: 1.25rem;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(13, 17, 24, 0.92), rgba(7, 10, 14, 0.98));
-  }
-
-  @media (max-width: 1023px) {
-    .tp-home-embed {
-      min-height: 430px;
-    }
-  }
-</style>

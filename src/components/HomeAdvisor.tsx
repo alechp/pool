@@ -416,13 +416,21 @@ const HomeAdvisor: Component = () => {
               resetDemoState('chat');
               setTab('advisor');
             }}
-            class={`rounded-lg px-4 py-2 text-sm font-medium ${tab() === 'advisor' ? 'bg-bg-card text-text-primary' : 'text-text-tertiary'}`}
+            class={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+              tab() === 'advisor'
+                ? 'bg-bg-card text-text-primary shadow-[0_6px_16px_rgba(0,0,0,0.18)]'
+                : 'text-text-tertiary hover:bg-white/6 hover:text-text-primary'
+            }`}
           >
             Ask AI
           </button>
           <button
             onClick={playDemo}
-            class={`rounded-lg px-4 py-2 text-sm font-medium ${tab() === 'demo' ? 'bg-bg-card text-text-primary' : 'text-text-tertiary'}`}
+            class={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
+              tab() === 'demo'
+                ? 'bg-bg-card text-text-primary shadow-[0_6px_16px_rgba(0,0,0,0.18)]'
+                : 'text-text-tertiary hover:bg-white/6 hover:text-text-primary'
+            }`}
           >
             Demo
           </button>
@@ -440,16 +448,16 @@ const HomeAdvisor: Component = () => {
                 <p class="mt-2 max-w-[58ch] text-sm leading-7 text-text-secondary">{demoHint()}</p>
               </div>
               <div class="flex flex-wrap gap-2">
-                <button onClick={playDemo} class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep">
+                <button onClick={playDemo} class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep transition-all duration-150 hover:-translate-y-px hover:bg-accent-dim hover:shadow-[0_14px_30px_rgba(0,229,160,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45">
                   Replay demo
                 </button>
-                <button onClick={() => jumpDemo('chat')} class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary">
+                <button onClick={() => jumpDemo('chat')} class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
                   Chat
                 </button>
-                <button onClick={() => jumpDemo('build')} class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary">
+                <button onClick={() => jumpDemo('build')} class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
                   Build
                 </button>
-                <button onClick={() => jumpDemo('bom')} class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary">
+                <button onClick={() => jumpDemo('bom')} class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
                   BOM
                 </button>
               </div>
@@ -508,10 +516,10 @@ const HomeAdvisor: Component = () => {
                                   <div class="mb-4">
                                     <MarkdownMessage content={msg.recommendation!.reasoning} class="text-[13px]" />
                                   </div>
-                                  <button class={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
+                                  <button class={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 ${
                                     demoBuildHighlight() === 'cta'
-                                      ? 'bg-accent text-bg-deep shadow-[0_0_0_6px_rgba(0,229,160,0.14)]'
-                                      : 'bg-accent/85 text-bg-deep'
+                                      ? 'bg-accent text-bg-deep shadow-[0_0_0_6px_rgba(0,229,160,0.14)] hover:bg-accent-dim'
+                                      : 'bg-accent/85 text-bg-deep hover:bg-accent'
                                   }`}>
                                     Apply this build →
                                   </button>
@@ -681,11 +689,11 @@ const HomeAdvisor: Component = () => {
                     <div class="mt-4 flex flex-wrap gap-3">
                       <button
                         onClick={() => startFromDemo('I have a pool layout image. Can you extract the dimensions and recommend a sensor count?')}
-                        class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep"
+                        class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep transition-all duration-150 hover:-translate-y-px hover:bg-accent-dim hover:shadow-[0_14px_30px_rgba(0,229,160,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45"
                       >
                         Yes, get started
                       </button>
-                      <a href="/build" class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary">
+                      <a href="/build" class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
                         Open builder
                       </a>
                     </div>
@@ -700,7 +708,7 @@ const HomeAdvisor: Component = () => {
           <div class="rounded-[1.6rem] border border-white/8 bg-black/12 p-4">
             <div class="mb-3 flex items-center justify-between">
               <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Threads</div>
-              <button onClick={() => createNewConversation()} class="rounded-lg bg-white/6 px-3 py-1.5 text-[11px] font-medium text-text-secondary hover:text-text-primary">
+              <button onClick={() => createNewConversation()} class="rounded-lg bg-white/6 px-3 py-1.5 text-[11px] font-medium text-text-secondary transition-all duration-150 hover:bg-white/9 hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
                 New
               </button>
             </div>
@@ -808,13 +816,13 @@ const HomeAdvisor: Component = () => {
                   onKeyDown={handleInputKeyDown}
                   placeholder="Ask about layout sizing, hub selection, sensors, or BOM sourcing..."
                   disabled={loading()}
-                  class="flex-1 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-border-active"
+                  class="flex-1 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-sm text-text-primary placeholder:text-text-tertiary outline-none transition-all duration-150 hover:border-white/16 focus:border-border-active focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <input ref={fileInputRef} type="file" accept="image/*" class="hidden" onChange={handleImageSelect} />
-                <button onClick={() => fileInputRef?.click()} class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-text-primary">
+                <button onClick={() => fileInputRef?.click()} class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
                   Add image
                 </button>
-                <button onClick={() => void sendMessage()} disabled={loading() || (!input().trim() && !selectedImage())} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg-deep disabled:opacity-50">
+                <button onClick={() => void sendMessage()} disabled={loading() || (!input().trim() && !selectedImage())} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-all duration-150 hover:-translate-y-px hover:bg-accent-dim hover:shadow-[0_14px_30px_rgba(0,229,160,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none">
                   Send
                 </button>
               </div>

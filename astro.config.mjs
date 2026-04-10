@@ -3,9 +3,11 @@ import { resolve } from 'node:path';
 import solidJs from '@astrojs/solid-js';
 import tailwindcss from '@tailwindcss/vite';
 import node from '@astrojs/node';
+import { searchForWorkspaceRoot } from 'vite';
 
 const threadPilledRoot = '/Users/alechp/Code/threadpilled/embed';
 const threadPilledVanillaEntry = resolve(threadPilledRoot, 'packages/embed/dist/vanilla/index.mjs');
+const workspaceRoot = searchForWorkspaceRoot(process.cwd());
 
 export default defineConfig({
   server: { port: 5187 },
@@ -20,7 +22,7 @@ export default defineConfig({
     },
     server: {
       fs: {
-        allow: [threadPilledRoot],
+        allow: [workspaceRoot, threadPilledRoot],
       },
     },
     plugins: [tailwindcss()],

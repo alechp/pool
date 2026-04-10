@@ -21,6 +21,57 @@ export type HardwareVisualVariant =
   | 'part-audio'
   | 'part-accessory';
 
+export type HardwareExplorerArchitecture = 'standalone' | 'zigbee' | 'lora';
+export type HardwareExplorerTier = 'budget' | 'premium';
+
+export type HardwareExplorerAccentColors = {
+  sensor: string;
+  hub: string | null;
+};
+
+const hardwareExplorerAccentMap: Record<
+  HardwareExplorerArchitecture,
+  Record<HardwareExplorerTier, HardwareExplorerAccentColors>
+> = {
+  standalone: {
+    budget: {
+      sensor: '#00e5a0',
+      hub: null,
+    },
+    premium: {
+      sensor: '#34d399',
+      hub: null,
+    },
+  },
+  zigbee: {
+    budget: {
+      sensor: '#38bdf8',
+      hub: '#60a5fa',
+    },
+    premium: {
+      sensor: '#818cf8',
+      hub: '#a78bfa',
+    },
+  },
+  lora: {
+    budget: {
+      sensor: '#fbbf24',
+      hub: '#f59e0b',
+    },
+    premium: {
+      sensor: '#f97316',
+      hub: '#fb923c',
+    },
+  },
+};
+
+export function getHardwareExplorerAccentColors(
+  architecture: HardwareExplorerArchitecture,
+  tier: HardwareExplorerTier
+): HardwareExplorerAccentColors {
+  return hardwareExplorerAccentMap[architecture][tier];
+}
+
 export function getHubVisualVariant(hubTierId?: string | null): HardwareVisualVariant {
   switch (hubTierId) {
     case 'zigbee-cheap':
