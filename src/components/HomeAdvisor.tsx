@@ -404,7 +404,7 @@ const HomeAdvisor: Component = () => {
   }
 
   return (
-    <section class="rounded-[2rem] border border-white/8 bg-bg-surface/95 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] md:p-8">
+    <section class="rounded-2xl sm:rounded-[2rem] border border-white/8 bg-bg-surface/95 p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.28)] md:p-8">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">Inline AI Advisor</div>
@@ -629,31 +629,33 @@ const HomeAdvisor: Component = () => {
                       </div>
 
                       <div class="mt-4 overflow-hidden rounded-2xl border border-white/6">
-                        <div class="grid grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_0.45fr] gap-4 bg-bg-card/60 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
-                          <div>Part</div>
-                          <div>Supplier</div>
-                          <div>Price</div>
-                          <div>Source</div>
-                          <div class="text-right">Open</div>
-                        </div>
-                        <div class="divide-y divide-white/6">
-                          <For each={[
-                            { part: 'Zigbee coordinator', supplier: 'Amazon', price: '$42.00', source: 'filter' },
-                            { part: 'mmWave module', supplier: 'Seeed', price: '$18.40', source: 'manual' },
-                            { part: 'ESP32 board', supplier: 'Amazon', price: '$11.20', source: 'default' },
-                          ]}>
-                            {(row) => (
-                              <div class="grid grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_0.45fr] gap-4 px-4 py-4 text-sm">
-                                <div class="text-text-primary">{row.part}</div>
-                                <div class="text-text-secondary">{row.supplier}</div>
-                                <div class="text-text-primary">{row.price}</div>
-                                <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">{row.source}</div>
-                                <div class="text-right">
-                                  <span class="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-medium text-accent">Open</span>
+                        <div class="overflow-x-auto">
+                          <div class="grid grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_0.45fr] gap-4 bg-bg-card/60 px-4 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary min-w-[480px]">
+                            <div>Part</div>
+                            <div>Supplier</div>
+                            <div>Price</div>
+                            <div>Source</div>
+                            <div class="text-right">Open</div>
+                          </div>
+                          <div class="divide-y divide-white/6 min-w-[480px]">
+                            <For each={[
+                              { part: 'Zigbee coordinator', supplier: 'Amazon', price: '$42.00', source: 'filter' },
+                              { part: 'mmWave module', supplier: 'Seeed', price: '$18.40', source: 'manual' },
+                              { part: 'ESP32 board', supplier: 'Amazon', price: '$11.20', source: 'default' },
+                            ]}>
+                              {(row) => (
+                                <div class="grid grid-cols-[1.2fr_0.8fr_0.55fr_0.55fr_0.45fr] gap-4 px-4 py-4 text-sm">
+                                  <div class="text-text-primary">{row.part}</div>
+                                  <div class="text-text-secondary">{row.supplier}</div>
+                                  <div class="text-text-primary">{row.price}</div>
+                                  <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">{row.source}</div>
+                                  <div class="text-right">
+                                    <span class="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-medium text-accent">Open</span>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </For>
+                              )}
+                            </For>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -808,7 +810,7 @@ const HomeAdvisor: Component = () => {
                   </button>
                 </div>
               </Show>
-              <div class="flex gap-2">
+              <div class="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   value={input()}
@@ -819,12 +821,14 @@ const HomeAdvisor: Component = () => {
                   class="flex-1 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-sm text-text-primary placeholder:text-text-tertiary outline-none transition-all duration-150 hover:border-white/16 focus:border-border-active focus-visible:ring-2 focus-visible:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <input ref={fileInputRef} type="file" accept="image/*" class="hidden" onChange={handleImageSelect} />
-                <button onClick={() => fileInputRef?.click()} class="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
-                  Add image
-                </button>
-                <button onClick={() => void sendMessage()} disabled={loading() || (!input().trim() && !selectedImage())} class="rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-all duration-150 hover:-translate-y-px hover:bg-accent-dim hover:shadow-[0_14px_30px_rgba(0,229,160,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none">
-                  Send
-                </button>
+                <div class="flex gap-2">
+                  <button onClick={() => fileInputRef?.click()} class="flex-1 sm:flex-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-text-primary transition-all duration-150 hover:-translate-y-px hover:border-white/16 hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35">
+                    Add image
+                  </button>
+                  <button onClick={() => void sendMessage()} disabled={loading() || (!input().trim() && !selectedImage())} class="flex-1 sm:flex-none rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-all duration-150 hover:-translate-y-px hover:bg-accent-dim hover:shadow-[0_14px_30px_rgba(0,229,160,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/45 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none">
+                    Send
+                  </button>
+                </div>
               </div>
             </div>
           </div>

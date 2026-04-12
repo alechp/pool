@@ -122,7 +122,7 @@ const subnavItems = [
 ];
 ---
 <Base title="SwimSentry — Build">
-  <main class="max-w-[1120px] mx-auto px-8">
+  <main class="max-w-[1120px] mx-auto px-4 sm:px-6 md:px-8">
     <section class="pt-2">
       <SectionSubnav items={subnavItems} />
     </section>
@@ -134,32 +134,34 @@ const subnavItems = [
         Configure sensors and hubs for full backyard coverage. Real-time pricing from Amazon and direct suppliers.
       </p>
     </section>
-    <div class="flex gap-0.5 mb-12 bg-bg-surface rounded-xl p-1 border border-border">
-      {stepTabs.map((tab) => (
-        <a
-          href={tab.disabled ? undefined : tab.href}
-          class={`flex-1 py-3 px-4 text-center text-[13px] font-medium rounded-lg transition-all relative ${
-            currentStep === tab.num
-              ? 'bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
-              : 'text-text-tertiary'
-          } ${tab.disabled ? 'opacity-30 pointer-events-none' : ''}`}
-          data-astro-prefetch
-        >
-          <div class="flex items-center justify-center gap-1.5">
-            {tab.num < currentStep && (
-              <svg class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            )}
-            <span class={`font-mono text-[11px] block mb-0.5 ${
-              currentStep === tab.num || tab.num < currentStep ? 'text-accent' : 'text-text-tertiary'
-            }`}>
-              {String(tab.num).padStart(2, '0')}
-            </span>
-          </div>
-          {tab.label}
-        </a>
-      ))}
+    <div class="overflow-x-auto scrollbar-hide mb-12">
+      <div class="flex gap-0.5 bg-bg-surface rounded-xl p-1 border border-border min-w-max">
+        {stepTabs.map((tab) => (
+          <a
+            href={tab.disabled ? undefined : tab.href}
+            class={`flex-1 py-3 px-4 text-center text-[13px] font-medium rounded-lg transition-all relative whitespace-nowrap ${
+              currentStep === tab.num
+                ? 'bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
+                : 'text-text-tertiary'
+            } ${tab.disabled ? 'opacity-30 pointer-events-none' : ''}`}
+            data-astro-prefetch
+          >
+            <div class="flex items-center justify-center gap-1.5">
+              {tab.num < currentStep && (
+                <svg class="w-3.5 h-3.5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              <span class={`font-mono text-[11px] block mb-0.5 ${
+                currentStep === tab.num || tab.num < currentStep ? 'text-accent' : 'text-text-tertiary'
+              }`}>
+                {String(tab.num).padStart(2, '0')}
+              </span>
+            </div>
+            {tab.label}
+          </a>
+        ))}
+      </div>
     </div>
 
     {currentStep === 1 && (
@@ -254,7 +256,7 @@ const subnavItems = [
         <section class="my-12">
           <div class="bg-bg-surface border border-border rounded-xl overflow-hidden">
             <div
-              class="relative min-h-[380px] px-8 py-10"
+              class="relative min-h-[380px] px-4 sm:px-6 md:px-8 py-10"
               style={`background:
                 radial-gradient(circle at 22% 18%, ${selectedSensorTier.accentColor}22, transparent 34%),
                 radial-gradient(circle at 78% 28%, rgba(255,255,255,0.08), transparent 30%),

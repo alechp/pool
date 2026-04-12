@@ -497,7 +497,7 @@ const HubViewer3D: Component<Props> = (props) => {
           <canvas
             ref={canvasRef}
             class="block w-full cursor-grab active:cursor-grabbing"
-            style={{ height: `${canvasHeight()}px` }}
+            style={{ height: `${canvasHeight()}px`, "touch-action": "none" }}
             role="img"
             aria-label={props.ariaLabel ?? `${props.architecture} ${props.tier} hub hardware model`}
           />

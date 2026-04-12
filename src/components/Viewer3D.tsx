@@ -258,7 +258,7 @@ const Viewer3D: Component<Props> = (props) => {
         <canvas
           ref={canvasRef}
           class="block w-full cursor-grab active:cursor-grabbing"
-          style={{ height: `${props.canvasHeight ?? 380}px` }}
+          style={{ height: `${props.canvasHeight ?? 380}px`, "touch-action": "none" }}
           role="img"
           aria-label={props.ariaLabel ?? '3D preview of a SwimSentry sensor node'}
         />

@@ -592,7 +592,8 @@ const SummaryTable: Component<Props> = (props) => {
         <div class="mt-12">
           <h2 class="text-lg font-semibold mb-4">Saved configurations</h2>
           <div class="border border-border rounded-xl overflow-hidden">
-            <table class="w-full text-left">
+            <div class="overflow-x-auto">
+            <table class="w-full text-left min-w-[500px]">
               <thead>
                 <tr class="border-b border-border bg-bg-surface">
                   <th class="px-4 py-3 text-[11px] font-mono uppercase tracking-wider text-text-tertiary">Name</th>
@@ -641,6 +642,7 @@ const SummaryTable: Component<Props> = (props) => {
                 </For>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </Show>

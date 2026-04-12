@@ -136,7 +136,7 @@ const BuildReview: Component<Props> = (props) => {
                   placeholder={autoName()}
                   value={configName()}
                   onInput={(e) => setConfigName(e.currentTarget.value)}
-                  class="bg-bg-elevated border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-border-active min-w-[18rem]"
+                  class="bg-bg-elevated border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder:text-text-tertiary outline-none focus:border-border-active w-full sm:min-w-[18rem] sm:w-auto"
                 />
                 <button
                   onClick={saveConfig}

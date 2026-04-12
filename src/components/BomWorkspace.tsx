@@ -382,18 +382,18 @@ const BomWorkspace: Component<Props> = (props) => {
             </select>
           </label>
 
-          <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-3 w-full md:w-auto">
             <button
               onClick={() => void generateSelectionBy(filterMode())}
               disabled={bulkState() === 'loading'}
-              class="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim disabled:opacity-60"
+              class="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim disabled:opacity-60 w-full md:w-auto"
             >
               {bulkState() === 'loading' ? 'Generating…' : 'Generate selection'}
             </button>
             <button
               onClick={() => void findLinksForAllParts(true)}
               disabled={bulkState() === 'loading'}
-              class="rounded-full bg-white/6 px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 disabled:opacity-60"
+              class="rounded-full bg-white/6 px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 disabled:opacity-60 w-full md:w-auto"
             >
               {bulkState() === 'loading' ? 'Finding links…' : 'Find links for all parts'}
             </button>
@@ -403,7 +403,7 @@ const BomWorkspace: Component<Props> = (props) => {
         <div class="mt-4 flex flex-wrap gap-3">
           <button
             onClick={persistSelection}
-            class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim"
+            class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim w-full sm:w-auto"
           >
             Save BOM selection
           </button>
@@ -416,7 +416,7 @@ const BomWorkspace: Component<Props> = (props) => {
                 }
               }
             }}
-            class="rounded-full bg-white/6 px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/10"
+            class="rounded-full bg-white/6 px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 w-full sm:w-auto"
           >
             Open all selected shopping links
           </button>
@@ -434,7 +434,8 @@ const BomWorkspace: Component<Props> = (props) => {
       </section>
 
       <section class="rounded-2xl border border-border bg-bg-surface overflow-hidden">
-        <div class="grid grid-cols-[1.15fr_0.8fr_0.65fr_0.55fr_0.55fr_0.45fr] gap-4 border-b border-white/6 px-5 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">
+        <div class="overflow-x-auto">
+        <div class="grid grid-cols-[1.15fr_0.8fr_0.65fr_0.55fr_0.55fr_0.45fr] gap-4 border-b border-white/6 px-5 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary min-w-[700px]">
           <button class="text-left" onClick={() => setSort('part')}>Part</button>
           <button class="text-left" onClick={() => setSort('supplier')}>Supplier</button>
           <button class="text-left" onClick={() => setSort('price')}>Price</button>
@@ -449,7 +450,7 @@ const BomWorkspace: Component<Props> = (props) => {
             const selected = () => links().find((link) => link.url === selectedLinks()[part.name]) ?? chooseLink(links(), filterMode());
 
             return (
-              <div class="border-b border-white/4 px-5 py-4 last:border-b-0">
+              <div class="border-b border-white/4 px-5 py-4 last:border-b-0 min-w-[700px]">
                 <div class="grid grid-cols-[1.15fr_0.8fr_0.65fr_0.55fr_0.55fr_0.45fr] gap-4 items-center">
                   <div class="flex items-center gap-3 min-w-0">
                     <HardwareThumbnail variant={getPartVisualVariant(part.name)} title={part.name} class="h-14 w-20 flex-none" />
@@ -539,6 +540,7 @@ const BomWorkspace: Component<Props> = (props) => {
             );
           }}
         </For>
+        </div>
       </section>
     </div>
   );

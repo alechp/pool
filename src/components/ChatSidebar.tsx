@@ -317,16 +317,29 @@ const ChatSidebar: Component = () => {
 
   return (
     <>
-      {/* Toggle button - fixed to right edge */}
+      {/* Toggle button - fixed to right edge (desktop only) */}
       <Show when={!open()}>
         <button
           onClick={() => setOpen(true)}
-          class="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-bg-surface border border-r-0 border-border rounded-l-lg px-2 py-4 hover:bg-bg-card transition-colors group cursor-pointer"
+          class="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-bg-surface border border-r-0 border-border rounded-l-lg px-2 py-4 hover:bg-bg-card transition-colors group cursor-pointer hidden md:block"
           title="AI Advisor"
         >
           <span class="[writing-mode:vertical-lr] text-xs font-medium text-text-secondary group-hover:text-accent transition-colors">
             AI Advisor
           </span>
+        </button>
+      </Show>
+
+      {/* Mobile FAB toggle (below md only) */}
+      <Show when={!open()}>
+        <button
+          onClick={() => setOpen(true)}
+          class="fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full bg-accent shadow-[0_4px_20px_rgba(0,229,160,0.3)] flex items-center justify-center md:hidden cursor-pointer active:scale-95 transition-transform"
+          title="AI Advisor"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0a0b0f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
         </button>
       </Show>
 
@@ -341,17 +354,18 @@ const ChatSidebar: Component = () => {
       {/* Sidebar panel */}
       <Show when={open()}>
         <div
-          class={`fixed right-0 top-0 h-full max-w-[92vw] z-50 border-l flex flex-col animate-[slide-in-right_0.2s_ease] ${
+          class={`fixed right-0 top-0 h-full z-50 border-l flex flex-col animate-[slide-in-right_0.2s_ease] w-full md:max-w-[92vw] ${
             highContrast()
               ? 'bg-[#0f1117] border-white/12 shadow-[-18px_0_50px_rgba(0,0,0,0.4)]'
               : 'bg-bg-surface border-border'
           }`}
-          style={{ width: `${sidebarWidth()}px` }}
+          style={{ width: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : `${sidebarWidth()}px` }}
         >
+          {/* Resize handle (desktop only) */}
           <button
             type="button"
             aria-label="Resize AI Advisor"
-            class="absolute left-0 top-0 h-full w-3 -translate-x-1/2 cursor-col-resize bg-transparent"
+            class="absolute left-0 top-0 h-full w-3 -translate-x-1/2 cursor-col-resize bg-transparent hidden md:block"
             onPointerDown={startResizing}
           >
             <span class="absolute left-1/2 top-1/2 h-14 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/10" />
@@ -558,7 +572,7 @@ const ChatSidebar: Component = () => {
           </div>
 
           {/* Input area */}
-          <div class={`p-4 border-t ${highContrast() ? 'border-white/10' : 'border-border'}`}>
+          <div class={`p-4 border-t pb-[max(1rem,env(safe-area-inset-bottom))] ${highContrast() ? 'border-white/10' : 'border-border'}`}>
             <Show when={selectedImage()}>
               <div class="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/8 px-3 py-1 text-[11px] font-mono uppercase tracking-[0.08em] text-accent">
                 <span>{selectedImage()!.name}</span>
