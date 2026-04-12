@@ -1,11 +1,14 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { buildSessions } from '../../lib/schema';
 import { desc } from 'drizzle-orm';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async (context) => {
   try {
-    const rows = db.select().from(buildSessions).orderBy(desc(buildSessions.createdAt)).limit(50).all();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const rows = await db.select().from(buildSessions).orderBy(desc(buildSessions.createdAt)).limit(50).all();
 
     return new Response(JSON.stringify(rows), {
       headers: { 'Content-Type': 'application/json' },
@@ -18,9 +21,12 @@ export const GET: APIRoute = async () => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const body = await context.request.json();
     const { status, source, hubTypeId, hubTierId, sensorTierId, qty } = body;
 
     if (!status || typeof status !== 'string') {
@@ -31,7 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const now = new Date().toISOString();
-    const result = db.insert(buildSessions).values({
+    const result = await db.insert(buildSessions).values({
       status,
       source,
       hubTypeId: hubTypeId || null,

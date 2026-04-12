@@ -1,16 +1,19 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/db';
+import { getDb } from '../../../lib/db';
 import { buildSessions } from '../../../lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async (context) => {
   try {
-    const id = parseInt(params.id!);
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const id = parseInt(context.params.id!);
     if (isNaN(id)) {
       return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400 });
     }
 
-    const row = db.select().from(buildSessions).where(eq(buildSessions.id, id)).get();
+    const row = await db.select().from(buildSessions).where(eq(buildSessions.id, id)).get();
     if (!row) {
       return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
     }
@@ -26,19 +29,22 @@ export const GET: APIRoute = async ({ params }) => {
   }
 };
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = async (context) => {
   try {
-    const id = parseInt(params.id!);
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const id = parseInt(context.params.id!);
     if (isNaN(id)) {
       return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400 });
     }
 
-    const existing = db.select().from(buildSessions).where(eq(buildSessions.id, id)).get();
+    const existing = await db.select().from(buildSessions).where(eq(buildSessions.id, id)).get();
     if (!existing) {
       return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
     }
 
-    const body = await request.json();
+    const body = await context.request.json();
     const updates: Record<string, any> = { updatedAt: new Date().toISOString() };
 
     if (body.status !== undefined) updates.status = body.status;
@@ -47,9 +53,9 @@ export const PUT: APIRoute = async ({ params, request }) => {
     if (body.sensorTierId !== undefined) updates.sensorTierId = body.sensorTierId;
     if (body.qty !== undefined) updates.qty = body.qty;
 
-    db.update(buildSessions).set(updates).where(eq(buildSessions.id, id)).run();
+    await db.update(buildSessions).set(updates).where(eq(buildSessions.id, id)).run();
 
-    const updated = db.select().from(buildSessions).where(eq(buildSessions.id, id)).get();
+    const updated = await db.select().from(buildSessions).where(eq(buildSessions.id, id)).get();
 
     return new Response(JSON.stringify(updated), {
       headers: { 'Content-Type': 'application/json' },

@@ -1,17 +1,20 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { savedConfigs, hubTypes, hubTiers, sensorTiers } from '../../lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const GET: APIRoute = async () => {
-  const rows = db.select().from(savedConfigs).all();
+export const GET: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
 
-  const result = rows.map(row => {
-    const ht = db.select().from(hubTypes).where(eq(hubTypes.id, row.hubTypeId)).get();
+  const rows = await db.select().from(savedConfigs).all();
+
+  const result = await Promise.all(rows.map(async (row) => {
+    const ht = await db.select().from(hubTypes).where(eq(hubTypes.id, row.hubTypeId)).get();
     const hubTier = row.hubTierId
-      ? db.select().from(hubTiers).where(eq(hubTiers.id, row.hubTierId)).get()
+      ? await db.select().from(hubTiers).where(eq(hubTiers.id, row.hubTierId)).get()
       : null;
-    const st = db.select().from(sensorTiers).where(eq(sensorTiers.id, row.sensorTierId)).get();
+    const st = await db.select().from(sensorTiers).where(eq(sensorTiers.id, row.sensorTierId)).get();
 
     return {
       id: row.id,
@@ -24,15 +27,18 @@ export const GET: APIRoute = async () => {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };
-  });
+  }));
 
   return new Response(JSON.stringify(result), {
     headers: { 'Content-Type': 'application/json' },
   });
 };
 
-export const POST: APIRoute = async ({ request }) => {
-  const body = await request.json();
+export const POST: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const body = await context.request.json();
   const { name, hubTypeId, hubTierId, sensorTierId, qty } = body;
 
   // Validation
@@ -50,7 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   // Verify hub type exists
-  const ht = db.select().from(hubTypes).where(eq(hubTypes.id, hubTypeId)).get();
+  const ht = await db.select().from(hubTypes).where(eq(hubTypes.id, hubTypeId)).get();
   if (!ht) {
     return new Response(JSON.stringify({ error: 'Invalid hubTypeId' }), { status: 400 });
   }
@@ -60,20 +66,20 @@ export const POST: APIRoute = async ({ request }) => {
     if (!hubTierId) {
       return new Response(JSON.stringify({ error: 'hubTierId required for non-standalone' }), { status: 400 });
     }
-    const tier = db.select().from(hubTiers).where(eq(hubTiers.id, hubTierId)).get();
+    const tier = await db.select().from(hubTiers).where(eq(hubTiers.id, hubTierId)).get();
     if (!tier || tier.hubTypeId !== hubTypeId) {
       return new Response(JSON.stringify({ error: 'Invalid hubTierId' }), { status: 400 });
     }
   }
 
   // Verify sensor tier
-  const st = db.select().from(sensorTiers).where(eq(sensorTiers.id, sensorTierId)).get();
+  const st = await db.select().from(sensorTiers).where(eq(sensorTiers.id, sensorTierId)).get();
   if (!st || st.hubTypeId !== hubTypeId) {
     return new Response(JSON.stringify({ error: 'Invalid sensorTierId' }), { status: 400 });
   }
 
   const now = new Date().toISOString();
-  const result = db.insert(savedConfigs).values({
+  const result = await db.insert(savedConfigs).values({
     name,
     hubTypeId,
     hubTierId: hubTypeId === 'none' ? null : hubTierId,
@@ -89,20 +95,23 @@ export const POST: APIRoute = async ({ request }) => {
   });
 };
 
-export const DELETE: APIRoute = async ({ request }) => {
-  const body = await request.json();
+export const DELETE: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const body = await context.request.json();
   const { id } = body;
 
   if (!id || typeof id !== 'number') {
     return new Response(JSON.stringify({ error: 'id is required' }), { status: 400 });
   }
 
-  const existing = db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
+  const existing = await db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
   if (!existing) {
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
   }
 
-  db.delete(savedConfigs).where(eq(savedConfigs.id, id)).run();
+  await db.delete(savedConfigs).where(eq(savedConfigs.id, id)).run();
 
   return new Response(JSON.stringify({ deleted: true }), {
     headers: { 'Content-Type': 'application/json' },

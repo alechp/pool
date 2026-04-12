@@ -1,11 +1,14 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { hubTypes, hubTiers, sensorTiers, chatSessions } from '../../lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const body = await context.request.json();
     const { messages, sessionId, image } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -16,7 +19,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Check for API key
-    const apiKey = import.meta.env.ANTHROPIC_API_KEY;
+    const apiKey = context.locals.runtime.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({
@@ -28,17 +31,11 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Load catalog data from DB
-    const hubTypesData = db.select().from(hubTypes).all();
-    const hubTiersData = db
-      .select()
-      .from(hubTiers)
-      .all()
-      .map((t) => ({ ...t, price: t.price / 100 }));
-    const sensorTiersData = db
-      .select()
-      .from(sensorTiers)
-      .all()
-      .map((t) => ({ ...t, price: t.price / 100 }));
+    const hubTypesData = await db.select().from(hubTypes).all();
+    const hubTiersRaw = await db.select().from(hubTiers).all();
+    const hubTiersData = hubTiersRaw.map((t) => ({ ...t, price: t.price / 100 }));
+    const sensorTiersRaw = await db.select().from(sensorTiers).all();
+    const sensorTiersData = sensorTiersRaw.map((t) => ({ ...t, price: t.price / 100 }));
 
     // Build system prompt with catalog data
     const systemPrompt = `You are SwimSentry's AI advisor helping users choose pool safety hardware.
@@ -122,11 +119,11 @@ Keep responses concise (2-4 sentences) unless asked for detail.`;
       try {
         recommendation = JSON.parse(recMatch[1].trim());
         if (recommendation?.hubTypeId && recommendation?.sensorTierId) {
-          const hubType = db.select().from(hubTypes).where(eq(hubTypes.id, recommendation.hubTypeId)).get();
+          const hubType = await db.select().from(hubTypes).where(eq(hubTypes.id, recommendation.hubTypeId)).get();
           const hubTier = recommendation.hubTierId
-            ? db.select().from(hubTiers).where(eq(hubTiers.id, recommendation.hubTierId)).get()
+            ? await db.select().from(hubTiers).where(eq(hubTiers.id, recommendation.hubTierId)).get()
             : null;
-          const sensorTier = db.select().from(sensorTiers).where(eq(sensorTiers.id, recommendation.sensorTierId)).get();
+          const sensorTier = await db.select().from(sensorTiers).where(eq(sensorTiers.id, recommendation.sensorTierId)).get();
 
           recommendation = {
             ...recommendation,
@@ -149,7 +146,7 @@ Keep responses concise (2-4 sentences) unless asked for detail.`;
 
     if (currentSessionId) {
       // Update existing session
-      db.update(chatSessions)
+      await db.update(chatSessions)
         .set({
           messageCount: messages.length + 1,
           recommendationMade: recommendation ? 1 : 0,
@@ -159,7 +156,7 @@ Keep responses concise (2-4 sentences) unless asked for detail.`;
         .run();
     } else {
       // Create new session
-      const session = db
+      const session = await db
         .insert(chatSessions)
         .values({
           messageCount: messages.length + 1,
