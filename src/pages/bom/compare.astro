@@ -2,19 +2,20 @@
 import Base from '../../layouts/Base.astro';
 import SectionSubnav from '../../components/SectionSubnav.astro';
 import SummaryTable from '../../components/SummaryTable.tsx';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../../lib/schema';
 import { loadCatalog } from '../../lib/data';
 
+const db = getDb(Astro.locals.runtime.env.DB);
 const raw = {
-  hubTypes: db.select().from(hubTypes).all(),
-  hubTiers: db.select().from(hubTiers).all(),
-  sensorTiers: db.select().from(sensorTiers).all(),
-  hubParts: db.select().from(hubTierParts).all(),
-  sensorParts: db.select().from(sensorTierParts).all(),
+  hubTypes: await db.select().from(hubTypes).all(),
+  hubTiers: await db.select().from(hubTiers).all(),
+  sensorTiers: await db.select().from(sensorTiers).all(),
+  hubParts: await db.select().from(hubTierParts).all(),
+  sensorParts: await db.select().from(sensorTierParts).all(),
 };
 const catalog = loadCatalog(raw);
-const configs = db.select().from(savedConfigs).all();
+const configs = await db.select().from(savedConfigs).all();
 const subnavItems = [
   { href: '/bom', label: 'Workspace' },
   { href: '/bom/compare', label: 'Compare' },

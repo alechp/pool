@@ -5,18 +5,19 @@ import SectionSubnav from '../components/SectionSubnav.astro';
 import SelectableCard from '../components/SelectableCard.astro';
 import HardwareThumbnail from '../components/HardwareThumbnail.tsx';
 import PartDetailRow from '../components/PartDetailRow.tsx';
-import { db } from '../lib/db';
+import { getDb } from '../lib/db';
 import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
 import { getHubVisualVariant, getSensorVisualVariant } from '../lib/hardwareVisuals';
 import { eq } from 'drizzle-orm';
 
+const db = getDb(Astro.locals.runtime.env.DB);
 const raw = {
-  hubTypes: db.select().from(hubTypes).all(),
-  hubTiers: db.select().from(hubTiers).all(),
-  sensorTiers: db.select().from(sensorTiers).all(),
-  hubParts: db.select().from(hubTierParts).all(),
-  sensorParts: db.select().from(sensorTierParts).all(),
+  hubTypes: await db.select().from(hubTypes).all(),
+  hubTiers: await db.select().from(hubTiers).all(),
+  sensorTiers: await db.select().from(sensorTiers).all(),
+  hubParts: await db.select().from(hubTierParts).all(),
+  sensorParts: await db.select().from(sensorTierParts).all(),
 };
 const catalog = loadCatalog(raw);
 
@@ -25,9 +26,9 @@ const forkFromParam = Astro.url.searchParams.get('fork_from');
 const configId = configIdParam ? Number.parseInt(configIdParam, 10) : null;
 const forkFromId = forkFromParam ? Number.parseInt(forkFromParam, 10) : null;
 const sourceConfig = configId
-  ? db.select().from(savedConfigs).where(eq(savedConfigs.id, configId)).get()
+  ? await db.select().from(savedConfigs).where(eq(savedConfigs.id, configId)).get()
   : forkFromId
-  ? db.select().from(savedConfigs).where(eq(savedConfigs.id, forkFromId)).get()
+  ? await db.select().from(savedConfigs).where(eq(savedConfigs.id, forkFromId)).get()
   : null;
 
 const hubTypeParam = Astro.url.searchParams.get('hub_type') ?? sourceConfig?.hubTypeId ?? null;

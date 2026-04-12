@@ -2,23 +2,24 @@
 import Base from '../layouts/Base.astro';
 import SectionSubnav from '../components/SectionSubnav.astro';
 import PersonaGrid from '../components/PersonaGrid.tsx';
-import { db } from '../lib/db';
+import { getDb } from '../lib/db';
 import { personas, personaFactors, personaBundles, hubTypes, hubTiers, sensorTiers, hubTierParts, sensorTierParts } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
 import type { Persona } from '../lib/data';
 
+const db = getDb(Astro.locals.runtime.env.DB);
 const raw = {
-  hubTypes: db.select().from(hubTypes).all(),
-  hubTiers: db.select().from(hubTiers).all(),
-  sensorTiers: db.select().from(sensorTiers).all(),
-  hubParts: db.select().from(hubTierParts).all(),
-  sensorParts: db.select().from(sensorTierParts).all(),
+  hubTypes: await db.select().from(hubTypes).all(),
+  hubTiers: await db.select().from(hubTiers).all(),
+  sensorTiers: await db.select().from(sensorTiers).all(),
+  hubParts: await db.select().from(hubTierParts).all(),
+  sensorParts: await db.select().from(sensorTierParts).all(),
 };
 const catalog = loadCatalog(raw);
 
-const personaRows = db.select().from(personas).all();
-const factorRows = db.select().from(personaFactors).all();
-const bundleRows = db.select().from(personaBundles).all();
+const personaRows = await db.select().from(personas).all();
+const factorRows = await db.select().from(personaFactors).all();
+const bundleRows = await db.select().from(personaBundles).all();
 
 const personaData: Persona[] = personaRows.map(p => ({
   ...p,

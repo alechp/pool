@@ -10,5 +10,16 @@ declare namespace App {
         ANTHROPIC_API_KEY: string;
       };
     };
+    user?: {
+      id: string;
+      email: string;
+      name: string | null;
+    };
+    session?: {
+      id: string;
+      userId: string;
+      token: string;
+      expiresAt: Date;
+    };
   }
 }

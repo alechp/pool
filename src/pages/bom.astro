@@ -2,17 +2,18 @@
 import Base from '../layouts/Base.astro';
 import BomWorkspace from '../components/BomWorkspace.tsx';
 import SectionSubnav from '../components/SectionSubnav.astro';
-import { db } from '../lib/db';
+import { getDb } from '../lib/db';
 import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs, bomSelections } from '../lib/schema';
 import { loadCatalog } from '../lib/data';
 import { eq } from 'drizzle-orm';
 
+const db = getDb(Astro.locals.runtime.env.DB);
 const raw = {
-  hubTypes: db.select().from(hubTypes).all(),
-  hubTiers: db.select().from(hubTiers).all(),
-  sensorTiers: db.select().from(sensorTiers).all(),
-  hubParts: db.select().from(hubTierParts).all(),
-  sensorParts: db.select().from(sensorTierParts).all(),
+  hubTypes: await db.select().from(hubTypes).all(),
+  hubTiers: await db.select().from(hubTiers).all(),
+  sensorTiers: await db.select().from(sensorTiers).all(),
+  hubParts: await db.select().from(hubTierParts).all(),
+  sensorParts: await db.select().from(sensorTierParts).all(),
 };
 const catalog = loadCatalog(raw);
 
@@ -28,7 +29,7 @@ const sensorTier = catalog.sensorTiers.find((item) => item.id === sensorTierPara
 const hubParts = hubTier ? catalog.hubParts[hubTier.id] ?? [] : [];
 const sensorParts = sensorTier ? catalog.sensorParts[sensorTier.id] ?? [] : [];
 const buildKey = [hubType?.id ?? 'none', hubTier?.id ?? 'none', sensorTier?.id ?? 'none', qty].join(':');
-const savedConfigsRows = db.select().from(savedConfigs).all()
+const savedConfigsRows = (await db.select().from(savedConfigs).all())
   .map((row) => {
     const ht = catalog.hubTypes.find((item) => item.id === row.hubTypeId) ?? null;
     const hub = row.hubTierId ? catalog.hubTiers.find((item) => item.id === row.hubTierId) ?? null : null;
@@ -47,7 +48,7 @@ const savedConfigsRows = db.select().from(savedConfigs).all()
   })
   .sort((a, b) => b.id - a.id);
 const persistedSelections = sensorTier
-  ? db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all()
+  ? await db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all()
   : [];
 const initialState = {
   filterMode: persistedSelections[0]?.filterMode ?? null,
