@@ -1,11 +1,14 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { preselections } from '../../lib/schema';
 import { desc } from 'drizzle-orm';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async (context) => {
   try {
-    const rows = db.select().from(preselections).orderBy(desc(preselections.createdAt)).limit(50).all();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const rows = await db.select().from(preselections).orderBy(desc(preselections.createdAt)).limit(50).all();
 
     return new Response(JSON.stringify(rows), {
       headers: { 'Content-Type': 'application/json' },
@@ -18,9 +21,12 @@ export const GET: APIRoute = async () => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const body = await context.request.json();
     const { hubTypeId, hubTierId, sensorTierId, source } = body;
 
     if (!hubTypeId || typeof hubTypeId !== 'string') {
@@ -34,7 +40,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const now = new Date().toISOString();
-    const result = db.insert(preselections).values({
+    const result = await db.insert(preselections).values({
       hubTypeId,
       hubTierId: hubTierId || null,
       sensorTierId,

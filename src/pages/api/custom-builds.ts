@@ -1,14 +1,17 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { customBuilds, customBuildParts } from '../../lib/schema';
 import { eq, desc } from 'drizzle-orm';
 
-export const GET: APIRoute = async () => {
+export const GET: APIRoute = async (context) => {
   try {
-    const builds = db.select().from(customBuilds).orderBy(desc(customBuilds.createdAt)).all();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
 
-    const result = builds.map(build => {
-      const parts = db.select().from(customBuildParts)
+    const builds = await db.select().from(customBuilds).orderBy(desc(customBuilds.createdAt)).all();
+
+    const result = await Promise.all(builds.map(async (build) => {
+      const parts = await db.select().from(customBuildParts)
         .where(eq(customBuildParts.customBuildId, build.id))
         .orderBy(customBuildParts.sortOrder)
         .all();
@@ -21,7 +24,7 @@ export const GET: APIRoute = async () => {
           price: p.price / 100,
         })),
       };
-    });
+    }));
 
     return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json' },
@@ -34,9 +37,12 @@ export const GET: APIRoute = async () => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const body = await context.request.json();
     const { name, hubTypeId, sensorQty, totalPrice, parts } = body;
 
     if (!name || typeof name !== 'string' || name.length > 100) {
@@ -58,7 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
     const now = new Date().toISOString();
 
     // Insert the custom build first
-    const build = db.insert(customBuilds).values({
+    const build = await db.insert(customBuilds).values({
       name,
       hubTypeId,
       sensorQty,
@@ -69,7 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Insert all parts with the custom build ID
     for (const part of parts) {
-      db.insert(customBuildParts).values({
+      await db.insert(customBuildParts).values({
         customBuildId: build.id,
         partType: part.partType,
         partName: part.partName,
@@ -80,7 +86,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Fetch inserted parts to return with the build
-    const insertedParts = db.select().from(customBuildParts)
+    const insertedParts = await db.select().from(customBuildParts)
       .where(eq(customBuildParts.customBuildId, build.id))
       .orderBy(customBuildParts.sortOrder)
       .all();
@@ -104,25 +110,28 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ request }) => {
+export const DELETE: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const body = await context.request.json();
     const { id } = body;
 
     if (!id || typeof id !== 'number') {
       return new Response(JSON.stringify({ error: 'id is required' }), { status: 400 });
     }
 
-    const existing = db.select().from(customBuilds).where(eq(customBuilds.id, id)).get();
+    const existing = await db.select().from(customBuilds).where(eq(customBuilds.id, id)).get();
     if (!existing) {
       return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
     }
 
     // Delete parts first (foreign key constraint)
-    db.delete(customBuildParts).where(eq(customBuildParts.customBuildId, id)).run();
+    await db.delete(customBuildParts).where(eq(customBuildParts.customBuildId, id)).run();
 
     // Then delete the build
-    db.delete(customBuilds).where(eq(customBuilds.id, id)).run();
+    await db.delete(customBuilds).where(eq(customBuilds.id, id)).run();
 
     return new Response(JSON.stringify({ deleted: true }), {
       headers: { 'Content-Type': 'application/json' },

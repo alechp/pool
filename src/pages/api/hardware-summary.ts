@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { eq } from 'drizzle-orm';
-import { db } from '../../lib/db';
+import { getDb, type AppDatabase } from '../../lib/db';
 import { hubTierParts, hubTiers, sensorTierParts, sensorTiers } from '../../lib/schema';
 import {
   getHardwareExplorerAccentColors,
@@ -82,15 +82,16 @@ function compactPartSummary(parts: Array<{ name: string }>) {
     .join(' · ');
 }
 
-function buildSensorSummary(
+async function buildSensorSummary(
+  db: AppDatabase,
   sensorTierId: string,
   architecture: HardwareExplorerArchitecture,
   tier: HardwareExplorerTier
-): HardwareSummaryRow | null {
-  const sensorTier = db.select().from(sensorTiers).where(eq(sensorTiers.id, sensorTierId)).get();
+): Promise<HardwareSummaryRow | null> {
+  const sensorTier = await db.select().from(sensorTiers).where(eq(sensorTiers.id, sensorTierId)).get();
   if (!sensorTier) return null;
 
-  const parts = db
+  const parts = await db
     .select()
     .from(sensorTierParts)
     .where(eq(sensorTierParts.sensorTierId, sensorTier.id))
@@ -105,17 +106,18 @@ function buildSensorSummary(
   };
 }
 
-function buildHubSummary(
+async function buildHubSummary(
+  db: AppDatabase,
   hubTierId: string | null,
   architecture: HardwareExplorerArchitecture,
   tier: HardwareExplorerTier
-): HardwareSummaryRow | null {
+): Promise<HardwareSummaryRow | null> {
   if (!hubTierId) return null;
 
-  const hubTier = db.select().from(hubTiers).where(eq(hubTiers.id, hubTierId)).get();
+  const hubTier = await db.select().from(hubTiers).where(eq(hubTiers.id, hubTierId)).get();
   if (!hubTier) return null;
 
-  const parts = db
+  const parts = await db
     .select()
     .from(hubTierParts)
     .where(eq(hubTierParts.hubTierId, hubTier.id))
@@ -133,8 +135,11 @@ function buildHubSummary(
     : null;
 }
 
-export const GET: APIRoute = async ({ url }) => {
-  const architecture = normalizeArchitecture(url.searchParams.get('arch'));
+export const GET: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const architecture = normalizeArchitecture(context.url.searchParams.get('arch'));
   if (!architecture) {
     return new Response(JSON.stringify({ error: 'Invalid arch. Expected standalone, zigbee, or lora.' }), {
       status: 400,
@@ -142,7 +147,7 @@ export const GET: APIRoute = async ({ url }) => {
     });
   }
 
-  const tier = normalizeTier(url.searchParams.get('tier'));
+  const tier = normalizeTier(context.url.searchParams.get('tier'));
   if (!tier) {
     return new Response(JSON.stringify({ error: 'Invalid tier. Expected budget or premium.' }), {
       status: 400,
@@ -151,7 +156,7 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   const selection = HARDWARE_TIER_SELECTIONS[architecture][tier];
-  const sensor = buildSensorSummary(selection.sensorTierId, architecture, tier);
+  const sensor = await buildSensorSummary(db, selection.sensorTierId, architecture, tier);
   if (!sensor) {
     return new Response(JSON.stringify({ error: 'Sensor tier not found.' }), {
       status: 404,
@@ -159,7 +164,7 @@ export const GET: APIRoute = async ({ url }) => {
     });
   }
 
-  const hub = buildHubSummary(selection.hubTierId, architecture, tier);
+  const hub = await buildHubSummary(db, selection.hubTierId, architecture, tier);
   if (selection.hubTierId && !hub) {
     return new Response(JSON.stringify({ error: 'Hub tier not found.' }), {
       status: 404,

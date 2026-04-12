@@ -1,10 +1,13 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { bomSelections } from '../../lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const GET: APIRoute = async ({ request }) => {
-  const url = new URL(request.url);
+export const GET: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const url = new URL(context.request.url);
   const buildKey = url.searchParams.get('buildKey');
 
   if (!buildKey) {
@@ -14,15 +17,18 @@ export const GET: APIRoute = async ({ request }) => {
     });
   }
 
-  const rows = db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all();
+  const rows = await db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all();
 
   return new Response(JSON.stringify({ selections: rows }), {
     headers: { 'Content-Type': 'application/json' },
   });
 };
 
-export const PUT: APIRoute = async ({ request }) => {
-  const body = await request.json();
+export const PUT: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const body = await context.request.json();
   const { buildKey, filterMode, selections } = body;
 
   if (!buildKey || typeof buildKey !== 'string') {
@@ -37,11 +43,12 @@ export const PUT: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'selections array is required' }), { status: 400 });
   }
 
-  db.delete(bomSelections).where(eq(bomSelections.buildKey, buildKey)).run();
+  await db.delete(bomSelections).where(eq(bomSelections.buildKey, buildKey)).run();
 
   const now = new Date().toISOString();
-  const saved = selections.map((selection: any) =>
-    db.insert(bomSelections).values({
+  const saved = [];
+  for (const selection of selections as any[]) {
+    const row = await db.insert(bomSelections).values({
       buildKey,
       partName: selection.partName,
       selectedUrl: selection.selectedUrl,
@@ -49,8 +56,9 @@ export const PUT: APIRoute = async ({ request }) => {
       selectionSource: selection.selectionSource,
       filterMode,
       updatedAt: now,
-    }).returning().get()
-  );
+    }).returning().get();
+    saved.push(row);
+  }
 
   return new Response(JSON.stringify({ saved }), {
     headers: { 'Content-Type': 'application/json' },

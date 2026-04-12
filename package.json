@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "wrangler pages dev dist",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "node --import tsx scripts/seed.ts",
@@ -13,12 +13,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.39.0",
-    "@astrojs/node": "10.0.4",
+    "@astrojs/cloudflare": "12.2.1",
     "@astrojs/solid-js": "6.0.1",
     "@tailwindcss/vite": "4.2.2",
     "@tanstack/solid-table": "8.21.3",
     "astro": "6.1.2",
-    "better-sqlite3": "12.8.0",
     "drizzle-orm": "0.45.2",
     "lucide-solid": "0.469.0",
     "solid-js": "1.9.12",
@@ -26,11 +25,11 @@
     "three": "0.183.2"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "7.6.13",
     "@types/three": "0.183.1",
     "drizzle-kit": "0.31.10",
     "tsx": "4.21.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "wrangler": "4.14.0"
   },
   "overrides": {
     "vite": "^7"

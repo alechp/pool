@@ -1,10 +1,13 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../lib/db';
+import { getDb } from '../../lib/db';
 import { bomLinks } from '../../lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const GET: APIRoute = async ({ request }) => {
-  const url = new URL(request.url);
+export const GET: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const url = new URL(context.request.url);
   const partName = url.searchParams.get('partName');
 
   if (!partName) {
@@ -14,16 +17,19 @@ export const GET: APIRoute = async ({ request }) => {
     });
   }
 
-  const rows = db.select().from(bomLinks).where(eq(bomLinks.partName, partName)).all();
+  const rows = await db.select().from(bomLinks).where(eq(bomLinks.partName, partName)).all();
 
   return new Response(JSON.stringify({ links: rows, cached: true }), {
     headers: { 'Content-Type': 'application/json' },
   });
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (context) => {
   try {
-    const body = await request.json();
+    const d1 = context.locals.runtime.env.DB;
+    const db = getDb(d1);
+
+    const body = await context.request.json();
     const { partName, partDescription, targetPrice, refresh } = body;
 
     if (!partName || typeof partName !== 'string') {
@@ -35,7 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Check cache unless refresh is requested
     if (!refresh) {
-      const cached = db.select().from(bomLinks).where(eq(bomLinks.partName, partName)).all();
+      const cached = await db.select().from(bomLinks).where(eq(bomLinks.partName, partName)).all();
       if (cached.length > 0) {
         const fetchedAt = new Date(cached[0].fetchedAt);
         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -48,7 +54,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Check for API key
-    const apiKey = import.meta.env.ANTHROPIC_API_KEY;
+    const apiKey = context.locals.runtime.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: 'AI service unavailable', links: [] }),
@@ -112,12 +118,13 @@ Only include suppliers where you're reasonably confident the product exists. Tar
     }
 
     // Clear old cached links for this part
-    db.delete(bomLinks).where(eq(bomLinks.partName, partName)).run();
+    await db.delete(bomLinks).where(eq(bomLinks.partName, partName)).run();
 
     // Cache results
     const now = new Date().toISOString();
-    const savedLinks = parsedLinks.map((link: any) => {
-      const row = db
+    const savedLinks = [];
+    for (const link of parsedLinks) {
+      const row = await db
         .insert(bomLinks)
         .values({
           partName,
@@ -130,8 +137,8 @@ Only include suppliers where you're reasonably confident the product exists. Tar
         })
         .returning()
         .get();
-      return row;
-    });
+      savedLinks.push(row);
+    }
 
     return new Response(JSON.stringify({ links: savedLinks, cached: false }), {
       headers: { 'Content-Type': 'application/json' },
