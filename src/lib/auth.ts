@@ -1,16 +1,13 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-
-// TODO: Import AppDatabase type from './db' once Phase 2 exports it.
-// Phase 2 will change db.ts to export: `export type AppDatabase = ReturnType<typeof getDb>;`
-// For now, use `any` to avoid coupling to the current (pre-D1) db module.
-type AppDatabase = any;
+import type { AppDatabase } from './db';
+import * as schema from './schema';
 
 const ALLOWED_EMAILS = ['me@alechp.com'];
 
 export function createAuth(db: AppDatabase) {
   return betterAuth({
-    database: drizzleAdapter(db, { provider: 'sqlite' }),
+    database: drizzleAdapter(db, { provider: 'sqlite', schema }),
     basePath: '/api/auth',
     emailAndPassword: {
       enabled: true,

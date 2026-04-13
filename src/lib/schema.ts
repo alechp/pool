@@ -1,4 +1,54 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+// ── BetterAuth tables ─────────────────────────────────────────────
+
+export const user = sqliteTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  emailVerified: integer('emailVerified').notNull().default(0),
+  image: text('image'),
+  createdAt: text('createdAt').notNull(),
+  updatedAt: text('updatedAt').notNull(),
+}, (table) => [uniqueIndex('user_email_idx').on(table.email)]);
+
+export const session = sqliteTable('session', {
+  id: text('id').primaryKey(),
+  expiresAt: text('expiresAt').notNull(),
+  token: text('token').notNull(),
+  ipAddress: text('ipAddress'),
+  userAgent: text('userAgent'),
+  userId: text('userId').notNull().references(() => user.id),
+  createdAt: text('createdAt').notNull(),
+  updatedAt: text('updatedAt').notNull(),
+}, (table) => [uniqueIndex('session_token_idx').on(table.token)]);
+
+export const account = sqliteTable('account', {
+  id: text('id').primaryKey(),
+  accountId: text('accountId').notNull(),
+  providerId: text('providerId').notNull(),
+  userId: text('userId').notNull().references(() => user.id),
+  accessToken: text('accessToken'),
+  refreshToken: text('refreshToken'),
+  idToken: text('idToken'),
+  accessTokenExpiresAt: text('accessTokenExpiresAt'),
+  refreshTokenExpiresAt: text('refreshTokenExpiresAt'),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: text('createdAt').notNull(),
+  updatedAt: text('updatedAt').notNull(),
+});
+
+export const verification = sqliteTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: text('expiresAt').notNull(),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+});
+
+// ── App tables ────────────────────────────────────────────────────
 
 export const hubTypes = sqliteTable('hub_types', {
   id: text('id').primaryKey(),
