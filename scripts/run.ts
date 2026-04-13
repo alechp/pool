@@ -31,7 +31,7 @@ const ROUTES = [
 const options = [
   { key: "1", label: "Run everything",       desc: "DB setup + dev server",       color: GREEN },
   { key: "2", label: "Dev server",           desc: "astro dev",                   color: CYAN },
-  { key: "3", label: "DB setup",             desc: "generate + migrate + seed",   color: YELLOW },
+  { key: "3", label: "DB setup",             desc: "D1 migrate + seed",           color: YELLOW },
   { key: "4", label: "DB seed only",         desc: "re-seed existing database",   color: YELLOW },
   { key: "5", label: "Build for production", desc: "astro build",                 color: MAGENTA },
   { key: "6", label: "Preview production",   desc: "astro preview",               color: MAGENTA },
@@ -84,13 +84,7 @@ function printRouteTable() {
 }
 
 async function dbSetup() {
-  console.log(`\n${YELLOW}${BOLD}\u25b8 Generating migrations...${RESET}`);
-  await $`npx drizzle-kit generate`.quiet();
-
-  console.log(`${YELLOW}${BOLD}\u25b8 Running migrations...${RESET}`);
-  await $`npx drizzle-kit migrate`.quiet();
-
-  console.log(`${YELLOW}${BOLD}\u25b8 Applying D1 migrations (local)...${RESET}`);
+  console.log(`\n${YELLOW}${BOLD}\u25b8 Applying D1 migrations (local)...${RESET}`);
   await $`npx wrangler d1 migrations apply swimsentry-db --local`.quiet();
 
   console.log(`${YELLOW}${BOLD}\u25b8 Seeding local D1...${RESET}`);
