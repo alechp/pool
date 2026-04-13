@@ -3,9 +3,15 @@ import { createAuth } from './lib/auth';
 import { getDb } from './lib/db';
 
 const PUBLIC_PATHS = ['/api/auth/', '/login', '/register'];
+const STATIC_PREFIXES = ['/_astro/', '/_image/', '/favicon'];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const { pathname } = context.url;
+
+  // Allow static assets through (JS/CSS chunks, images, favicon)
+  if (STATIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+    return next();
+  }
 
   // Allow auth routes and public pages through
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
