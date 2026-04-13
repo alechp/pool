@@ -11,7 +11,7 @@ const ALLOWED_EMAILS = ['me@alechp.com'];
 export function createAuth(db: AppDatabase) {
   return betterAuth({
     database: drizzleAdapter(db, { provider: 'sqlite' }),
-    baseURL: '/api/auth',
+    basePath: '/api/auth',
     emailAndPassword: {
       enabled: true,
     },
