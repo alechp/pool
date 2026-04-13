@@ -90,8 +90,11 @@ async function dbSetup() {
   console.log(`${YELLOW}${BOLD}\u25b8 Running migrations...${RESET}`);
   await $`npx drizzle-kit migrate`.quiet();
 
-  console.log(`${YELLOW}${BOLD}\u25b8 Seeding database...${RESET}`);
-  await $`node --import tsx scripts/seed.ts`.quiet();
+  console.log(`${YELLOW}${BOLD}\u25b8 Applying D1 migrations (local)...${RESET}`);
+  await $`npx wrangler d1 migrations apply swimsentry-db --local`.quiet();
+
+  console.log(`${YELLOW}${BOLD}\u25b8 Seeding local D1...${RESET}`);
+  await $`npx wrangler d1 execute swimsentry-db --local --file=scripts/seed.sql`.quiet();
 
   console.log(`${GREEN}${BOLD}\u2713 Database ready${RESET}\n`);
 }
@@ -99,9 +102,7 @@ async function dbSetup() {
 async function ensureDeps() {
   if (!existsSync(resolve(projectRoot, "node_modules"))) {
     console.log(`${CYAN}${BOLD}\u25b8 Installing dependencies...${RESET}`);
-    await $`sfw npm ci`.quiet();
-    // Rebuild native modules (better-sqlite3)
-    await $`cd node_modules/better-sqlite3 && npx --yes prebuild-install`.quiet();
+    await $`sfw bun install`.quiet();
     console.log(`${GREEN}${BOLD}\u2713 Dependencies installed${RESET}\n`);
   }
 }
@@ -139,14 +140,14 @@ async function buildProd() {
 async function previewProd() {
   await ensureDeps();
   printRouteTable();
-  console.log(`${MAGENTA}${BOLD}\u25b8 Starting preview server...${RESET}\n`);
-  await $`npx astro preview`;
+  console.log(`${MAGENTA}${BOLD}\u25b8 Starting preview server (wrangler)...${RESET}\n`);
+  await $`npx wrangler pages dev dist`;
 }
 
 async function seedOnly() {
   await ensureDeps();
-  console.log(`${YELLOW}${BOLD}\u25b8 Seeding database...${RESET}`);
-  await $`node --import tsx scripts/seed.ts`.quiet();
+  console.log(`${YELLOW}${BOLD}\u25b8 Seeding local D1...${RESET}`);
+  await $`npx wrangler d1 execute swimsentry-db --local --file=scripts/seed.sql`.quiet();
   console.log(`${GREEN}${BOLD}\u2713 Seed complete${RESET}`);
 }
 
