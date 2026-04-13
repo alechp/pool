@@ -35,6 +35,7 @@ const options = [
   { key: "4", label: "DB seed only",         desc: "re-seed existing database",   color: YELLOW },
   { key: "5", label: "Build for production", desc: "astro build",                 color: MAGENTA },
   { key: "6", label: "Preview production",   desc: "astro preview",               color: MAGENTA },
+  { key: "7", label: "Seed demo user",       desc: "create me@alechp.com account",color: GREEN },
   { key: "q", label: "Quit",                 desc: "",                            color: DIM },
 ];
 
@@ -145,6 +146,39 @@ async function seedOnly() {
   console.log(`${GREEN}${BOLD}\u2713 Seed complete${RESET}`);
 }
 
+async function seedDemo() {
+  const url = `http://localhost:${PORT}/api/auth/sign-up/email`;
+  const body = JSON.stringify({
+    name: "alechp",
+    email: "me@alechp.com",
+    password: "gtk*vaw4QPK9mqz7qxy",
+  });
+
+  console.log(`\n${GREEN}${BOLD}\u25b8 Creating demo user (me@alechp.com)...${RESET}`);
+  console.log(`${DIM}  Requires dev server running on port ${PORT}${RESET}\n`);
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+    const data = await res.json() as Record<string, unknown>;
+
+    if (res.ok && data.user) {
+      console.log(`${GREEN}${BOLD}\u2713 Demo user created${RESET}`);
+      console.log(`${DIM}  Email: me@alechp.com${RESET}`);
+    } else if (data.message === "User already exists") {
+      console.log(`${YELLOW}${BOLD}\u25b8 User already exists — ready to sign in${RESET}`);
+    } else {
+      console.log(`${RED}${BOLD}\u2717 Failed: ${JSON.stringify(data)}${RESET}`);
+    }
+  } catch {
+    console.log(`${RED}${BOLD}\u2717 Could not connect to localhost:${PORT}${RESET}`);
+    console.log(`${DIM}  Start the dev server first: ./run dev${RESET}`);
+  }
+}
+
 // Non-interactive mode: accept choice as CLI arg
 const arg = process.argv[2];
 
@@ -156,6 +190,7 @@ if (arg) {
     "4": seedOnly, "seed": seedOnly,
     "5": buildProd, "build": buildProd,
     "6": previewProd, "preview": previewProd,
+    "7": seedDemo, "demo": seedDemo, "seed-demo": seedDemo,
   };
   const handler = handlers[arg];
   if (!handler) {
@@ -170,7 +205,7 @@ if (arg) {
 banner();
 menu();
 
-process.stdout.write(`  ${BOLD}Choose [1-6, q]${RESET} ${DIM}(default: 1)${RESET} \u2192 `);
+process.stdout.write(`  ${BOLD}Choose [1-7, q]${RESET} ${DIM}(default: 1)${RESET} \u2192 `);
 
 for await (const line of console) {
   const choice = line.trim() || "1";
@@ -182,6 +217,7 @@ for await (const line of console) {
     case "4": await seedOnly(); break;
     case "5": await buildProd(); break;
     case "6": await previewProd(); break;
+    case "7": await seedDemo(); break;
     case "q": case "Q":
       console.log(`${DIM}  Bye.${RESET}`);
       process.exit(0);

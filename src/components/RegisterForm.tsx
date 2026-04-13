@@ -1,5 +1,4 @@
 import { createSignal, Show } from 'solid-js';
-import { authClient } from '../lib/auth-client';
 
 export default function RegisterForm() {
   const [name, setName] = createSignal('');
@@ -26,15 +25,21 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      const result = await authClient.signUp.email({
-        name: name(),
-        email: email(),
-        password: password(),
+      const res = await fetch('/api/auth/sign-up/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name(),
+          email: email(),
+          password: password(),
+        }),
       });
 
-      if (result.error) {
+      const data = await res.json();
+
+      if (!res.ok) {
         setError(
-          result.error.message ?? 'Registration failed. Please try again.',
+          data?.message ?? data?.error?.message ?? 'Registration failed. Please try again.',
         );
         setLoading(false);
         return;

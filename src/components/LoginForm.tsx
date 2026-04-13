@@ -1,5 +1,4 @@
 import { createSignal, Show } from 'solid-js';
-import { authClient } from '../lib/auth-client';
 
 export default function LoginForm() {
   const [email, setEmail] = createSignal('');
@@ -13,13 +12,19 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await authClient.signIn.email({
-        email: email(),
-        password: password(),
+      const res = await fetch('/api/auth/sign-in/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email(),
+          password: password(),
+        }),
       });
 
-      if (result.error) {
-        setError(result.error.message ?? 'Sign in failed. Check your credentials.');
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data?.message ?? 'Sign in failed. Check your credentials.');
         setLoading(false);
         return;
       }
