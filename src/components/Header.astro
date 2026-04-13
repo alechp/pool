@@ -15,12 +15,17 @@
         Prices live — Apr 2026
       </div>
       {Astro.locals.user && (
-        <form method="POST" action="/api/auth/sign-out">
-          <button type="submit" class="rounded-lg bg-white/6 px-3 py-1.5 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary hover:bg-white/10 cursor-pointer">
-            Sign out
-          </button>
-        </form>
+        <button type="button" id="signout-btn" class="rounded-lg bg-white/6 px-3 py-1.5 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary hover:bg-white/10 cursor-pointer">
+          Sign out
+        </button>
       )}
     </div>
   </div>
 </header>
+
+<script>
+  document.getElementById('signout-btn')?.addEventListener('click', async () => {
+    await fetch('/api/auth/sign-out', { method: 'POST' });
+    window.location.href = '/login?signedOut=1';
+  });
+</script>

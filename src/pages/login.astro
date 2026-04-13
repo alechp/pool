@@ -28,6 +28,9 @@ import LoginForm from '../components/LoginForm.tsx';
       <p class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Pool Security Configurator</p>
     </div>
 
+    <!-- Toast -->
+    <div id="toast" class="hidden rounded-lg bg-accent/10 border border-accent/20 px-4 py-2.5 text-sm text-accent text-center mb-4"></div>
+
     <!-- Login Card -->
     <div class="rounded-2xl border border-border bg-bg-surface p-6">
       <h1 class="font-display text-lg font-semibold text-text-primary mb-1">Sign in</h1>
@@ -42,5 +45,20 @@ import LoginForm from '../components/LoginForm.tsx';
       <a href="/register" class="text-accent hover:text-accent-dim transition-colors">Create an account</a>
     </p>
   </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const toast = document.getElementById('toast');
+    if (toast && params.get('signedOut')) {
+      toast.textContent = 'Successfully signed out.';
+      toast.classList.remove('hidden');
+      history.replaceState(null, '', '/login');
+    }
+    if (toast && params.get('registered')) {
+      toast.textContent = 'Account created! Sign in to continue.';
+      toast.classList.remove('hidden');
+      history.replaceState(null, '', '/login');
+    }
+  </script>
 </body>
 </html>

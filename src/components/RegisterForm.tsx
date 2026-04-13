@@ -41,7 +41,7 @@ export default function RegisterForm() {
       }
 
       // Redirect to login on success
-      window.location.href = '/login';
+      window.location.href = '/login?registered=1';
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
       setLoading(false);
