@@ -22,23 +22,20 @@ export function createAuth(db: AppDatabase) {
       },
     },
     hooks: {
-      before: [
-        {
-          matcher: (context) => context.path === '/sign-up/email',
-          handler: async (context) => {
-            const body = context.body as { email?: string };
-            if (
-              !body?.email ||
-              !ALLOWED_EMAILS.includes(body.email.toLowerCase())
-            ) {
-              return context.json(
-                { error: 'Registration is not open.' },
-                { status: 403 },
-              );
-            }
-          },
-        },
-      ],
+      before: async (context) => {
+        if (context.path === '/sign-up/email') {
+          const body = context.body as { email?: string };
+          if (
+            !body?.email ||
+            !ALLOWED_EMAILS.includes(body.email.toLowerCase())
+          ) {
+            return context.json(
+              { error: 'Registration is not open.' },
+              { status: 403 },
+            );
+          }
+        }
+      },
     },
   });
 }
