@@ -1,30 +1,42 @@
 ---
 import Base from '../layouts/Base.astro';
-import SummaryTable from '../components/SummaryTable.tsx';
-import { db } from '../lib/db';
-import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../lib/schema';
-import { loadCatalog } from '../lib/data';
-
-const raw = {
-  hubTypes: db.select().from(hubTypes).all(),
-  hubTiers: db.select().from(hubTiers).all(),
-  sensorTiers: db.select().from(sensorTiers).all(),
-  hubParts: db.select().from(hubTierParts).all(),
-  sensorParts: db.select().from(sensorTierParts).all(),
-};
-const catalog = loadCatalog(raw);
-const configs = db.select().from(savedConfigs).all();
+import LandingSignalScene from '../components/LandingSignalScene.astro';
+import HomeAdvisor from '../components/HomeAdvisor.tsx';
 ---
-<Base title="Pool Security — Summary">
-  <main class="max-w-[1120px] mx-auto px-8">
-    <section class="py-12 text-center">
-      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
-        All <span class="text-accent">build options</span> at a glance
-      </h1>
-      <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
-        Compare every valid hub + sensor combination. Sort by price, filter by architecture, and jump straight to the configurator.
-      </p>
+<Base title="SwimSentry — Home" showAdvisor={false}>
+  <main class="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8">
+    <section class="py-10">
+      <LandingSignalScene />
     </section>
-    <SummaryTable client:load catalog={catalog} savedConfigs={configs} />
+
+    <section id="home-advisor" class="pb-10">
+      <HomeAdvisor client:load />
+    </section>
+
+    <section class="grid gap-5 pb-12 lg:grid-cols-3">
+      <a href="/personas" class="group rounded-[1.6rem] border border-white/8 bg-bg-surface p-6 transition-colors hover:border-border-active">
+        <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">Guided</div>
+        <h2 class="mt-3 text-2xl font-semibold tracking-tight">Let the advisor narrow the right architecture.</h2>
+        <p class="mt-3 text-sm leading-7 text-text-secondary">
+          Start from your pool shape, coverage goals, and risk tolerance. The guided flow recommends a practical SwimSentry stack before you commit to parts.
+        </p>
+      </a>
+
+      <a href="/build" class="group rounded-[1.6rem] border border-white/8 bg-bg-surface p-6 transition-colors hover:border-border-active">
+        <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">Build</div>
+        <h2 class="mt-3 text-2xl font-semibold tracking-tight">Turn a system design into a saved build.</h2>
+        <p class="mt-3 text-sm leading-7 text-text-secondary">
+          Select architecture, hub tier, and sensor tier, then save or fork configurations for later edits without losing your review state.
+        </p>
+      </a>
+
+      <a href="/bom" class="group rounded-[1.6rem] border border-white/8 bg-bg-surface p-6 transition-colors hover:border-border-active">
+        <div class="font-mono text-[11px] uppercase tracking-[0.12em] text-accent">BOM</div>
+        <h2 class="mt-3 text-2xl font-semibold tracking-tight">Convert saved builds into a purchase-ready BOM.</h2>
+        <p class="mt-3 text-sm leading-7 text-text-secondary">
+          Load a saved build, find supplier links in bulk, apply link strategies for the whole table, then save the final shopping set you want to use.
+        </p>
+      </a>
+    </section>
   </main>
 </Base>

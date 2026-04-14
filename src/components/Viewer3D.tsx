@@ -1,18 +1,24 @@
 import { onMount, onCleanup, createEffect } from 'solid-js';
 import type { Component } from 'solid-js';
-import * as THREE from 'three';
 
 interface Props {
   accentColor: string;
   visible: boolean;
+  label?: string;
+  partSummary?: string;
+  price?: string;
+  canvasHeight?: number;
+  reducedMotion?: boolean;
+  ariaLabel?: string;
 }
 
 const Viewer3D: Component<Props> = (props) => {
   let canvasRef: HTMLCanvasElement | undefined;
-  let scene: THREE.Scene;
-  let camera: THREE.PerspectiveCamera;
-  let renderer: THREE.WebGLRenderer;
-  let meshGroup: THREE.Group;
+  let threeModule: typeof import('three') | null = null;
+  let scene: import('three').Scene;
+  let camera: import('three').PerspectiveCamera;
+  let renderer: import('three').WebGLRenderer;
+  let meshGroup: import('three').Group;
   let animFrameId: number;
   let isDrag = false;
   let pX = 0;
@@ -21,10 +27,14 @@ const Viewer3D: Component<Props> = (props) => {
     return parseInt(hex.replace('#', ''), 16);
   }
 
-  function init3D() {
+  async function init3D() {
     if (!canvasRef) return;
+    if (!threeModule) {
+      threeModule = await import('three');
+    }
+    const THREE = threeModule;
     const w = canvasRef.parentElement!.clientWidth;
-    const h = 380;
+    const h = props.canvasHeight ?? 380;
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
@@ -33,7 +43,7 @@ const Viewer3D: Component<Props> = (props) => {
 
     renderer = new THREE.WebGLRenderer({ canvas: canvasRef, antialias: true, alpha: true });
     renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, h <= 320 ? 1.5 : 2));
     renderer.setClearColor(0x000000, 0);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
@@ -58,14 +68,14 @@ const Viewer3D: Component<Props> = (props) => {
 
     function animate() {
       animFrameId = requestAnimationFrame(animate);
-      if (!isDrag) meshGroup.rotation.y += 0.002;
+      if (!isDrag && !props.reducedMotion) meshGroup.rotation.y += 0.002;
       renderer.render(scene, camera);
     }
     animate();
   }
 
   function onPointerMove(e: PointerEvent) {
-    if (isDrag) {
+    if (isDrag && meshGroup) {
       meshGroup.rotation.y += (e.clientX - pX) * 0.008;
       pX = e.clientX;
     }
@@ -79,14 +89,16 @@ const Viewer3D: Component<Props> = (props) => {
   function onResize() {
     if (!canvasRef || !renderer) return;
     const nw = canvasRef.parentElement!.clientWidth;
-    const h = 380;
+    const h = props.canvasHeight ?? 380;
     camera.aspect = nw / h;
     camera.updateProjectionMatrix();
     renderer.setSize(nw, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, h <= 320 ? 1.5 : 2));
   }
 
   function buildModel(accentHex: string) {
-    if (!meshGroup) return;
+    if (!meshGroup || !threeModule) return;
+    const THREE = threeModule;
     while (meshGroup.children.length) meshGroup.remove(meshGroup.children[0]);
     const c = hexToThreeColor(accentHex);
 
@@ -215,13 +227,20 @@ const Viewer3D: Component<Props> = (props) => {
   }
 
   onMount(() => {
-    init3D();
-    if (props.accentColor) buildModel(props.accentColor);
+    init3D().then(() => {
+      if (props.accentColor) buildModel(props.accentColor);
+    });
   });
 
   createEffect(() => {
     if (props.accentColor && meshGroup) {
       buildModel(props.accentColor);
+    }
+  });
+
+  createEffect(() => {
+    if (renderer && camera && canvasRef) {
+      onResize();
     }
   });
 
@@ -239,7 +258,9 @@ const Viewer3D: Component<Props> = (props) => {
         <canvas
           ref={canvasRef}
           class="block w-full cursor-grab active:cursor-grabbing"
-          style="height: 380px"
+          style={{ height: `${props.canvasHeight ?? 380}px`, "touch-action": "none" }}
+          role="img"
+          aria-label={props.ariaLabel ?? '3D preview of a SwimSentry sensor node'}
         />
         <div class="absolute bottom-0 left-0 right-0 px-6 py-5 bg-gradient-to-t from-bg-surface/95 to-transparent flex justify-between items-end">
           <div class="text-sm font-medium">
@@ -248,6 +269,13 @@ const Viewer3D: Component<Props> = (props) => {
           <div class="font-mono text-[11px] text-text-tertiary">Drag to rotate</div>
         </div>
       </div>
+      {(props.label || props.partSummary || props.price) && (
+        <div class="mt-4 space-y-2 px-1">
+          {props.label && <div class="text-sm font-semibold text-text-primary">{props.label}</div>}
+          {props.partSummary && <div class="text-sm leading-6 text-text-secondary">{props.partSummary}</div>}
+          {props.price && <div class="font-mono text-[12px] uppercase tracking-[0.12em] text-accent">{props.price}</div>}
+        </div>
+      )}
     </div>
   );
 };

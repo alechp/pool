@@ -1,6 +1,7 @@
-import { createSignal, createMemo, Show, For } from 'solid-js';
+import { createSignal, createMemo, createEffect, Show, For } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { Catalog, HubType, HubTier, SensorTier, Part } from '../lib/data';
+import { Check } from 'lucide-solid';
 import OptionCard from './OptionCard';
 import Viewer3D from './Viewer3D';
 import FleetSizer from './FleetSizer';
@@ -37,6 +38,37 @@ const Configurator: Component<Props> = (props) => {
   const [saveError, setSaveError] = createSignal<string | null>(null);
   const [configName, setConfigName] = createSignal('');
   const [showSave, setShowSave] = createSignal(false);
+  const [sessionId, setSessionId] = createSignal<number | null>(null);
+
+  // On mount, create session
+  createEffect(() => {
+    if (!sessionId()) {
+      fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'started', source: 'wizard' }),
+      }).then(r => r.json()).then(data => setSessionId(data.id)).catch(() => {});
+    }
+  });
+
+  // Track step progress
+  createEffect(() => {
+    const sid = sessionId();
+    const s = step();
+    if (!sid || s === 1) return;
+    const statusMap: Record<number, string> = { 2: 'step2', 3: 'step3', 4: 'completed' };
+    fetch(`/api/sessions/${sid}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: statusMap[s] || 'started',
+        hubTypeId: hubType(),
+        hubTierId: hubTier()?.id || null,
+        sensorTierId: sensorTier()?.id || null,
+        qty: qty(),
+      }),
+    }).catch(() => {});
+  });
 
   const filteredHubTiers = createMemo(() =>
     props.catalog.hubTiers.filter(t => t.hubTypeId === hubType())
@@ -134,6 +166,16 @@ const Configurator: Component<Props> = (props) => {
 
       setSaved(true);
       setShowSave(false);
+
+      // Track saved status (fire-and-forget)
+      const sid = sessionId();
+      if (sid) {
+        fetch(`/api/sessions/${sid}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'saved' }),
+        }).catch(() => {});
+      }
     } catch (e: any) {
       setSaveError(e.message);
     } finally {
@@ -151,31 +193,35 @@ const Configurator: Component<Props> = (props) => {
   return (
     <div>
       {/* Step navigation */}
-      <div class="flex gap-0.5 mb-12 bg-bg-surface rounded-xl p-1 border border-border">
-        <For each={stepTabs}>
-          {(tab) => (
-            <div
-              class={`flex-1 py-3 px-4 text-center text-[13px] font-medium rounded-lg cursor-pointer transition-all relative ${
-                step() === tab.num
-                  ? 'bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
-                  : tab.num < step()
-                  ? 'text-text-tertiary'
-                  : 'text-text-tertiary'
-              } ${tab.num === 2 && hubType() === 'none' ? 'opacity-30 pointer-events-none' : ''}`}
-              onClick={() => goToStep(tab.num)}
-            >
-              <span class={`font-mono text-[11px] block mb-0.5 ${
-                step() === tab.num || tab.num < step() ? 'text-accent' : 'text-text-tertiary'
-              }`}>
-                {String(tab.num).padStart(2, '0')}
-              </span>
-              {tab.label}
-              {tab.num < step() && (
-                <span class="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full" />
-              )}
-            </div>
-          )}
-        </For>
+      <div class="overflow-x-auto scrollbar-hide mb-12">
+        <div class="flex gap-0.5 bg-bg-surface rounded-xl p-1 border border-border min-w-max">
+          <For each={stepTabs}>
+            {(tab) => (
+              <div
+                class={`flex-1 py-3 px-4 text-center text-[13px] font-medium rounded-lg cursor-pointer transition-all relative whitespace-nowrap ${
+                  step() === tab.num
+                    ? 'bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.3)]'
+                    : tab.num < step()
+                    ? 'text-text-tertiary'
+                    : 'text-text-tertiary'
+                } ${tab.num === 2 && hubType() === 'none' ? 'opacity-30 pointer-events-none' : ''}`}
+                onClick={() => goToStep(tab.num)}
+              >
+                <div class="flex items-center justify-center gap-1.5">
+                  <Show when={tab.num < step()}>
+                    <Check size={14} class="text-accent" />
+                  </Show>
+                  <span class={`font-mono text-[11px] block mb-0.5 ${
+                    step() === tab.num || tab.num < step() ? 'text-accent' : 'text-text-tertiary'
+                  }`}>
+                    {String(tab.num).padStart(2, '0')}
+                  </span>
+                </div>
+                {tab.label}
+              </div>
+            )}
+          </For>
+        </div>
       </div>
 
       {/* Step 1: Hub Type */}
@@ -335,7 +381,7 @@ const Configurator: Component<Props> = (props) => {
           />
 
           {/* Save / Actions */}
-          <div class="flex items-center gap-4 mt-8">
+          <div class="flex flex-wrap items-center gap-4 mt-8">
             <Show when={!saved()}>
               <Show when={!showSave()} fallback={
                 <div class="flex items-center gap-3">
@@ -383,7 +429,7 @@ const Configurator: Component<Props> = (props) => {
               <span class="text-accent-coral text-sm">{saveError()}</span>
             </Show>
 
-            <a href="/" class="text-sm text-accent hover:underline ml-auto">View all builds</a>
+            <a href="/bom/compare" class="text-sm text-accent hover:underline ml-auto">Compare builds</a>
 
             <button
               onClick={resetConfig}

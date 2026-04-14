@@ -1,24 +1,27 @@
 import type { APIRoute } from 'astro';
-import { db } from '../../../lib/db';
+import { getDb } from '../../../lib/db';
 import { savedConfigs, hubTypes, hubTiers, sensorTiers } from '../../../lib/schema';
 import { eq } from 'drizzle-orm';
 
-export const GET: APIRoute = async ({ params }) => {
-  const id = parseInt(params.id!);
+export const GET: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const id = parseInt(context.params.id!);
   if (isNaN(id)) {
     return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400 });
   }
 
-  const row = db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
+  const row = await db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
   if (!row) {
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
   }
 
-  const ht = db.select().from(hubTypes).where(eq(hubTypes.id, row.hubTypeId)).get();
+  const ht = await db.select().from(hubTypes).where(eq(hubTypes.id, row.hubTypeId)).get();
   const hubTier = row.hubTierId
-    ? db.select().from(hubTiers).where(eq(hubTiers.id, row.hubTierId)).get()
+    ? await db.select().from(hubTiers).where(eq(hubTiers.id, row.hubTierId)).get()
     : null;
-  const st = db.select().from(sensorTiers).where(eq(sensorTiers.id, row.sensorTierId)).get();
+  const st = await db.select().from(sensorTiers).where(eq(sensorTiers.id, row.sensorTierId)).get();
 
   return new Response(JSON.stringify({
     id: row.id,
@@ -35,18 +38,21 @@ export const GET: APIRoute = async ({ params }) => {
   });
 };
 
-export const PUT: APIRoute = async ({ params, request }) => {
-  const id = parseInt(params.id!);
+export const PUT: APIRoute = async (context) => {
+  const d1 = context.locals.runtime.env.DB;
+  const db = getDb(d1);
+
+  const id = parseInt(context.params.id!);
   if (isNaN(id)) {
     return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400 });
   }
 
-  const existing = db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
+  const existing = await db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
   if (!existing) {
     return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 });
   }
 
-  const body = await request.json();
+  const body = await context.request.json();
   const updates: Record<string, any> = { updatedAt: new Date().toISOString() };
 
   if (body.name !== undefined) {
@@ -67,9 +73,9 @@ export const PUT: APIRoute = async ({ params, request }) => {
   if (body.hubTierId !== undefined) updates.hubTierId = body.hubTierId;
   if (body.sensorTierId !== undefined) updates.sensorTierId = body.sensorTierId;
 
-  db.update(savedConfigs).set(updates).where(eq(savedConfigs.id, id)).run();
+  await db.update(savedConfigs).set(updates).where(eq(savedConfigs.id, id)).run();
 
-  const updated = db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
+  const updated = await db.select().from(savedConfigs).where(eq(savedConfigs.id, id)).get();
 
   return new Response(JSON.stringify(updated), {
     headers: { 'Content-Type': 'application/json' },

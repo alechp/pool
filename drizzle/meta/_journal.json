@@ -8,6 +8,34 @@
       "when": 1775069212507,
       "tag": "0000_groovy_xorn",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1775080858681,
+      "tag": "0001_unique_mojo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1775257656369,
+      "tag": "0002_amused_puma",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775368800000,
+      "tag": "0003_hushed_rating",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1776268800000,
+      "tag": "0004_better_auth",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import SectionSubnav from '../../components/SectionSubnav.astro';
+import SummaryTable from '../../components/SummaryTable.tsx';
+import { getDb } from '../../lib/db';
+import { hubTypes, hubTiers, hubTierParts, sensorTiers, sensorTierParts, savedConfigs } from '../../lib/schema';
+import { loadCatalog } from '../../lib/data';
+
+const db = getDb(Astro.locals.runtime.env.DB);
+const raw = {
+  hubTypes: await db.select().from(hubTypes).all(),
+  hubTiers: await db.select().from(hubTiers).all(),
+  sensorTiers: await db.select().from(sensorTiers).all(),
+  hubParts: await db.select().from(hubTierParts).all(),
+  sensorParts: await db.select().from(sensorTierParts).all(),
+};
+const catalog = loadCatalog(raw);
+const configs = await db.select().from(savedConfigs).all();
+const subnavItems = [
+  { href: '/bom', label: 'Workspace' },
+  { href: '/bom/compare', label: 'Compare' },
+];
+---
+<Base title="SwimSentry — Compare Systems">
+  <main class="max-w-[1120px] mx-auto px-4 sm:px-6 md:px-8">
+    <section class="pt-2">
+      <SectionSubnav items={subnavItems} />
+    </section>
+    <section class="py-8 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+        Compare <span class="text-accent">build options</span>
+      </h1>
+      <p class="text-base text-text-secondary max-w-[560px] mx-auto leading-relaxed">
+        Review every valid hub and sensor combination, sort by cost and architecture, then jump directly into a build or saved BOM workflow.
+      </p>
+    </section>
+    <SummaryTable client:idle catalog={catalog} savedConfigs={configs} />
+  </main>
+</Base>

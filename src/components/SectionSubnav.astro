@@ -1,0 +1,30 @@
+---
+interface Item {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props;
+const pathname = Astro.url.pathname;
+---
+<nav class="mb-8 flex justify-center">
+  <div class="inline-flex gap-0.5 rounded-xl border border-border bg-bg-surface p-1">
+    {items.map((item) => (
+      <a
+        href={item.href}
+        class:list={[
+          'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+          pathname === item.href
+            ? 'bg-bg-card text-text-primary shadow-[0_2px_8px_rgba(0,0,0,0.24)]'
+            : 'text-text-tertiary hover:text-text-primary',
+        ]}
+      >
+        {item.label}
+      </a>
+    ))}
+  </div>
+</nav>

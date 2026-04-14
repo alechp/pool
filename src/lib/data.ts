@@ -59,6 +59,106 @@ export type Catalog = {
   sensorParts: Record<string, Part[]>;
 };
 
+export type CustomBuild = {
+  id: number;
+  name: string;
+  hubTypeId: string;
+  sensorQty: number;
+  totalPrice: number;
+  parts: CustomBuildPart[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CustomBuildPart = {
+  id: number;
+  partType: 'hub' | 'sensor';
+  partName: string;
+  partDescription: string;
+  price: number;
+  sortOrder: number;
+};
+
+export type BomLink = {
+  id: number;
+  partName: string;
+  supplier: string;
+  url: string;
+  price: string | null;
+  rating: number | null;
+  confidence: 'high' | 'medium' | 'low';
+  fetchedAt: string;
+};
+
+export type BuildSession = {
+  id: number;
+  hubTypeId: string | null;
+  hubTierId: string | null;
+  sensorTierId: string | null;
+  qty: number | null;
+  status: string;
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Preselection = {
+  id: number;
+  hubTypeId: string;
+  hubTierId: string | null;
+  sensorTierId: string;
+  source: string;
+  convertedToSave: boolean;
+  createdAt: string;
+};
+
+export type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+  imageName?: string | null;
+  recommendation?: {
+    hubTypeId: string;
+    hubTierId?: string;
+    sensorTierId: string;
+    qty: number;
+    reasoning: string;
+    hubTypeName?: string;
+    hubTierName?: string | null;
+    sensorTierName?: string;
+  };
+};
+
+export type Persona = {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  icon: string;
+  sortOrder: number;
+  factors: PersonaFactor[];
+  bundles: PersonaBundle[];
+};
+
+export type PersonaFactor = {
+  id: number;
+  factor: string;
+  label: string;
+  value: string;
+  importance: 'critical' | 'high' | 'medium' | 'low';
+  sortOrder: number;
+};
+
+export type PersonaBundle = {
+  id: number;
+  label: string;
+  hubTypeId: string;
+  hubTierId: string | null;
+  sensorTierId: string;
+  qty: number;
+  reasoning: string;
+  sortOrder: number;
+};
+
 export type BuildCombo = {
   hubType: HubType;
   hubTier: HubTier | null;

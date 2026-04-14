@@ -1,0 +1,88 @@
+---
+const badgeStyles: Record<string, string> = {
+  'badge-budget': 'bg-accent/12 text-accent',
+  'badge-premium': 'bg-accent-blue/12 text-accent-blue',
+  'badge-none': 'bg-white/6 text-text-secondary',
+  'badge-zigbee': 'bg-accent-purple/12 text-accent-purple',
+  'badge-lora': 'bg-accent-amber/12 text-accent-amber',
+};
+
+interface Props {
+  href?: string;
+  title: string;
+  badge: string;
+  badgeClass: string;
+  description: string;
+  price?: number;
+  priceNote?: string;
+  specs: string[];
+  selected?: boolean;
+  disabled?: boolean;
+}
+
+const {
+  href,
+  title,
+  badge,
+  badgeClass,
+  description,
+  price,
+  priceNote,
+  specs,
+  selected = false,
+  disabled = false,
+} = Astro.props;
+---
+<a
+  href={disabled ? undefined : href}
+  aria-disabled={disabled}
+  class={`relative block overflow-hidden rounded-xl p-5 transition-all border ${
+    selected
+      ? 'border-border-active bg-bg-card-hover'
+      : 'border-border bg-bg-card hover:border-border-hover hover:bg-bg-card-hover'
+  } ${disabled ? 'opacity-35 pointer-events-none grayscale-50' : ''}`}
+  data-astro-prefetch
+>
+  <div
+    class={`absolute top-0 left-0 right-0 h-0.5 transition-colors ${
+      selected ? 'bg-accent' : 'bg-transparent'
+    }`}
+  />
+
+  <div class="flex items-start justify-between mb-2">
+    <span
+      class={`font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-sm font-medium ${
+        badgeStyles[badgeClass] || 'bg-white/6 text-text-secondary'
+      }`}
+    >
+      {badge}
+    </span>
+    <div
+      class={`w-[18px] h-[18px] rounded-full border-2 transition-all flex-shrink-0 ${
+        selected
+          ? 'border-accent bg-accent shadow-[inset_0_0_0_3px_var(--color-bg-card-hover)]'
+          : 'border-text-tertiary'
+      }`}
+    />
+  </div>
+
+  <h3 class="text-base font-semibold tracking-tight mb-1">{title}</h3>
+  <p class="text-[13px] text-text-secondary leading-relaxed mb-3">{description}</p>
+
+  {price !== undefined && (
+    <div class="mt-3">
+      <span class="font-mono text-[22px] font-medium">${price}</span>
+      {priceNote && (
+        <span class="text-xs text-text-tertiary ml-1">{priceNote}</span>
+      )}
+    </div>
+  )}
+
+  <div class="flex flex-wrap gap-1.5 mt-2.5">
+    {specs.map((spec) => (
+      <span class="font-mono text-[11px] text-text-secondary bg-white/4 px-2 py-0.5 rounded-full border border-border">
+        {spec}
+      </span>
+    ))}
+  </div>
+</a>

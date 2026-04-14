@@ -1,0 +1,11 @@
+name = "swimsentry-configurator"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "swimsentry-db"
+database_id = "0e08d963-f783-4e65-97a1-6a1864b9f253"
+
+# Secrets set via: wrangler secret put ANTHROPIC_API_KEY

@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .astro/
+.wrangler/
 sqlite.db
 sqlite.db-shm
 sqlite.db-wal
+.env
