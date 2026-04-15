@@ -87,7 +87,7 @@ const Dropdown: Component<DropdownProps> = (props) => {
       <button
         ref={triggerRef}
         type="button"
-        class="bg-bg-elevated border border-border rounded-lg px-3 py-2 text-sm text-text-primary cursor-pointer flex items-center justify-between gap-2 min-w-[160px] hover:border-border-hover transition-colors outline-none focus:border-border-active"
+        class="w-full rounded-xl border border-white/10 bg-bg-card px-4 py-3 text-sm text-text-primary cursor-pointer flex items-center justify-between gap-2 hover:border-border-hover transition-colors outline-none focus:border-border-active"
         onClick={() => {
           setOpen(!open());
           if (!open()) setFocusedIndex(-1);
@@ -113,13 +113,13 @@ const Dropdown: Component<DropdownProps> = (props) => {
       <Show when={open()}>
         <div
           ref={menuRef}
-          class="absolute z-50 mt-1 bg-bg-card border border-border rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.5)] py-1 min-w-full animate-[dropdown-in_0.15s_ease]"
+          class="absolute z-50 mt-1 w-full bg-bg-card border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] py-1 animate-[dropdown-in_0.15s_ease]"
           role="listbox"
         >
           <For each={props.options}>
             {(option, idx) => (
               <div
-                class={`px-3 py-2 text-sm text-text-primary hover:bg-bg-card-hover cursor-pointer flex items-center justify-between transition-colors ${
+                class={`px-4 py-3 text-sm text-text-primary hover:bg-bg-card-hover cursor-pointer flex items-center justify-between transition-colors rounded-lg mx-1 ${
                   option.value === props.value ? 'text-accent' : ''
                 } ${focusedIndex() === idx() ? 'bg-bg-card-hover' : ''}`}
                 role="option"
