@@ -8,12 +8,19 @@ import { loadCatalog } from '../lib/data';
 import { eq } from 'drizzle-orm';
 
 const db = getDb(Astro.locals.runtime.env.DB);
+const [hubTypesData, hubTiersData, sensorTiersData, hubPartsData, sensorPartsData] = await Promise.all([
+  db.select().from(hubTypes).all(),
+  db.select().from(hubTiers).all(),
+  db.select().from(sensorTiers).all(),
+  db.select().from(hubTierParts).all(),
+  db.select().from(sensorTierParts).all(),
+]);
 const raw = {
-  hubTypes: await db.select().from(hubTypes).all(),
-  hubTiers: await db.select().from(hubTiers).all(),
-  sensorTiers: await db.select().from(sensorTiers).all(),
-  hubParts: await db.select().from(hubTierParts).all(),
-  sensorParts: await db.select().from(sensorTierParts).all(),
+  hubTypes: hubTypesData,
+  hubTiers: hubTiersData,
+  sensorTiers: sensorTiersData,
+  hubParts: hubPartsData,
+  sensorParts: sensorPartsData,
 };
 const catalog = loadCatalog(raw);
 
@@ -29,7 +36,13 @@ const sensorTier = catalog.sensorTiers.find((item) => item.id === sensorTierPara
 const hubParts = hubTier ? catalog.hubParts[hubTier.id] ?? [] : [];
 const sensorParts = sensorTier ? catalog.sensorParts[sensorTier.id] ?? [] : [];
 const buildKey = [hubType?.id ?? 'none', hubTier?.id ?? 'none', sensorTier?.id ?? 'none', qty].join(':');
-const savedConfigsRows = (await db.select().from(savedConfigs).all())
+const [savedConfigsRaw, persistedSelections] = await Promise.all([
+  db.select().from(savedConfigs).all(),
+  sensorTier
+    ? db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all()
+    : Promise.resolve([]),
+]);
+const savedConfigsRows = savedConfigsRaw
   .map((row) => {
     const ht = catalog.hubTypes.find((item) => item.id === row.hubTypeId) ?? null;
     const hub = row.hubTierId ? catalog.hubTiers.find((item) => item.id === row.hubTierId) ?? null : null;
@@ -47,9 +60,6 @@ const savedConfigsRows = (await db.select().from(savedConfigs).all())
     };
   })
   .sort((a, b) => b.id - a.id);
-const persistedSelections = sensorTier
-  ? await db.select().from(bomSelections).where(eq(bomSelections.buildKey, buildKey)).all()
-  : [];
 const initialState = {
   filterMode: persistedSelections[0]?.filterMode ?? null,
   selections: Object.fromEntries(persistedSelections.map((row) => [row.partName, row.selectedUrl])),
