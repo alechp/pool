@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, Show, onMount } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, Show, onMount, batch, untrack } from 'solid-js';
 import type { Component } from 'solid-js';
 import type { BomLink, Part } from '../lib/data';
 import HardwareThumbnail from './HardwareThumbnail';
@@ -68,6 +68,17 @@ function formatRating(rating: number | null) {
   return typeof rating === 'number' ? `${(rating / 10).toFixed(1)}★` : '—';
 }
 
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 function normalizeStrategy(value: string | null | undefined): LinkStrategy {
   switch (value) {
     case 'best-price':
@@ -134,6 +145,9 @@ function saveWorkspaceState(buildKey: string, state: BomWorkspaceState) {
   localStorage.setItem(`${STORAGE_KEY}:${buildKey}`, JSON.stringify(state));
 }
 
+const linkCache = new Map<string, { links: BomLink[]; fetchedAt: number }>();
+const CLIENT_CACHE_TTL = 5 * 60 * 1000;
+
 const BomWorkspace: Component<Props> = (props) => {
   const [filterMode, setFilterMode] = createSignal<LinkStrategy>('highest-rating');
   const [selectedLinks, setSelectedLinks] = createSignal<SelectedLinkMap>({});
@@ -176,26 +190,45 @@ const BomWorkspace: Component<Props> = (props) => {
   createEffect(() => {
     const mode = filterMode();
     const currentLinks = linksByPart();
-    setSelectedLinks((current) => {
-      const next = { ...current };
-      const source = { ...selectionSource() };
+    const currentParts = parts();
+    const currentSelected = selectedLinks();
+    const currentSource = selectionSource();
 
-      for (const part of parts()) {
-        if (current[part.name]) continue;
-        const chosen = chooseLink(currentLinks[part.name] ?? [], mode);
-        if (chosen) {
-          next[part.name] = chosen.url;
-          if (!source[part.name]) source[part.name] = 'default';
-        }
+    const nextSelected = { ...currentSelected };
+    const nextSource = { ...currentSource };
+    let changed = false;
+
+    for (const part of currentParts) {
+      if (currentSelected[part.name]) continue;
+      const chosen = chooseLink(currentLinks[part.name] ?? [], mode);
+      if (chosen) {
+        nextSelected[part.name] = chosen.url;
+        if (!nextSource[part.name]) nextSource[part.name] = 'default';
+        changed = true;
       }
+    }
 
-      setSelectionSource(source);
-      return next;
-    });
+    if (changed) {
+      batch(() => {
+        untrack(() => {
+          setSelectedLinks(nextSelected);
+          setSelectionSource(nextSource);
+        });
+      });
+    }
   });
 
   async function ensureLinks(part: WorkspacePart, refresh = false) {
     if (loadingParts().includes(part.name)) return;
+
+    if (!refresh) {
+      const memCached = linkCache.get(part.name);
+      if (memCached && Date.now() - memCached.fetchedAt < CLIENT_CACHE_TTL) {
+        setLinksByPart((current) => ({ ...current, [part.name]: memCached.links }));
+        return;
+      }
+    }
+
     setLoadingParts((current) => [...current, part.name]);
 
     try {
@@ -203,6 +236,7 @@ const BomWorkspace: Component<Props> = (props) => {
       const cachedData = await cached.json();
       if (!refresh && Array.isArray(cachedData.links) && cachedData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: cachedData.links }));
+        linkCache.set(part.name, { links: cachedData.links, fetchedAt: Date.now() });
         return;
       }
 
@@ -219,6 +253,7 @@ const BomWorkspace: Component<Props> = (props) => {
       const liveData = await live.json();
       if (Array.isArray(liveData.links)) {
         setLinksByPart((current) => ({ ...current, [part.name]: liveData.links }));
+        linkCache.set(part.name, { links: liveData.links, fetchedAt: Date.now() });
       }
     } finally {
       setLoadingParts((current) => current.filter((name) => name !== part.name));
@@ -492,12 +527,21 @@ const BomWorkspace: Component<Props> = (props) => {
                 <div class="mt-4 rounded-2xl border border-white/6 bg-black/12 p-4">
                   <div class="mb-3 flex items-center justify-between gap-3">
                     <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Available links</div>
-                    <button
-                      onClick={() => void ensureLinks(part, true)}
-                      class="text-xs text-text-tertiary hover:text-text-primary"
-                    >
-                      Refresh this part
-                    </button>
+                    <div class="flex items-center gap-3">
+                      <Show when={(linksByPart()[part.name] ?? [])[0]?.fetchedAt}>
+                        {(fetchedAt) => (
+                          <span class="text-[10px] text-text-tertiary font-mono">
+                            Updated {formatRelativeTime(fetchedAt())}
+                          </span>
+                        )}
+                      </Show>
+                      <button
+                        onClick={() => void ensureLinks(part, true)}
+                        class="text-xs text-text-tertiary hover:text-text-primary"
+                      >
+                        Refresh this part
+                      </button>
+                    </div>
                   </div>
 
                   <Show when={links().length > 0} fallback={<div class="text-sm text-text-tertiary">No supplier links yet. Use “Find links for all parts” or refresh this part.</div>}>
