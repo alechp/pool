@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, For, Show, onMount } from 'soli
 import type { Component } from 'solid-js';
 import type { BomLink, Part } from '../lib/data';
 import HardwareThumbnail from './HardwareThumbnail';
+import Dropdown from './Dropdown';
 import { getPartVisualVariant } from '../lib/hardwareVisuals';
 
 type WorkspacePart = Part & {
@@ -358,28 +359,28 @@ const BomWorkspace: Component<Props> = (props) => {
         <div class="mt-6 grid gap-4 md:grid-cols-[1.2fr_1fr_auto]">
           <label class="rounded-2xl border border-white/8 bg-black/12 p-4">
             <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Generate links by</div>
-            <select
+            <Dropdown
+              options={[
+                { value: 'cheapest', label: 'Cheapest' },
+                { value: 'most-expensive', label: 'Most Expensive' },
+                { value: 'highest-rating', label: 'Highest Rating' },
+              ]}
               value={filterMode()}
-              onChange={(e) => setFilterMode(e.currentTarget.value as LinkStrategy)}
-              class="mt-3 w-full rounded-xl border border-white/10 bg-bg-card px-4 py-3 text-sm text-text-primary outline-none"
-            >
-              <option value="cheapest">Cheapest</option>
-              <option value="most-expensive">Most Expensive</option>
-              <option value="highest-rating">Highest Rating</option>
-            </select>
+              onChange={(v) => setFilterMode((v as LinkStrategy) ?? 'highest-rating')}
+              placeholder="Select strategy"
+              class="mt-3"
+            />
           </label>
 
           <label class="rounded-2xl border border-white/8 bg-black/12 p-4">
             <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Sensor quantity</div>
-            <select
+            <Dropdown
+              options={SENSOR_QTY_OPTIONS.map((q) => ({ value: String(q), label: `${q} sensors` }))}
               value={String(qty())}
-              onChange={(e) => handleQtyChange(Number(e.currentTarget.value))}
-              class="mt-3 w-full rounded-xl border border-white/10 bg-bg-card px-4 py-3 text-sm text-text-primary outline-none"
-            >
-              <For each={SENSOR_QTY_OPTIONS}>
-                {(q) => <option value={q}>{q} sensors</option>}
-              </For>
-            </select>
+              onChange={(v) => handleQtyChange(Number(v ?? props.quantity))}
+              placeholder="Select quantity"
+              class="mt-3"
+            />
           </label>
 
           <div class="flex flex-col gap-3 w-full md:w-auto">
