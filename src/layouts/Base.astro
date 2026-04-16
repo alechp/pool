@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import ChatSidebar from '../components/ChatSidebar.tsx';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title: string;
@@ -22,12 +23,15 @@ const { title, showAdvisor = true } = Astro.props;
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <ClientRouter />
 </head>
 <body class="min-h-screen">
-  <Header />
+  <Header transition:persist />
   <Nav />
-  <slot />
+  <div transition:animate="fade">
+    <slot />
+  </div>
   <Footer />
-  {showAdvisor ? <ChatSidebar client:idle /> : null}
+  {showAdvisor ? <ChatSidebar client:idle transition:persist /> : null}
 </body>
 </html>

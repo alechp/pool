@@ -13,6 +13,10 @@ export default defineConfig({
   server: { port: 5187 },
   output: 'server',
   adapter: cloudflare({ platformProxy: { enabled: true } }),
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'viewport',
+  },
   integrations: [solidJs()],
   vite: {
     resolve: {

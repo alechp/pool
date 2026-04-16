@@ -89,7 +89,12 @@ async function dbSetup() {
   await $`npx wrangler d1 migrations apply swimsentry-db --local`.quiet();
 
   console.log(`${YELLOW}${BOLD}\u25b8 Seeding local D1...${RESET}`);
-  await $`npx wrangler d1 execute swimsentry-db --local --file=scripts/seed.sql`.quiet();
+  const seedProc = Bun.spawn(["npx", "wrangler", "d1", "execute", "swimsentry-db", "--local", "--file=scripts/seed.sql"], {
+    cwd: projectRoot,
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  await seedProc.exited;
 
   console.log(`${GREEN}${BOLD}\u2713 Database ready${RESET}\n`);
 }
@@ -142,7 +147,12 @@ async function previewProd() {
 async function seedOnly() {
   await ensureDeps();
   console.log(`${YELLOW}${BOLD}\u25b8 Seeding local D1...${RESET}`);
-  await $`npx wrangler d1 execute swimsentry-db --local --file=scripts/seed.sql`.quiet();
+  const seedProc = Bun.spawn(["npx", "wrangler", "d1", "execute", "swimsentry-db", "--local", "--file=scripts/seed.sql"], {
+    cwd: projectRoot,
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  await seedProc.exited;
   console.log(`${GREEN}${BOLD}\u2713 Seed complete${RESET}`);
 }
 
