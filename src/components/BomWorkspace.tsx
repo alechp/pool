@@ -159,6 +159,7 @@ const BomWorkspace: Component<Props> = (props) => {
   const [loadingParts, setLoadingParts] = createSignal<string[]>([]);
   const [saveState, setSaveState] = createSignal<'idle' | 'saved'>('idle');
   const [bulkState, setBulkState] = createSignal<'idle' | 'loading' | 'loaded'>('idle');
+  const [linkErrors, setLinkErrors] = createSignal<Record<string, string>>({});
   const [qty, setQty] = createSignal(props.quantity);
   const currentBuildKey = createMemo(() => {
     const params = new URLSearchParams();
@@ -231,16 +232,24 @@ const BomWorkspace: Component<Props> = (props) => {
     }
 
     setLoadingParts((current) => [...current, part.name]);
+    setLinkErrors((current) => {
+      const next = { ...current };
+      delete next[part.name];
+      return next;
+    });
 
     try {
+      // Phase 1: Try server cache (GET)
       const cached = await fetch(`/api/bom-links?partName=${encodeURIComponent(part.name)}`);
       const cachedData = await cached.json();
+
       if (!refresh && Array.isArray(cachedData.links) && cachedData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: cachedData.links }));
         linkCache.set(part.name, { links: cachedData.links, fetchedAt: Date.now() });
         return;
       }
 
+      // Phase 2: Generate via Claude API (POST)
       const live = await fetch('/api/bom-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,10 +261,22 @@ const BomWorkspace: Component<Props> = (props) => {
         }),
       });
       const liveData = await live.json();
-      if (Array.isArray(liveData.links)) {
+
+      if (liveData.error) {
+        console.warn(`[BOM] Link generation failed for "${part.name}":`, liveData.error);
+        setLinkErrors((current) => ({ ...current, [part.name]: liveData.error }));
+        return;
+      }
+
+      if (Array.isArray(liveData.links) && liveData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: liveData.links }));
         linkCache.set(part.name, { links: liveData.links, fetchedAt: Date.now() });
+      } else {
+        setLinkErrors((current) => ({ ...current, [part.name]: 'No links found for this part' }));
       }
+    } catch (err) {
+      console.error(`[BOM] Network error fetching links for "${part.name}":`, err);
+      setLinkErrors((current) => ({ ...current, [part.name]: 'Network error — check connection' }));
     } finally {
       setLoadingParts((current) => current.filter((name) => name !== part.name));
     }
@@ -267,8 +288,8 @@ const BomWorkspace: Component<Props> = (props) => {
     setBulkState('loaded');
   }
 
-  async function generateSelectionBy(mode: LinkStrategy) {
-    await findLinksForAllParts(false);
+  async function generateSelectionBy(mode: LinkStrategy, forceRefresh = false) {
+    await findLinksForAllParts(forceRefresh);
     setFilterMode(mode);
     setSaveState('idle');
     setSelectedLinks((current) => {
@@ -424,14 +445,14 @@ const BomWorkspace: Component<Props> = (props) => {
               disabled={bulkState() === 'loading'}
               class="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim disabled:opacity-60 w-full md:w-auto"
             >
-              {bulkState() === 'loading' ? 'Generating…' : 'Generate selection'}
+              {bulkState() === 'loading' ? 'Generating...' : 'Generate selection'}
             </button>
             <button
-              onClick={() => void findLinksForAllParts(true)}
+              onClick={() => void generateSelectionBy(filterMode(), true)}
               disabled={bulkState() === 'loading'}
-              class="rounded-full bg-white/6 px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 disabled:opacity-60 w-full md:w-auto"
+              class="text-xs text-text-tertiary hover:text-text-primary underline disabled:opacity-60"
             >
-              {bulkState() === 'loading' ? 'Finding links…' : 'Find links for all parts'}
+              Refresh all links from scratch
             </button>
           </div>
         </div>
@@ -545,7 +566,22 @@ const BomWorkspace: Component<Props> = (props) => {
                     </div>
                   </div>
 
-                  <Show when={links().length > 0} fallback={<div class="text-sm text-text-tertiary">No supplier links yet. Use “Find links for all parts” or refresh this part.</div>}>
+                  <Show when={links().length > 0} fallback={
+                    <div>
+                      <Show when={linkErrors()[part.name]}>
+                        {(err) => (
+                          <div class=”mb-2 rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2 text-xs text-red-400”>
+                            {err()}
+                          </div>
+                        )}
+                      </Show>
+                      <div class=”text-sm text-text-tertiary”>
+                        {loadingParts().includes(part.name)
+                          ? 'Fetching links...'
+                          : 'No supplier links yet. Click “Generate selection” or refresh this part.'}
+                      </div>
+                    </div>
+                  }>
                     <div class="space-y-2">
                       <For each={links()}>
                         {(link) => (
