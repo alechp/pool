@@ -3,7 +3,9 @@ import type { Component } from 'solid-js';
 import type { BomLink, Part } from '../lib/data';
 import HardwareThumbnail from './HardwareThumbnail';
 import Dropdown from './Dropdown';
+import Spinner from './Spinner';
 import { getPartVisualVariant } from '../lib/hardwareVisuals';
+import { getCachedLinks, setCachedLinks, getEstimatedTotal, setEstimatedTotal } from '../lib/local-db';
 
 type WorkspacePart = Part & {
   scope: 'hub' | 'sensor';
@@ -160,6 +162,7 @@ const BomWorkspace: Component<Props> = (props) => {
   const [saveState, setSaveState] = createSignal<'idle' | 'saved'>('idle');
   const [bulkState, setBulkState] = createSignal<'idle' | 'loading' | 'loaded'>('idle');
   const [linkErrors, setLinkErrors] = createSignal<Record<string, string>>({});
+  const [cachedGrandTotal, setCachedGrandTotal] = createSignal(0);
   const [qty, setQty] = createSignal(props.quantity);
   const currentBuildKey = createMemo(() => {
     const params = new URLSearchParams();
@@ -175,7 +178,7 @@ const BomWorkspace: Component<Props> = (props) => {
     ...props.sensorParts.map((part) => ({ ...part, scope: 'sensor' as const, quantity: qty() })),
   ]);
 
-  onMount(() => {
+  onMount(async () => {
     if (props.initialState?.selections && Object.keys(props.initialState.selections).length > 0) {
       setFilterMode(normalizeStrategy(props.initialState.filterMode));
       setSelectedLinks(props.initialState.selections);
@@ -186,6 +189,11 @@ const BomWorkspace: Component<Props> = (props) => {
       setSelectedLinks(stored.selections);
       setSelectionSource(stored.selectionSource);
     }
+
+    // Show cached total while links load
+    const cachedTotal = await getEstimatedTotal(currentBuildKey());
+    if (cachedTotal) setCachedGrandTotal(cachedTotal.totalCents / 100);
+
     void findLinksForAllParts(false);
   });
 
@@ -223,11 +231,23 @@ const BomWorkspace: Component<Props> = (props) => {
   async function ensureLinks(part: WorkspacePart, refresh = false) {
     if (loadingParts().includes(part.name)) return;
 
+    // Check in-memory cache first, then local SQLite cache
     if (!refresh) {
       const memCached = linkCache.get(part.name);
       if (memCached && Date.now() - memCached.fetchedAt < CLIENT_CACHE_TTL) {
         setLinksByPart((current) => ({ ...current, [part.name]: memCached.links }));
         return;
+      }
+
+      const localLinks = await getCachedLinks(part.name);
+      if (localLinks.length > 0) {
+        const age = Date.now() - new Date(localLinks[0].fetchedAt).getTime();
+        if (age < CLIENT_CACHE_TTL) {
+          const mapped = localLinks as unknown as BomLink[];
+          setLinksByPart((current) => ({ ...current, [part.name]: mapped }));
+          linkCache.set(part.name, { links: mapped, fetchedAt: Date.now() });
+          return;
+        }
       }
     }
 
@@ -246,6 +266,7 @@ const BomWorkspace: Component<Props> = (props) => {
       if (!refresh && Array.isArray(cachedData.links) && cachedData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: cachedData.links }));
         linkCache.set(part.name, { links: cachedData.links, fetchedAt: Date.now() });
+        void setCachedLinks(part.name, cachedData.links);
         return;
       }
 
@@ -271,6 +292,7 @@ const BomWorkspace: Component<Props> = (props) => {
       if (Array.isArray(liveData.links) && liveData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: liveData.links }));
         linkCache.set(part.name, { links: liveData.links, fetchedAt: Date.now() });
+        void setCachedLinks(part.name, liveData.links);
       } else {
         setLinkErrors((current) => ({ ...current, [part.name]: 'No links found for this part' }));
       }
@@ -395,6 +417,32 @@ const BomWorkspace: Component<Props> = (props) => {
     }, 0);
   });
 
+  // Display cached total while live total is computing
+  const displayTotal = () => {
+    const live = grandTotal();
+    return live > 0 ? live : cachedGrandTotal();
+  };
+
+  // Persist estimated total to local SQLite whenever it changes
+  createEffect(() => {
+    const total = grandTotal();
+    if (total > 0) {
+      const hubTotal = rows()
+        .filter((p) => p.scope === 'hub')
+        .reduce((sum, p) => {
+          const sel = (linksByPart()[p.name] ?? []).find((l) => l.url === selectedLinks()[p.name]) ?? null;
+          const price = parsePrice(sel?.price ?? null);
+          return sum + (Number.isFinite(price) ? price * p.quantity : 0);
+        }, 0);
+      void setEstimatedTotal(currentBuildKey(), {
+        totalCents: Math.round(total * 100),
+        hubSubtotal: Math.round(hubTotal * 100),
+        sensorSubtotal: Math.round((total - hubTotal) * 100),
+        sensorQty: qty(),
+      });
+    }
+  });
+
   return (
     <div class="pb-16">
       <section class="mb-8 rounded-2xl border border-border bg-bg-surface p-6">
@@ -408,7 +456,7 @@ const BomWorkspace: Component<Props> = (props) => {
           </div>
           <div class="rounded-2xl border border-white/8 bg-black/12 px-4 py-3 text-right">
             <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Estimated total</div>
-            <div class="mt-1 text-2xl font-semibold text-accent">${grandTotal().toFixed(2)}</div>
+            <div class="mt-1 text-2xl font-semibold text-accent">${displayTotal().toFixed(2)}</div>
           </div>
         </div>
 
@@ -445,7 +493,7 @@ const BomWorkspace: Component<Props> = (props) => {
               disabled={bulkState() === 'loading'}
               class="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim disabled:opacity-60 w-full md:w-auto"
             >
-              {bulkState() === 'loading' ? 'Generating...' : 'Generate selection'}
+              {bulkState() === 'loading' ? <Spinner size="sm" label="Generating..." /> : 'Generate selection'}
             </button>
             <button
               onClick={() => void generateSelectionBy(filterMode(), true)}
@@ -536,7 +584,11 @@ const BomWorkspace: Component<Props> = (props) => {
                   </div>
 
                   <div class="text-right">
-                    <Show when={selected()} fallback={<span class="text-xs text-text-tertiary">Waiting</span>}>
+                    <Show when={selected()} fallback={
+                      loadingParts().includes(part.name)
+                        ? <Spinner size="sm" />
+                        : <span class="text-xs text-text-tertiary">Waiting</span>
+                    }>
                       {(link) => (
                         <a href={link().url} target="_blank" rel="noreferrer" class="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20">
                           Open
@@ -557,12 +609,16 @@ const BomWorkspace: Component<Props> = (props) => {
                           </span>
                         )}
                       </Show>
-                      <button
-                        onClick={() => void ensureLinks(part, true)}
-                        class="text-xs text-text-tertiary hover:text-text-primary"
-                      >
-                        Refresh this part
-                      </button>
+                      <Show when={loadingParts().includes(part.name)} fallback={
+                        <button
+                          onClick={() => void ensureLinks(part, true)}
+                          class="text-xs text-text-tertiary hover:text-text-primary"
+                        >
+                          Refresh this part
+                        </button>
+                      }>
+                        <Spinner size="sm" label="Loading..." />
+                      </Show>
                     </div>
                   </div>
 
