@@ -57,7 +57,7 @@ export const POST: APIRoute = async (context) => {
     const apiKey = context.locals.runtime.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'AI service unavailable', links: [] }),
+        JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured — link generation unavailable', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -68,7 +68,7 @@ export const POST: APIRoute = async (context) => {
       Anthropic = (await import('@anthropic-ai/sdk')).default;
     } catch {
       return new Response(
-        JSON.stringify({ error: 'AI service unavailable', links: [] }),
+        JSON.stringify({ error: 'Anthropic SDK not available — link generation unavailable', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -98,7 +98,7 @@ Only include suppliers where you're reasonably confident the product exists. Tar
     const textBlock = response.content.find((b: any) => b.type === 'text');
     if (!textBlock) {
       return new Response(
-        JSON.stringify({ error: 'AI service unavailable', links: [] }),
+        JSON.stringify({ error: 'AI returned empty response', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -112,7 +112,7 @@ Only include suppliers where you're reasonably confident the product exists. Tar
       parsedLinks = JSON.parse(jsonMatch[0]);
     } catch {
       return new Response(
-        JSON.stringify({ error: 'Failed to parse AI response', links: [] }),
+        JSON.stringify({ error: 'AI response was not valid JSON — try refreshing', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
