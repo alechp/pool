@@ -151,6 +151,21 @@ function saveWorkspaceState(buildKey: string, state: BomWorkspaceState) {
 const linkCache = new Map<string, { links: BomLink[]; fetchedAt: number }>();
 const CLIENT_CACHE_TTL = 5 * 60 * 1000;
 
+const LinksEmptyState: Component<{ error?: string; loading?: boolean }> = (props) => (
+  <div>
+    {props.error && (
+      <div class="mb-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+        {props.error}
+      </div>
+    )}
+    <div class="text-sm text-text-tertiary">
+      {props.loading
+        ? 'Fetching links...'
+        : 'No supplier links yet. Click "Generate selection" or refresh this part.'}
+    </div>
+  </div>
+);
+
 const BomWorkspace: Component<Props> = (props) => {
   const [filterMode, setFilterMode] = createSignal<LinkStrategy>('highest-rating');
   const [selectedLinks, setSelectedLinks] = createSignal<SelectedLinkMap>({});
@@ -586,8 +601,8 @@ const BomWorkspace: Component<Props> = (props) => {
                   <div class="text-right">
                     <Show when={selected()} fallback={
                       loadingParts().includes(part.name)
-                        ? <Spinner size="sm" />
-                        : <span class="text-xs text-text-tertiary">Waiting</span>
+                        ? (<Spinner size="sm" />)
+                        : (<span class="text-xs text-text-tertiary">Waiting</span>)
                     }>
                       {(link) => (
                         <a href={link().url} target="_blank" rel="noreferrer" class="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20">
@@ -609,34 +624,22 @@ const BomWorkspace: Component<Props> = (props) => {
                           </span>
                         )}
                       </Show>
-                      <Show when={loadingParts().includes(part.name)} fallback={
-                        <button
-                          onClick={() => void ensureLinks(part, true)}
-                          class="text-xs text-text-tertiary hover:text-text-primary"
-                        >
-                          Refresh this part
-                        </button>
-                      }>
-                        <Spinner size="sm" label="Loading..." />
-                      </Show>
+                      {loadingParts().includes(part.name)
+                        ? (<Spinner size="sm" label="Loading..." />)
+                        : (
+                          <button
+                            onClick={() => void ensureLinks(part, true)}
+                            class="text-xs text-text-tertiary hover:text-text-primary"
+                          >
+                            Refresh this part
+                          </button>
+                        )
+                      }
                     </div>
                   </div>
 
                   <Show when={links().length > 0} fallback={
-                    <div>
-                      <Show when={linkErrors()[part.name]}>
-                        {(err) => (
-                          <div class=”mb-2 rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2 text-xs text-red-400”>
-                            {err()}
-                          </div>
-                        )}
-                      </Show>
-                      <div class=”text-sm text-text-tertiary”>
-                        {loadingParts().includes(part.name)
-                          ? 'Fetching links...'
-                          : 'No supplier links yet. Click “Generate selection” or refresh this part.'}
-                      </div>
-                    </div>
+                    <LinksEmptyState error={linkErrors()[part.name]} loading={loadingParts().includes(part.name)} />
                   }>
                     <div class="space-y-2">
                       <For each={links()}>

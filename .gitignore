@@ -6,3 +6,4 @@ sqlite.db
 sqlite.db-shm
 sqlite.db-wal
 .env
+.dev.vars
