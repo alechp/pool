@@ -5,7 +5,6 @@
     "": {
       "name": "pool-security-configurator",
       "dependencies": {
-        "@anthropic-ai/sdk": "0.39.0",
         "@astrojs/cloudflare": "12.2.1",
         "@astrojs/solid-js": "6.0.1",
         "@tailwindcss/vite": "4.2.2",
@@ -13,6 +12,7 @@
         "astro": "6.1.2",
         "better-auth": "1.2.7",
         "drizzle-orm": "0.45.2",
+        "groq-sdk": "0.15.0",
         "lucide-solid": "0.469.0",
         "solid-js": "1.9.12",
         "sql.js": "1.12.0",
@@ -32,8 +32,6 @@
     "vite": "^7",
   },
   "packages": {
-    "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.39.0", "", { "dependencies": { "@types/node": "^18.11.18", "@types/node-fetch": "^2.6.4", "abort-controller": "^3.0.0", "agentkeepalive": "^4.2.1", "form-data-encoder": "1.7.2", "formdata-node": "^4.3.2", "node-fetch": "^2.6.7" } }, "sha512-eMyDIPRZbt1CCLErRCi3exlAvNkBtRe+kW5vvJyef93PmNr/clstYgHhtvmkxN82nlKgzyGPCyGxrm0JQ1ZIdg=="],
-
     "@astrojs/cloudflare": ["@astrojs/cloudflare@12.2.1", "", { "dependencies": { "@astrojs/internal-helpers": "0.4.2", "@astrojs/underscore-redirects": "^0.6.0", "@cloudflare/workers-types": "^4.20250109.0", "esbuild": "^0.24.0", "estree-walker": "^3.0.3", "magic-string": "^0.30.17", "miniflare": "^3.20241230.1", "tiny-glob": "^0.2.9", "vite": "^6.0.7", "wrangler": "^3.101.0" }, "peerDependencies": { "astro": "^5.0.0" } }, "sha512-j787lw2iYST66ea/VMrdJ7AGKtgnX4iX2w8Obs4tK88e0K+cwjptq4sTxGXHVd3QWRkBU/XjOquKSRoZskbMnQ=="],
 
     "@astrojs/compiler": ["@astrojs/compiler@3.0.1", "", {}, "sha512-z97oYbdebO5aoWzuJ/8q5hLK232+17KcLZ7cJ8BCWk6+qNzVxn/gftC0KzMBUTD8WAaBkPpNSQK6PXLnNrZ0CA=="],
@@ -667,6 +665,8 @@
     "gopd": ["gopd@1.2.0", "", {}, "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg=="],
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
+
+    "groq-sdk": ["groq-sdk@0.15.0", "", { "dependencies": { "@types/node": "^18.11.18", "@types/node-fetch": "^2.6.4", "abort-controller": "^3.0.0", "agentkeepalive": "^4.2.1", "form-data-encoder": "1.7.2", "formdata-node": "^4.3.2", "node-fetch": "^2.6.7" } }, "sha512-aYDEdr4qczx3cLCRRe+Beb37I7g/9bD5kHF+EEDxcrREWw1vKoRcfP3vHEkJB7Ud/8oOuF0scRwDpwWostTWuQ=="],
 
     "h3": ["h3@1.15.11", "", { "dependencies": { "cookie-es": "^1.2.3", "crossws": "^0.3.5", "defu": "^6.1.6", "destr": "^2.0.5", "iron-webcrypto": "^1.2.1", "node-mock-http": "^1.0.4", "radix3": "^1.1.2", "ufo": "^1.6.3", "uncrypto": "^0.1.3" } }, "sha512-L3THSe2MPeBwgIZVSH5zLdBBU90TOxarvhK9d04IDY2AmVS8j2Jz2LIWtwsGOU3lu2I5jCN7FNvVfY2+XyF+mg=="],
 

@@ -19,11 +19,11 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Check for API key
-    const apiKey = context.locals.runtime.env.ANTHROPIC_API_KEY;
+    const apiKey = context.locals.runtime.env.GROQ_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({
-          content: 'AI chat requires an API key. Add ANTHROPIC_API_KEY to your .env file.',
+          content: 'AI chat requires an API key. Add GROQ_API_KEY to your .dev.vars file.',
           recommendation: null,
         }),
         { headers: { 'Content-Type': 'application/json' } }
@@ -55,36 +55,42 @@ If the user uploads a layout, site plan, or pool image, inspect it carefully. Ex
 Format the visible response in clean GitHub-flavored Markdown with short headings or bullets when useful.
 Keep responses concise (2-4 sentences) unless asked for detail.`;
 
-    // Call Claude API
-    let Anthropic: any;
+    // Call Groq API
+    let Groq: any;
     try {
-      Anthropic = (await import('@anthropic-ai/sdk')).default;
+      Groq = (await import('groq-sdk')).default;
     } catch {
       return new Response(
         JSON.stringify({
-          content: 'AI chat requires the Anthropic SDK. Please install @anthropic-ai/sdk.',
+          content: 'AI chat requires the Groq SDK. Please install groq-sdk.',
           recommendation: null,
         }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const client = new Anthropic({ apiKey });
+    const client = new Groq({ apiKey });
+
+    const model = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
     const latestUserIndex = [...messages].reverse().findIndex((m: any) => m.role === 'user');
     const imageMessageIndex = latestUserIndex === -1 ? -1 : messages.length - 1 - latestUserIndex;
 
-    const apiMessages = messages.map((m: any, index: number) => {
-      if (image && index === imageMessageIndex && m.role === 'user') {
-        return {
-          role: 'user' as const,
+    // Build messages array (system prompt is now a message)
+    const apiMessages: any[] = [
+      { role: 'system', content: systemPrompt },
+    ];
+
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      if (image && i === imageMessageIndex && m.role === 'user') {
+        apiMessages.push({
+          role: 'user',
           content: [
             {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: image.mediaType,
-                data: image.data,
+              type: 'image_url',
+              image_url: {
+                url: `data:${image.mediaType};base64,${image.data}`,
               },
             },
             {
@@ -92,25 +98,23 @@ Keep responses concise (2-4 sentences) unless asked for detail.`;
               text: m.content,
             },
           ],
-        };
+        });
+      } else {
+        apiMessages.push({
+          role: m.role,
+          content: m.content,
+        });
       }
+    }
 
-      return {
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      };
-    });
-
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: systemPrompt,
+    const response = await client.chat.completions.create({
+      model,
+      max_completion_tokens: 1024,
       messages: apiMessages,
     });
 
-    // Extract text content
-    const textBlock = response.content.find((b: any) => b.type === 'text');
-    const content = textBlock ? (textBlock as any).text : 'Sorry, I could not generate a response.';
+    const content = response.choices[0]?.message?.content
+      || 'Sorry, I could not generate a response.';
 
     // Parse recommendation JSON if present
     let recommendation = null;

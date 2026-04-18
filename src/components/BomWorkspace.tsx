@@ -5,7 +5,7 @@ import HardwareThumbnail from './HardwareThumbnail';
 import Dropdown from './Dropdown';
 import Spinner from './Spinner';
 import { getPartVisualVariant } from '../lib/hardwareVisuals';
-import { getCachedLinks, setCachedLinks, getEstimatedTotal, setEstimatedTotal } from '../lib/local-db';
+import { getEstimatedTotal, setEstimatedTotal } from '../lib/local-db';
 
 type WorkspacePart = Part & {
   scope: 'hub' | 'sensor';
@@ -149,7 +149,7 @@ function saveWorkspaceState(buildKey: string, state: BomWorkspaceState) {
 }
 
 const linkCache = new Map<string, { links: BomLink[]; fetchedAt: number }>();
-const CLIENT_CACHE_TTL = 5 * 60 * 1000;
+const MEM_CACHE_TTL = 5 * 60 * 1000; // 5 min — avoids redundant GETs within same session
 
 const LinksEmptyState: Component<{ error?: string; loading?: boolean }> = (props) => (
   <div>
@@ -246,23 +246,12 @@ const BomWorkspace: Component<Props> = (props) => {
   async function ensureLinks(part: WorkspacePart, refresh = false) {
     if (loadingParts().includes(part.name)) return;
 
-    // Check in-memory cache first, then local SQLite cache
+    // In-memory cache avoids redundant GETs within the same session
     if (!refresh) {
       const memCached = linkCache.get(part.name);
-      if (memCached && Date.now() - memCached.fetchedAt < CLIENT_CACHE_TTL) {
+      if (memCached && Date.now() - memCached.fetchedAt < MEM_CACHE_TTL) {
         setLinksByPart((current) => ({ ...current, [part.name]: memCached.links }));
         return;
-      }
-
-      const localLinks = await getCachedLinks(part.name);
-      if (localLinks.length > 0) {
-        const age = Date.now() - new Date(localLinks[0].fetchedAt).getTime();
-        if (age < CLIENT_CACHE_TTL) {
-          const mapped = localLinks as unknown as BomLink[];
-          setLinksByPart((current) => ({ ...current, [part.name]: mapped }));
-          linkCache.set(part.name, { links: mapped, fetchedAt: Date.now() });
-          return;
-        }
       }
     }
 
@@ -281,7 +270,7 @@ const BomWorkspace: Component<Props> = (props) => {
       if (!refresh && Array.isArray(cachedData.links) && cachedData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: cachedData.links }));
         linkCache.set(part.name, { links: cachedData.links, fetchedAt: Date.now() });
-        void setCachedLinks(part.name, cachedData.links);
+
         return;
       }
 
@@ -307,7 +296,7 @@ const BomWorkspace: Component<Props> = (props) => {
       if (Array.isArray(liveData.links) && liveData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: liveData.links }));
         linkCache.set(part.name, { links: liveData.links, fetchedAt: Date.now() });
-        void setCachedLinks(part.name, liveData.links);
+
       } else {
         setLinkErrors((current) => ({ ...current, [part.name]: 'No links found for this part' }));
       }
@@ -321,7 +310,10 @@ const BomWorkspace: Component<Props> = (props) => {
 
   async function findLinksForAllParts(refresh = false) {
     setBulkState('loading');
-    await Promise.all(parts().map((part) => ensureLinks(part, refresh)));
+    // Serialize requests to avoid rate-limit bursts on Groq free tier
+    for (const part of parts()) {
+      await ensureLinks(part, refresh);
+    }
     setBulkState('loaded');
   }
 

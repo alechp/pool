@@ -54,49 +54,59 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Check for API key
-    const apiKey = context.locals.runtime.env.ANTHROPIC_API_KEY;
+    const apiKey = context.locals.runtime.env.GROQ_API_KEY;
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured — link generation unavailable', links: [] }),
+        JSON.stringify({ error: 'GROQ_API_KEY not configured — link generation unavailable', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Call Claude API
-    let Anthropic: any;
+    // Call Groq API with structured output
+    let Groq: any;
     try {
-      Anthropic = (await import('@anthropic-ai/sdk')).default;
+      Groq = (await import('groq-sdk')).default;
     } catch {
       return new Response(
-        JSON.stringify({ error: 'Anthropic SDK not available — link generation unavailable', links: [] }),
+        JSON.stringify({ error: 'Groq SDK not available — link generation unavailable', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    const client = new Anthropic({ apiKey });
+    const client = new Groq({ apiKey });
 
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: `You are a hardware procurement assistant. Given an electronic component name and description, suggest purchase links from major suppliers. Return ONLY valid JSON array with this exact structure:
-[
-  { "supplier": "Amazon", "url": "https://amazon.com/dp/...", "price": "$XX.XX", "rating": 46, "confidence": "high" },
-  { "supplier": "AliExpress", "url": "https://aliexpress.com/item/...", "price": "$XX.XX", "rating": 40, "confidence": "medium" }
-]
-Confidence levels: "high" = exact match found, "medium" = close match, "low" = general category.
-Rating must be an integer from 10 to 50 representing a 1.0 to 5.0 star rating in tenths.
-Only include suppliers where you're reasonably confident the product exists. Target price is approximately $${targetPrice ?? 0}.`,
-      messages: [
-        {
-          role: 'user',
-          content: `Find purchase links for: ${partName} - ${partDescription || ''}`,
-        },
-      ],
-    });
+    const makeRequest = async (attempt = 0): Promise<any> => {
+      try {
+        return await client.chat.completions.create({
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          max_completion_tokens: 1024,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a hardware procurement assistant. Given an electronic component name and description, suggest purchase links from major suppliers. Return ONLY a JSON object with a "links" array. Each link object has: supplier (string), url (string), price (string like "$XX.XX"), rating (integer 10-50 for 1.0-5.0 stars), confidence ("high"|"medium"|"low"). Only include suppliers where you're confident the product exists. Target price is approximately $${targetPrice ?? 0}.`,
+            },
+            {
+              role: 'user',
+              content: `Find purchase links for: ${partName} - ${partDescription || ''}`,
+            },
+          ],
+          response_format: { type: 'json_object' },
+        });
+      } catch (err: any) {
+        if (err?.status === 429 && attempt < 3) {
+          const retryAfter = Number(err?.headers?.['retry-after']) || (2 ** attempt * 2);
+          await new Promise((r) => setTimeout(r, retryAfter * 1000));
+          return makeRequest(attempt + 1);
+        }
+        throw err;
+      }
+    };
 
-    // Parse JSON from Claude's response
-    const textBlock = response.content.find((b: any) => b.type === 'text');
-    if (!textBlock) {
+    const response = await makeRequest();
+
+    // With strict structured output, no regex extraction needed
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
       return new Response(
         JSON.stringify({ error: 'AI returned empty response', links: [] }),
         { headers: { 'Content-Type': 'application/json' } }
@@ -105,11 +115,8 @@ Only include suppliers where you're reasonably confident the product exists. Tar
 
     let parsedLinks: any[];
     try {
-      // Try to extract JSON array from the response text
-      const text = (textBlock as any).text;
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error('No JSON array found');
-      parsedLinks = JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(content);
+      parsedLinks = parsed.links;
     } catch {
       return new Response(
         JSON.stringify({ error: 'AI response was not valid JSON — try refreshing', links: [] }),

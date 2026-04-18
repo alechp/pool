@@ -12,7 +12,6 @@
     "db:setup": "npm run db:generate && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.39.0",
     "@astrojs/cloudflare": "12.2.1",
     "@astrojs/solid-js": "6.0.1",
     "@tailwindcss/vite": "4.2.2",
@@ -20,6 +19,7 @@
     "astro": "6.1.2",
     "better-auth": "1.2.7",
     "drizzle-orm": "0.45.2",
+    "groq-sdk": "0.15.0",
     "lucide-solid": "0.469.0",
     "solid-js": "1.9.12",
     "sql.js": "1.12.0",
