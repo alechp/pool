@@ -12,6 +12,7 @@ const tabs = [
       {tabs.map((tab) => (
         <a
           href={tab.href}
+          data-astro-prefetch="load"
           class:list={[
             "px-5 py-2.5 rounded-md text-sm font-medium transition-all whitespace-nowrap",
             pathname === tab.href

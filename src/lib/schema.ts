@@ -157,6 +157,16 @@ export const bomSelections = sqliteTable('bom_selections', {
   updatedAt: text('updated_at').notNull(),
 });
 
+// Estimated totals per build configuration (cached)
+export const estimatedTotals = sqliteTable('estimated_totals', {
+  buildKey: text('build_key').primaryKey(),
+  totalCents: integer('total_cents').notNull(),
+  hubSubtotal: integer('hub_subtotal').notNull(),
+  sensorSubtotal: integer('sensor_subtotal').notNull(),
+  sensorQty: integer('sensor_qty').notNull(),
+  computedAt: text('computed_at').notNull(),
+});
+
 // Build session tracking
 export const buildSessions = sqliteTable('build_sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),

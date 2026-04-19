@@ -3,7 +3,9 @@ import type { Component } from 'solid-js';
 import type { BomLink, Part } from '../lib/data';
 import HardwareThumbnail from './HardwareThumbnail';
 import Dropdown from './Dropdown';
+import Spinner from './Spinner';
 import { getPartVisualVariant } from '../lib/hardwareVisuals';
+import { getEstimatedTotal, setEstimatedTotal } from '../lib/local-db';
 
 type WorkspacePart = Part & {
   scope: 'hub' | 'sensor';
@@ -147,7 +149,22 @@ function saveWorkspaceState(buildKey: string, state: BomWorkspaceState) {
 }
 
 const linkCache = new Map<string, { links: BomLink[]; fetchedAt: number }>();
-const CLIENT_CACHE_TTL = 5 * 60 * 1000;
+const MEM_CACHE_TTL = 5 * 60 * 1000; // 5 min — avoids redundant GETs within same session
+
+const LinksEmptyState: Component<{ error?: string; loading?: boolean }> = (props) => (
+  <div>
+    {props.error && (
+      <div class="mb-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+        {props.error}
+      </div>
+    )}
+    <div class="text-sm text-text-tertiary">
+      {props.loading
+        ? 'Fetching links...'
+        : 'No supplier links yet. Click "Generate selection" or refresh this part.'}
+    </div>
+  </div>
+);
 
 const BomWorkspace: Component<Props> = (props) => {
   const [filterMode, setFilterMode] = createSignal<LinkStrategy>('highest-rating');
@@ -159,6 +176,8 @@ const BomWorkspace: Component<Props> = (props) => {
   const [loadingParts, setLoadingParts] = createSignal<string[]>([]);
   const [saveState, setSaveState] = createSignal<'idle' | 'saved'>('idle');
   const [bulkState, setBulkState] = createSignal<'idle' | 'loading' | 'loaded'>('idle');
+  const [linkErrors, setLinkErrors] = createSignal<Record<string, string>>({});
+  const [cachedGrandTotal, setCachedGrandTotal] = createSignal(0);
   const [qty, setQty] = createSignal(props.quantity);
   const currentBuildKey = createMemo(() => {
     const params = new URLSearchParams();
@@ -174,7 +193,7 @@ const BomWorkspace: Component<Props> = (props) => {
     ...props.sensorParts.map((part) => ({ ...part, scope: 'sensor' as const, quantity: qty() })),
   ]);
 
-  onMount(() => {
+  onMount(async () => {
     if (props.initialState?.selections && Object.keys(props.initialState.selections).length > 0) {
       setFilterMode(normalizeStrategy(props.initialState.filterMode));
       setSelectedLinks(props.initialState.selections);
@@ -185,6 +204,11 @@ const BomWorkspace: Component<Props> = (props) => {
       setSelectedLinks(stored.selections);
       setSelectionSource(stored.selectionSource);
     }
+
+    // Show cached total while links load
+    const cachedTotal = await getEstimatedTotal(currentBuildKey());
+    if (cachedTotal) setCachedGrandTotal(cachedTotal.totalCents / 100);
+
     void findLinksForAllParts(false);
   });
 
@@ -222,25 +246,35 @@ const BomWorkspace: Component<Props> = (props) => {
   async function ensureLinks(part: WorkspacePart, refresh = false) {
     if (loadingParts().includes(part.name)) return;
 
+    // In-memory cache avoids redundant GETs within the same session
     if (!refresh) {
       const memCached = linkCache.get(part.name);
-      if (memCached && Date.now() - memCached.fetchedAt < CLIENT_CACHE_TTL) {
+      if (memCached && Date.now() - memCached.fetchedAt < MEM_CACHE_TTL) {
         setLinksByPart((current) => ({ ...current, [part.name]: memCached.links }));
         return;
       }
     }
 
     setLoadingParts((current) => [...current, part.name]);
+    setLinkErrors((current) => {
+      const next = { ...current };
+      delete next[part.name];
+      return next;
+    });
 
     try {
+      // Phase 1: Try server cache (GET)
       const cached = await fetch(`/api/bom-links?partName=${encodeURIComponent(part.name)}`);
       const cachedData = await cached.json();
+
       if (!refresh && Array.isArray(cachedData.links) && cachedData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: cachedData.links }));
         linkCache.set(part.name, { links: cachedData.links, fetchedAt: Date.now() });
+
         return;
       }
 
+      // Phase 2: Generate via Claude API (POST)
       const live = await fetch('/api/bom-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -252,10 +286,23 @@ const BomWorkspace: Component<Props> = (props) => {
         }),
       });
       const liveData = await live.json();
-      if (Array.isArray(liveData.links)) {
+
+      if (liveData.error) {
+        console.warn(`[BOM] Link generation failed for "${part.name}":`, liveData.error);
+        setLinkErrors((current) => ({ ...current, [part.name]: liveData.error }));
+        return;
+      }
+
+      if (Array.isArray(liveData.links) && liveData.links.length > 0) {
         setLinksByPart((current) => ({ ...current, [part.name]: liveData.links }));
         linkCache.set(part.name, { links: liveData.links, fetchedAt: Date.now() });
+
+      } else {
+        setLinkErrors((current) => ({ ...current, [part.name]: 'No links found for this part' }));
       }
+    } catch (err) {
+      console.error(`[BOM] Network error fetching links for "${part.name}":`, err);
+      setLinkErrors((current) => ({ ...current, [part.name]: 'Network error — check connection' }));
     } finally {
       setLoadingParts((current) => current.filter((name) => name !== part.name));
     }
@@ -263,12 +310,15 @@ const BomWorkspace: Component<Props> = (props) => {
 
   async function findLinksForAllParts(refresh = false) {
     setBulkState('loading');
-    await Promise.all(parts().map((part) => ensureLinks(part, refresh)));
+    // Serialize requests to avoid rate-limit bursts on Groq free tier
+    for (const part of parts()) {
+      await ensureLinks(part, refresh);
+    }
     setBulkState('loaded');
   }
 
-  async function generateSelectionBy(mode: LinkStrategy) {
-    await findLinksForAllParts(false);
+  async function generateSelectionBy(mode: LinkStrategy, forceRefresh = false) {
+    await findLinksForAllParts(forceRefresh);
     setFilterMode(mode);
     setSaveState('idle');
     setSelectedLinks((current) => {
@@ -374,6 +424,32 @@ const BomWorkspace: Component<Props> = (props) => {
     }, 0);
   });
 
+  // Display cached total while live total is computing
+  const displayTotal = () => {
+    const live = grandTotal();
+    return live > 0 ? live : cachedGrandTotal();
+  };
+
+  // Persist estimated total to local SQLite whenever it changes
+  createEffect(() => {
+    const total = grandTotal();
+    if (total > 0) {
+      const hubTotal = rows()
+        .filter((p) => p.scope === 'hub')
+        .reduce((sum, p) => {
+          const sel = (linksByPart()[p.name] ?? []).find((l) => l.url === selectedLinks()[p.name]) ?? null;
+          const price = parsePrice(sel?.price ?? null);
+          return sum + (Number.isFinite(price) ? price * p.quantity : 0);
+        }, 0);
+      void setEstimatedTotal(currentBuildKey(), {
+        totalCents: Math.round(total * 100),
+        hubSubtotal: Math.round(hubTotal * 100),
+        sensorSubtotal: Math.round((total - hubTotal) * 100),
+        sensorQty: qty(),
+      });
+    }
+  });
+
   return (
     <div class="pb-16">
       <section class="mb-8 rounded-2xl border border-border bg-bg-surface p-6">
@@ -387,7 +463,7 @@ const BomWorkspace: Component<Props> = (props) => {
           </div>
           <div class="rounded-2xl border border-white/8 bg-black/12 px-4 py-3 text-right">
             <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Estimated total</div>
-            <div class="mt-1 text-2xl font-semibold text-accent">${grandTotal().toFixed(2)}</div>
+            <div class="mt-1 text-2xl font-semibold text-accent">${displayTotal().toFixed(2)}</div>
           </div>
         </div>
 
@@ -424,14 +500,14 @@ const BomWorkspace: Component<Props> = (props) => {
               disabled={bulkState() === 'loading'}
               class="rounded-full bg-accent px-4 py-3 text-sm font-semibold text-bg-deep transition-colors hover:bg-accent-dim disabled:opacity-60 w-full md:w-auto"
             >
-              {bulkState() === 'loading' ? 'Generating…' : 'Generate selection'}
+              {bulkState() === 'loading' ? <Spinner size="sm" label="Generating..." /> : 'Generate selection'}
             </button>
             <button
-              onClick={() => void findLinksForAllParts(true)}
+              onClick={() => void generateSelectionBy(filterMode(), true)}
               disabled={bulkState() === 'loading'}
-              class="rounded-full bg-white/6 px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 disabled:opacity-60 w-full md:w-auto"
+              class="text-xs text-text-tertiary hover:text-text-primary underline disabled:opacity-60"
             >
-              {bulkState() === 'loading' ? 'Finding links…' : 'Find links for all parts'}
+              Refresh all links from scratch
             </button>
           </div>
         </div>
@@ -515,7 +591,11 @@ const BomWorkspace: Component<Props> = (props) => {
                   </div>
 
                   <div class="text-right">
-                    <Show when={selected()} fallback={<span class="text-xs text-text-tertiary">Waiting</span>}>
+                    <Show when={selected()} fallback={
+                      loadingParts().includes(part.name)
+                        ? (<Spinner size="sm" />)
+                        : (<span class="text-xs text-text-tertiary">Waiting</span>)
+                    }>
                       {(link) => (
                         <a href={link().url} target="_blank" rel="noreferrer" class="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20">
                           Open
@@ -536,16 +616,23 @@ const BomWorkspace: Component<Props> = (props) => {
                           </span>
                         )}
                       </Show>
-                      <button
-                        onClick={() => void ensureLinks(part, true)}
-                        class="text-xs text-text-tertiary hover:text-text-primary"
-                      >
-                        Refresh this part
-                      </button>
+                      {loadingParts().includes(part.name)
+                        ? (<Spinner size="sm" label="Loading..." />)
+                        : (
+                          <button
+                            onClick={() => void ensureLinks(part, true)}
+                            class="text-xs text-text-tertiary hover:text-text-primary"
+                          >
+                            Refresh this part
+                          </button>
+                        )
+                      }
                     </div>
                   </div>
 
-                  <Show when={links().length > 0} fallback={<div class="text-sm text-text-tertiary">No supplier links yet. Use “Find links for all parts” or refresh this part.</div>}>
+                  <Show when={links().length > 0} fallback={
+                    <LinksEmptyState error={linkErrors()[part.name]} loading={loadingParts().includes(part.name)} />
+                  }>
                     <div class="space-y-2">
                       <For each={links()}>
                         {(link) => (

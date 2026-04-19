@@ -33,5 +33,17 @@ const { title, showAdvisor = true } = Astro.props;
   </div>
   <Footer />
   {showAdvisor ? <ChatSidebar client:idle transition:persist /> : null}
+<style is:global>
+  ::view-transition-new(root) {
+    animation: fade-in 150ms ease-out;
+  }
+  ::view-transition-old(root) {
+    animation: fade-out 100ms ease-in;
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+</style>
 </body>
 </html>

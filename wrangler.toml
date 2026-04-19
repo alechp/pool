@@ -8,4 +8,4 @@ binding = "DB"
 database_name = "swimsentry-db"
 database_id = "0e08d963-f783-4e65-97a1-6a1864b9f253"
 
-# Secrets set via: wrangler secret put ANTHROPIC_API_KEY
+# Secrets set via: wrangler secret put GROQ_API_KEY
