@@ -6,6 +6,14 @@ import Dropdown from './Dropdown';
 import Spinner from './Spinner';
 import { getPartVisualVariant } from '../lib/hardwareVisuals';
 import { getEstimatedTotal, setEstimatedTotal } from '../lib/local-db';
+import {
+  createSolidTable,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  type ColumnDef,
+  type SortingState,
+} from '@tanstack/solid-table';
 
 type WorkspacePart = Part & {
   scope: 'hub' | 'sensor';
@@ -40,6 +48,15 @@ type BomWorkspaceState = {
   filterMode: LinkStrategy;
   selections: SelectedLinkMap;
   selectionSource: Record<string, SelectionSource>;
+};
+
+type SummaryRow = {
+  partName: string;
+  partDescription: string;
+  supplier: string;
+  price: string;
+  rating: number | null;
+  url: string | null;
 };
 
 const STORAGE_KEY = 'poolguard-bom-workspace';
@@ -176,6 +193,7 @@ const BomWorkspace: Component<Props> = (props) => {
   const [loadingParts, setLoadingParts] = createSignal<string[]>([]);
   const [saveState, setSaveState] = createSignal<'idle' | 'saved'>('idle');
   const [bulkState, setBulkState] = createSignal<'idle' | 'loading' | 'loaded'>('idle');
+  const [copyState, setCopyState] = createSignal<string | null>(null);
   const [linkErrors, setLinkErrors] = createSignal<Record<string, string>>({});
   const [cachedGrandTotal, setCachedGrandTotal] = createSignal(0);
   const [qty, setQty] = createSignal(props.quantity);
@@ -309,10 +327,38 @@ const BomWorkspace: Component<Props> = (props) => {
   }
 
   async function findLinksForAllParts(refresh = false) {
+    // Phase 1: Parallel cache lookups — populates UI instantly for cached parts
+    if (!refresh) {
+      await Promise.all(parts().map(async (part) => {
+        const memCached = linkCache.get(part.name);
+        if (memCached && Date.now() - memCached.fetchedAt < MEM_CACHE_TTL) {
+          setLinksByPart((current) => ({ ...current, [part.name]: memCached.links }));
+          return;
+        }
+        try {
+          const res = await fetch(`/api/bom-links?partName=${encodeURIComponent(part.name)}`);
+          const data = await res.json();
+          if (Array.isArray(data.links) && data.links.length > 0) {
+            setLinksByPart((current) => ({ ...current, [part.name]: data.links }));
+            linkCache.set(part.name, { links: data.links, fetchedAt: Date.now() });
+          }
+        } catch {
+          // Will be handled in phase 2
+        }
+      }));
+    }
+
+    // Phase 2: Sequential generation only for parts still missing links
+    const missing = parts().filter((p) => !(linksByPart()[p.name]?.length > 0));
+    if (missing.length === 0) {
+      setBulkState('loaded');
+      return;
+    }
+
     setBulkState('loading');
-    // Serialize requests to avoid rate-limit bursts on Groq free tier
-    for (const part of parts()) {
-      await ensureLinks(part, refresh);
+    // Serialize Groq API calls to avoid rate-limit bursts on free tier
+    for (const part of missing) {
+      await ensureLinks(part, true);
     }
     setBulkState('loaded');
   }
@@ -430,6 +476,98 @@ const BomWorkspace: Component<Props> = (props) => {
     return live > 0 ? live : cachedGrandTotal();
   };
 
+  const partsWithLinks = createMemo(() => {
+    const current = linksByPart();
+    return parts().filter((p) => (current[p.name] ?? []).length > 0).length;
+  });
+
+  const allPartsResolved = createMemo(() => partsWithLinks() === parts().length);
+
+  const [viewMode, setViewMode] = createSignal<'detail' | 'summary'>('detail');
+
+  const summaryData = createMemo<SummaryRow[]>(() => {
+    const current = linksByPart();
+    const selected = selectedLinks();
+    return rows().map((part) => {
+      const link = (current[part.name] ?? []).find((l) => l.url === selected[part.name]) ?? null;
+      return {
+        partName: part.name,
+        partDescription: part.description,
+        supplier: link?.supplier ?? '—',
+        price: link?.price ?? '—',
+        rating: link?.rating ?? null,
+        url: link?.url ?? null,
+      };
+    });
+  });
+
+  const summaryColumns: ColumnDef<SummaryRow>[] = [
+    {
+      id: 'part',
+      accessorKey: 'partName',
+      header: 'Part',
+      size: 260,
+      cell: (info) => (
+        <div class="min-w-0">
+          <div class="text-sm font-medium text-text-primary">{info.row.original.partName}</div>
+          <div class="mt-0.5 text-xs text-text-tertiary truncate">{info.row.original.partDescription}</div>
+        </div>
+      ),
+    },
+    {
+      id: 'supplier',
+      accessorKey: 'supplier',
+      header: 'Supplier',
+      size: 160,
+      cell: (info) => <span class="text-sm text-text-primary">{info.row.original.supplier}</span>,
+    },
+    {
+      id: 'price',
+      accessorKey: 'price',
+      header: 'Price',
+      size: 100,
+      cell: (info) => <span class="font-mono text-sm text-text-primary">{info.row.original.price}</span>,
+      sortingFn: (a, b) => parsePrice(a.original.price) - parsePrice(b.original.price),
+    },
+    {
+      id: 'rating',
+      accessorKey: 'rating',
+      header: 'Rating',
+      size: 90,
+      cell: (info) => <span class="text-sm text-text-primary">{formatRating(info.row.original.rating)}</span>,
+      sortingFn: (a, b) => ratingRank(a.original.rating) - ratingRank(b.original.rating),
+    },
+    {
+      id: 'link',
+      header: 'Link',
+      size: 80,
+      enableSorting: false,
+      cell: (info) => {
+        const url = info.row.original.url;
+        return url ? (
+          <a href={url} target="_blank" rel="noreferrer" class="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20">
+            Open
+          </a>
+        ) : (
+          <span class="text-xs text-text-tertiary">—</span>
+        );
+      },
+    },
+  ];
+
+  const [summarySorting, setSummarySorting] = createSignal<SortingState>([]);
+
+  const summaryTable = createSolidTable({
+    get data() { return summaryData(); },
+    columns: summaryColumns,
+    state: {
+      get sorting() { return summarySorting(); },
+    },
+    onSortingChange: setSummarySorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   // Persist estimated total to local SQLite whenever it changes
   createEffect(() => {
     const total = grandTotal();
@@ -463,7 +601,20 @@ const BomWorkspace: Component<Props> = (props) => {
           </div>
           <div class="rounded-2xl border border-white/8 bg-black/12 px-4 py-3 text-right">
             <div class="font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary">Estimated total</div>
-            <div class="mt-1 text-2xl font-semibold text-accent">${displayTotal().toFixed(2)}</div>
+            <div class={`mt-1 text-2xl font-semibold ${allPartsResolved() ? 'text-accent' : 'text-accent-amber'}`}>
+              ${displayTotal().toFixed(2)}
+            </div>
+            <Show when={bulkState() === 'loading' || !allPartsResolved()}>
+              <div class="mt-2 h-1 w-full rounded-full bg-white/6 overflow-hidden">
+                <div
+                  class={`h-full rounded-full transition-all duration-300 ${allPartsResolved() ? 'bg-accent' : 'bg-accent-amber'}`}
+                  style={{ width: `${parts().length > 0 ? (partsWithLinks() / parts().length) * 100 : 0}%` }}
+                />
+              </div>
+              <div class="mt-1 font-mono text-[10px] text-text-tertiary">
+                {partsWithLinks()} of {parts().length} parts priced
+              </div>
+            </Show>
           </div>
         </div>
 
@@ -521,17 +672,28 @@ const BomWorkspace: Component<Props> = (props) => {
           </button>
           <button
             onClick={() => {
+              const urls: string[] = [];
               for (const part of rows()) {
-                const selected = (linksByPart()[part.name] ?? []).find((link) => link.url === selectedLinks()[part.name]) ?? null;
-                if (selected?.url) {
-                  window.open(selected.url, '_blank', 'noopener,noreferrer');
-                }
+                const sel = (linksByPart()[part.name] ?? []).find((link) => link.url === selectedLinks()[part.name]) ?? null;
+                if (sel?.url) urls.push(sel.url);
               }
+              if (urls.length === 0) return;
+              navigator.clipboard.writeText(urls.join('\n')).then(() => {
+                setCopyState(`${urls.length} links copied`);
+                setTimeout(() => setCopyState(null), 3000);
+              });
             }}
             class="rounded-full bg-white/6 px-4 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-white/10 w-full sm:w-auto"
           >
-            Open all selected shopping links
+            Copy all shopping links
           </button>
+          <Show when={copyState()}>
+            {(msg) => (
+              <div class="rounded-full border border-accent/25 bg-accent/10 px-4 py-2 text-sm text-accent">
+                {msg()}
+              </div>
+            )}
+          </Show>
           <Show when={bulkState() === 'loaded'}>
             <div class="rounded-full border border-white/8 bg-white/4 px-4 py-2 text-sm text-text-secondary">
               Link set loaded
@@ -545,6 +707,30 @@ const BomWorkspace: Component<Props> = (props) => {
         </div>
       </section>
 
+      <div class="mb-4 flex gap-2">
+        <button
+          onClick={() => setViewMode('detail')}
+          class={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+            viewMode() === 'detail'
+              ? 'bg-accent/12 text-accent border-accent/25'
+              : 'bg-white/4 text-text-secondary border-transparent hover:bg-white/6'
+          }`}
+        >
+          Detail view
+        </button>
+        <button
+          onClick={() => setViewMode('summary')}
+          class={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+            viewMode() === 'summary'
+              ? 'bg-accent/12 text-accent border-accent/25'
+              : 'bg-white/4 text-text-secondary border-transparent hover:bg-white/6'
+          }`}
+        >
+          Summary table
+        </button>
+      </div>
+
+      <Show when={viewMode() === 'detail'}>
       <section class="rounded-2xl border border-border bg-bg-surface overflow-hidden">
         <div class="overflow-x-auto">
         <div class="grid grid-cols-[1.15fr_0.8fr_0.65fr_0.55fr_0.55fr_0.45fr] gap-4 border-b border-white/6 px-5 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-text-tertiary min-w-[700px]">
@@ -674,6 +860,62 @@ const BomWorkspace: Component<Props> = (props) => {
         </For>
         </div>
       </section>
+      </Show>
+
+      <Show when={viewMode() === 'summary'}>
+      <section class="rounded-2xl border border-border bg-bg-surface overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left" style={{ "min-width": `${summaryTable.getTotalSize()}px` }}>
+            <thead>
+              <For each={summaryTable.getHeaderGroups()}>
+                {(headerGroup) => (
+                  <tr class="border-b border-border bg-bg-surface">
+                    <For each={headerGroup.headers}>
+                      {(header) => (
+                        <th
+                          class={`px-4 py-3 text-[11px] font-mono uppercase tracking-wider text-text-tertiary font-medium ${
+                            header.column.getCanSort() ? 'cursor-pointer select-none hover:text-text-secondary' : ''
+                          }`}
+                          colSpan={header.colSpan}
+                          style={{ width: `${header.getSize()}px` }}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          <Show when={!header.isPlaceholder}>
+                            <div class="flex items-center gap-1">
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <Show when={header.column.getIsSorted()}>
+                                <span class="text-accent">
+                                  {header.column.getIsSorted() === 'asc' ? ' \u2191' : ' \u2193'}
+                                </span>
+                              </Show>
+                            </div>
+                          </Show>
+                        </th>
+                      )}
+                    </For>
+                  </tr>
+                )}
+              </For>
+            </thead>
+            <tbody>
+              <For each={summaryTable.getRowModel().rows}>
+                {(row) => (
+                  <tr class="border-b border-white/3 hover:bg-bg-card-hover/50 transition-colors">
+                    <For each={row.getVisibleCells()}>
+                      {(cell) => (
+                        <td class="px-4 py-3" style={{ width: `${cell.column.getSize()}px` }}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      )}
+                    </For>
+                  </tr>
+                )}
+              </For>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      </Show>
     </div>
   );
 };
