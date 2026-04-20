@@ -83,7 +83,15 @@ export const POST: APIRoute = async (context) => {
           messages: [
             {
               role: 'system',
-              content: `You are a hardware procurement assistant. Given an electronic component name and description, suggest purchase links from major suppliers. Return ONLY a JSON object with a "links" array. Each link object has: supplier (string), url (string), price (string like "$XX.XX"), rating (integer 10-50 for 1.0-5.0 stars), confidence ("high"|"medium"|"low"). Only include suppliers where you're confident the product exists. Target price is approximately $${targetPrice ?? 0}.`,
+              content: `You are a hardware procurement assistant. Given an electronic component name and description, suggest purchase links from major suppliers (Adafruit, SparkFun, Digi-Key, Mouser, Amazon, etc.).
+
+Return ONLY a JSON object with a "links" array. Each link object has: supplier (string), url (string — must be a real product page URL, not a search or category page), price (string like "$XX.XX" — use the real retail price if you know it, otherwise set confidence to "low"), rating (integer 10-50 representing 1.0-5.0 stars), confidence ("high"|"medium"|"low").
+
+IMPORTANT:
+- Only include products that closely match the EXACT specifications (voltage, capacity, form factor, etc.).
+- URLs must point to specific product pages (e.g. adafruit.com/product/1234, sparkfun.com/products/12345).
+- Do NOT guess prices — if unsure, set confidence to "low".
+- If you cannot find an exact match at a supplier, do not include that supplier.`,
             },
             {
               role: 'user',

@@ -10,8 +10,8 @@ DELETE FROM custom_builds;
 DELETE FROM preselections;
 DELETE FROM build_sessions;
 DELETE FROM chat_sessions;
-DELETE FROM bom_links;
-DELETE FROM bom_selections;
+-- bom_links and bom_selections are runtime caches (populated by Groq API);
+-- do NOT delete them during re-seed so cached supplier links survive restarts.
 DELETE FROM sensor_tier_parts;
 DELETE FROM hub_tier_parts;
 DELETE FROM saved_configs;
